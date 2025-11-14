@@ -12,14 +12,14 @@
   - `src/types/pty.ts`: PTY 통신 인터페이스
 
 ### 1.2 백엔드 PTY 구현 (Rust)
-- [ ] `src-tauri/src/pty/mod.rs` 생성
+- [x] `src-tauri/src/pty/mod.rs` 생성
   - PTY 세션 생성/종료
   - 입력/출력 스트림 처리
-- [ ] Tauri 커맨드 추가 (`src-tauri/src/lib.rs`)
+- [x] Tauri 커맨드 추가 (`src-tauri/src/lib.rs`)
   - `create_pty`: 새 PTY 세션 생성
   - `write_to_pty`: 입력 전달
   - `close_pty`: PTY 종료
-- [ ] PTY 출력 이벤트 발행
+- [x] PTY 출력 이벤트 발행
   - `pty-output` 이벤트로 터미널 출력 전달
 
 ### 1.3 프론트엔드 터미널 컴포넌트
