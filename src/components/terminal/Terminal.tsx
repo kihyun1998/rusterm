@@ -1,0 +1,174 @@
+import { useEffect, useRef, useState } from 'react';
+import { Terminal as XTerm } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import { usePty } from '@/hooks/use-pty';
+import { getTerminalConfig } from '@/lib/xterm-config';
+import '@xterm/xterm/css/xterm.css';
+
+interface TerminalProps {
+  id: string;
+  className?: string;
+}
+
+/**
+ * Terminal component
+ * Renders an xterm.js terminal and connects to backend PTY
+ */
+export function Terminal({ id, className = '' }: TerminalProps) {
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const xtermRef = useRef<XTerm | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
+  const isInitializedRef = useRef(false);
+
+  const [isReady, setIsReady] = useState(false);
+
+  // PTY connection management
+  const { createPty, writeToPty, resizePty, closePty, isConnected, error } = usePty({
+    onOutput: (data) => {
+      // Write PTY output to terminal
+      if (xtermRef.current) {
+        xtermRef.current.write(data);
+      }
+    },
+    onExit: (exitCode) => {
+      // Display exit message
+      if (xtermRef.current) {
+        const message = exitCode !== null
+          ? `\r\n\x1b[1;33m[Process exited with code ${exitCode}]\x1b[0m\r\n`
+          : `\r\n\x1b[1;33m[Process terminated]\x1b[0m\r\n`;
+        xtermRef.current.write(message);
+      }
+    },
+  });
+
+  // Initialize xterm.js
+  useEffect(() => {
+    if (!terminalRef.current || isInitializedRef.current) {
+      return;
+    }
+
+    // Create terminal instance
+    const xterm = new XTerm(getTerminalConfig());
+    xtermRef.current = xterm;
+
+    // Add fit addon for responsive resizing
+    const fitAddon = new FitAddon();
+    fitAddonRef.current = fitAddon;
+    xterm.loadAddon(fitAddon);
+
+    // Add web links addon for clickable URLs
+    const webLinksAddon = new WebLinksAddon();
+    xterm.loadAddon(webLinksAddon);
+
+    // Mount terminal to DOM
+    xterm.open(terminalRef.current);
+
+    // Initial fit
+    fitAddon.fit();
+
+    // Handle user input
+    xterm.onData((data) => {
+      writeToPty(data);
+    });
+
+    isInitializedRef.current = true;
+    setIsReady(true);
+
+    // Cleanup on unmount
+    return () => {
+      xterm.dispose();
+      xtermRef.current = null;
+      fitAddonRef.current = null;
+      isInitializedRef.current = false;
+    };
+  }, [writeToPty]);
+
+  // Create PTY session when terminal is ready
+  useEffect(() => {
+    if (!isReady || !fitAddonRef.current) {
+      return;
+    }
+
+    const terminal = xtermRef.current;
+    if (!terminal) {
+      return;
+    }
+
+    // Get terminal dimensions
+    const cols = terminal.cols;
+    const rows = terminal.rows;
+
+    // Create PTY session
+    createPty(cols, rows);
+
+    // Cleanup on unmount
+    return () => {
+      closePty();
+    };
+  }, [isReady, createPty, closePty]);
+
+  // Handle terminal resize
+  useEffect(() => {
+    if (!isReady || !fitAddonRef.current || !xtermRef.current) {
+      return;
+    }
+
+    const fitAddon = fitAddonRef.current;
+    const terminal = xtermRef.current;
+
+    // Resize handler
+    const handleResize = () => {
+      if (!terminalRef.current) {
+        return;
+      }
+
+      // Fit terminal to container
+      fitAddon.fit();
+
+      // Get new dimensions
+      const cols = terminal.cols;
+      const rows = terminal.rows;
+
+      // Notify PTY of size change
+      if (isConnected) {
+        resizePty(cols, rows);
+      }
+    };
+
+    // Listen for window resize
+    window.addEventListener('resize', handleResize);
+
+    // Use ResizeObserver for container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    if (terminalRef.current) {
+      resizeObserver.observe(terminalRef.current);
+    }
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
+    };
+  }, [isReady, isConnected, resizePty]);
+
+  // Display error if any
+  useEffect(() => {
+    if (error && xtermRef.current) {
+      xtermRef.current.write(`\r\n\x1b[1;31m[Error: ${error}]\x1b[0m\r\n`);
+    }
+  }, [error]);
+
+  return (
+    <div
+      ref={terminalRef}
+      className={`w-full h-full ${className}`}
+      data-terminal-id={id}
+    />
+  );
+}
+
+export default Terminal;
