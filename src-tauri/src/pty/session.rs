@@ -11,10 +11,10 @@ pub struct PtySession {
     pub pty_id: String,
     pub pid: u32,
     pub shell: String,
-    master: Box<dyn MasterPty + Send>,
+    master: Arc<Mutex<Box<dyn MasterPty + Send>>>,
     writer: Arc<Mutex<Box<dyn Write + Send>>>,
     #[allow(dead_code)]
-    child: Box<dyn Child + Send>,
+    child: Arc<Mutex<Box<dyn Child + Send>>>,
 }
 
 impl PtySession {
@@ -97,9 +97,9 @@ impl PtySession {
             pty_id,
             pid,
             shell: shell_path,
-            master: pty_pair.master,
+            master: Arc::new(Mutex::new(pty_pair.master)),
             writer,
-            child,
+            child: Arc::new(Mutex::new(child)),
         })
     }
 
@@ -116,7 +116,7 @@ impl PtySession {
     }
 
     /// PTY 크기 조정
-    pub fn resize(&mut self, cols: u16, rows: u16) -> Result<(), PtyError> {
+    pub async fn resize(&self, cols: u16, rows: u16) -> Result<(), PtyError> {
         let pty_size = PtySize {
             rows,
             cols,
@@ -124,6 +124,8 @@ impl PtySession {
             pixel_height: 0,
         };
         self.master
+            .lock()
+            .await
             .resize(pty_size)
             .map_err(|e| PtyError::ResizeFailed(e.to_string()))?;
         Ok(())

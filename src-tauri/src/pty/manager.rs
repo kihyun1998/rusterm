@@ -68,12 +68,12 @@ impl PtyManager {
 
     /// PTY 크기 조정
     pub async fn resize_session(&self, pty_id: &str, cols: u16, rows: u16) -> Result<(), PtyError> {
-        let mut sessions = self.sessions.lock().await;
+        let sessions = self.sessions.lock().await;
         let session = sessions
-            .get_mut(pty_id)
+            .get(pty_id)
             .ok_or_else(|| PtyError::SessionNotFound(pty_id.to_string()))?;
 
-        session.resize(cols, rows)
+        session.resize(cols, rows).await
     }
 
     /// PTY 세션 종료

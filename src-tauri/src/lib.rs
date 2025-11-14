@@ -16,10 +16,10 @@ pub fn run() {
         .manage(PtyManager::new())
         .invoke_handler(tauri::generate_handler![
             greet,
-            commands::create_pty,
-            commands::write_to_pty,
-            commands::resize_pty,
-            commands::close_pty,
+            commands::pty_commands::create_pty,
+            commands::pty_commands::write_to_pty,
+            commands::pty_commands::resize_pty,
+            commands::pty_commands::close_pty,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
