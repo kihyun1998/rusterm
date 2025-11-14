@@ -8,6 +8,7 @@ use tokio::sync::Mutex;
 
 /// 개별 PTY 세션
 pub struct PtySession {
+    #[allow(dead_code)]
     pub pty_id: String,
     pub pid: u32,
     pub shell: String,
