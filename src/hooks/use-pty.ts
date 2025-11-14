@@ -31,7 +31,8 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Use refs to store callbacks to avoid recreating functions
+  // Use refs to store state to avoid recreating functions
+  const ptyIdRef = useRef<string | null>(null);
   const onOutputRef = useRef(options.onOutput);
   const onExitRef = useRef(options.onExit);
 
@@ -40,6 +41,11 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
     onOutputRef.current = options.onOutput;
     onExitRef.current = options.onExit;
   }, [options.onOutput, options.onExit]);
+
+  // Update ptyId ref when state changes
+  useEffect(() => {
+    ptyIdRef.current = ptyId;
+  }, [ptyId]);
 
   // Refs for cleanup functions
   const outputUnlistenRef = useRef<UnlistenFn | null>(null);
@@ -62,6 +68,7 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       });
 
       setPtyId(response.pty_id);
+      ptyIdRef.current = response.pty_id;
       setIsConnected(true);
 
       // Set up output event listener
@@ -99,14 +106,14 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
    * Write data to PTY (user input)
    */
   const writeToPty = useCallback(async (data: string) => {
-    if (!ptyId) {
+    if (!ptyIdRef.current) {
       console.warn('Cannot write to PTY: not connected');
       return;
     }
 
     try {
       await invoke('write_to_pty', {
-        ptyId,
+        ptyId: ptyIdRef.current,
         data,
       });
     } catch (err) {
@@ -114,19 +121,19 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       setError(errorMessage);
       console.error('Failed to write to PTY:', err);
     }
-  }, [ptyId]);
+  }, []); // No dependencies - uses ref instead
 
   /**
    * Resize PTY session
    */
   const resizePty = useCallback(async (cols: number, rows: number) => {
-    if (!ptyId) {
+    if (!ptyIdRef.current) {
       return;
     }
 
     try {
       await invoke('resize_pty', {
-        ptyId,
+        ptyId: ptyIdRef.current,
         cols,
         rows,
       });
@@ -135,13 +142,13 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       setError(errorMessage);
       console.error('Failed to resize PTY:', err);
     }
-  }, [ptyId]);
+  }, []); // No dependencies - uses ref instead
 
   /**
    * Close PTY session
    */
   const closePty = useCallback(async () => {
-    if (!ptyId) {
+    if (!ptyIdRef.current) {
       return;
     }
 
@@ -158,17 +165,18 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
 
       // Close PTY session
       await invoke('close_pty', {
-        ptyId,
+        ptyId: ptyIdRef.current,
       });
 
       setPtyId(null);
+      ptyIdRef.current = null;
       setIsConnected(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(errorMessage);
       console.error('Failed to close PTY:', err);
     }
-  }, [ptyId]);
+  }, []); // No dependencies - uses ref instead
 
   // Cleanup on unmount
   useEffect(() => {
