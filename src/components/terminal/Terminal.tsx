@@ -20,6 +20,7 @@ export function Terminal({ id, className = '' }: TerminalProps) {
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const isInitializedRef = useRef(false);
+  const ptyCreatedRef = useRef(false);
 
   const [isReady, setIsReady] = useState(false);
 
@@ -41,6 +42,12 @@ export function Terminal({ id, className = '' }: TerminalProps) {
       }
     },
   });
+
+  // Store writeToPty in ref to avoid recreating xterm on every render
+  const writeToPtyRef = useRef(writeToPty);
+  useEffect(() => {
+    writeToPtyRef.current = writeToPty;
+  }, [writeToPty]);
 
   // Initialize xterm.js
   useEffect(() => {
@@ -69,7 +76,7 @@ export function Terminal({ id, className = '' }: TerminalProps) {
 
     // Handle user input
     xterm.onData((data) => {
-      writeToPty(data);
+      writeToPtyRef.current(data);
     });
 
     isInitializedRef.current = true;
@@ -82,11 +89,11 @@ export function Terminal({ id, className = '' }: TerminalProps) {
       fitAddonRef.current = null;
       isInitializedRef.current = false;
     };
-  }, [writeToPty]);
+  }, []); // No dependencies - only run once
 
   // Create PTY session when terminal is ready
   useEffect(() => {
-    if (!isReady || !fitAddonRef.current) {
+    if (!isReady || !fitAddonRef.current || ptyCreatedRef.current) {
       return;
     }
 
@@ -101,10 +108,12 @@ export function Terminal({ id, className = '' }: TerminalProps) {
 
     // Create PTY session
     createPty(cols, rows);
+    ptyCreatedRef.current = true;
 
     // Cleanup on unmount
     return () => {
       closePty();
+      ptyCreatedRef.current = false;
     };
   }, [isReady, createPty, closePty]);
 

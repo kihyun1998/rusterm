@@ -27,11 +27,19 @@ interface UsePtyReturn {
  * Handles creation, communication, and cleanup of PTY connections
  */
 export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
-  const { onOutput, onExit } = options;
-
   const [ptyId, setPtyId] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Use refs to store callbacks to avoid recreating functions
+  const onOutputRef = useRef(options.onOutput);
+  const onExitRef = useRef(options.onExit);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onOutputRef.current = options.onOutput;
+    onExitRef.current = options.onExit;
+  }, [options.onOutput, options.onExit]);
 
   // Refs for cleanup functions
   const outputUnlistenRef = useRef<UnlistenFn | null>(null);
@@ -60,8 +68,8 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       const outputUnlisten = await listen<PtyOutputEvent>(
         `pty-output-${response.pty_id}`,
         (event) => {
-          if (onOutput) {
-            onOutput(event.payload.data);
+          if (onOutputRef.current) {
+            onOutputRef.current(event.payload.data);
           }
         }
       );
@@ -72,8 +80,8 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
         `pty-exit-${response.pty_id}`,
         (event) => {
           setIsConnected(false);
-          if (onExit) {
-            onExit(event.payload.exit_code);
+          if (onExitRef.current) {
+            onExitRef.current(event.payload.exit_code);
           }
         }
       );
@@ -85,7 +93,7 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       setIsConnected(false);
       console.error('Failed to create PTY:', err);
     }
-  }, [onOutput, onExit]);
+  }, []); // No dependencies - uses refs instead
 
   /**
    * Write data to PTY (user input)
