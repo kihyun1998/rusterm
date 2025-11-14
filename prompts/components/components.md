@@ -3,11 +3,11 @@
 ## Phase 1: 핵심 터미널 기능 (MVP)
 
 ### 1.1 기본 환경 설정
-- [ ] xterm.js 관련 패키지 설치
+- [x] xterm.js 관련 패키지 설치
   - `xterm`, `@xterm/addon-fit`, `@xterm/addon-web-links`
-- [ ] Rust PTY 의존성 추가
+- [x] Rust PTY 의존성 추가
   - `portable-pty` crate 추가 (Cargo.toml)
-- [ ] 타입 정의 파일 생성
+- [x] 타입 정의 파일 생성
   - `src/types/terminal.ts`: 기본 터미널 타입
   - `src/types/pty.ts`: PTY 통신 인터페이스
 
