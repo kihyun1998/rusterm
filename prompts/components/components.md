@@ -35,10 +35,10 @@
   - `src/lib/xterm-config.ts`: 폰트, 색상, 스크롤 설정
 
 ### 1.4 기본 레이아웃
-- [ ] `src/App.tsx` 수정
+- [x] `src/App.tsx` 수정
   - Terminal 컴포넌트 렌더링
   - 전체 화면 레이아웃 구성
-- [ ] CSS 스타일링
+- [x] CSS 스타일링
   - 터미널이 부모 크기에 맞게 조정
 
 ---
