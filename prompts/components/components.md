@@ -23,15 +23,15 @@
   - `pty-output` 이벤트로 터미널 출력 전달
 
 ### 1.3 프론트엔드 터미널 컴포넌트
-- [ ] `src/components/terminal/Terminal.tsx` 생성
+- [x] `src/components/terminal/Terminal.tsx` 생성
   - xterm.js Terminal 인스턴스 초기화
   - PTY와 연결 (invoke + listen)
   - 리사이즈 처리 (addon-fit 사용)
-- [ ] `src/hooks/use-pty.ts` 훅 생성
+- [x] `src/hooks/use-pty.ts` 훅 생성
   - PTY 생성/종료 로직
   - 입력 전송 함수
   - 출력 이벤트 리스닝
-- [ ] 기본 xterm 설정
+- [x] 기본 xterm 설정
   - `src/lib/xterm-config.ts`: 폰트, 색상, 스크롤 설정
 
 ### 1.4 기본 레이아웃
