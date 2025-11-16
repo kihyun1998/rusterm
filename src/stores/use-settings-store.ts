@@ -78,7 +78,7 @@ const defaultSettings: TerminalSettings = {
   cursorBlink: true,
   scrollback: 1000,
   theme: defaultTheme,
-  shell: process.platform === 'win32' ? 'powershell.exe' : '/bin/bash',
+  shell: '', // Empty string to use system default shell
 };
 
 export const useSettingsStore = create<SettingsState>()(
