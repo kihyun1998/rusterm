@@ -4,6 +4,7 @@ use thiserror::Error;
 
 /// PTY 생성 요청 파라미터
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct CreatePtyRequest {
     pub shell: Option<String>,
     pub cwd: Option<String>,
@@ -22,6 +23,7 @@ pub struct CreatePtyResponse {
 
 /// PTY 쓰기 요청
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct WritePtyRequest {
     pub pty_id: String,
     pub data: String,
@@ -29,6 +31,7 @@ pub struct WritePtyRequest {
 
 /// PTY 리사이즈 요청
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct ResizePtyRequest {
     pub pty_id: String,
     pub cols: u16,
