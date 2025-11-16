@@ -30,9 +30,11 @@ export function MainLayout() {
           tabs.map((tab) => (
             <div
               key={tab.id}
-              className={`absolute inset-0 ${
-                tab.id === activeTabId ? 'block' : 'hidden'
-              }`}
+              className="absolute inset-0"
+              style={{
+                visibility: tab.id === activeTabId ? 'visible' : 'hidden',
+                zIndex: tab.id === activeTabId ? 1 : 0,
+              }}
             >
               <Terminal id={tab.id} />
             </div>
