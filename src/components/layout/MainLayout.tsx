@@ -10,8 +10,6 @@ export function MainLayout() {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
 
-  console.log('MainLayout render:', { tabs, activeTabId });
-
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       {/* Tab bar */}
