@@ -12,7 +12,7 @@ import { Copy, ClipboardPaste, TextSelect, Eraser } from 'lucide-react';
 import { useClipboard } from '@/hooks/use-clipboard';
 
 interface TerminalContextMenuProps {
-  terminalRef: RefObject<XTerm>;
+  terminalRef: RefObject<XTerm | null>;
   onPaste: (text: string) => void;
   children: ReactNode;
 }

@@ -1,11 +1,17 @@
 import { WindowControls } from './WindowControls';
 import { useWindowControls } from '@/hooks/use-window-controls';
+import { Button } from '@/components/ui/button';
+
+interface TitleBarProps {
+  showDemoButton?: boolean;
+  onDemoClick?: () => void;
+}
 
 /**
  * TitleBar component
  * Custom title bar with drag region and window controls
  */
-export function TitleBar() {
+export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
   const { toggleMaximize, platform } = useWindowControls();
 
   const handleDoubleClick = () => {
@@ -34,6 +40,20 @@ export function TitleBar() {
           rusterm
         </span>
       </div>
+
+      {/* Center section: Dev tools (development mode only) */}
+      {showDemoButton && (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDemoClick}
+            className="h-6 px-2 text-xs"
+          >
+            Demo
+          </Button>
+        </div>
+      )}
 
       {/* Right section: Window controls */}
       <WindowControls />

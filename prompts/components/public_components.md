@@ -21,9 +21,17 @@ MCP 도구 사용 방법:
 
 ### 1. context-menu
 - **용도**: 터미널 우클릭 메뉴 (Phase 4.1)
-- **설치**: `npx shadcn@latest add context-menu`
-- **파일**: `src/components/ui/context-menu.tsx`
-- **상태**: ⏳ 필요 (현재 구현 대기 중)
+- **설치**: `npx shadcn@latest add context-menu` 또는 MCP: `mcp__shadcn__get_add_command_for_items`
+- **파일**:
+  - `src/components/ui/context-menu.tsx` ✅
+  - `src/components/menu/TerminalContextMenu.tsx` ✅
+- **상태**: ✅ **완료** (구현 완료 및 데모 페이지 추가됨)
+- **기능**:
+  - 복사 (Ctrl+Shift+C)
+  - 붙여넣기 (Ctrl+Shift+V)
+  - 모두 선택 (Ctrl+Shift+A)
+  - 화면 지우기 (Ctrl+L)
+- **데모**: 개발 모드에서 타이틀바 "Demo" 버튼 → Context Menu 섹션
 
 ### 2. command
 - **용도**: 커맨드 팔레트 (Phase 4.2)
@@ -439,7 +447,7 @@ src/
 ├── components/
 │   ├── ui/                          # shadcn/ui 컴포넌트
 │   │   ├── button.tsx               # ✅ 이미 존재
-│   │   ├── context-menu.tsx         # ⏳ 추가 필요
+│   │   ├── context-menu.tsx         # ✅ 완료
 │   │   ├── command.tsx              # ⏳ 추가 필요
 │   │   ├── dialog.tsx               # ⏳ 추가 필요
 │   │   ├── tabs.tsx                 # ⏳ 추가 필요
@@ -456,11 +464,11 @@ src/
 │   │   ├── card.tsx                 # ⏳ 추가 필요
 │   │   └── scroll-area.tsx          # ⏳ 추가 필요
 │   └── menu/
-│       └── TerminalContextMenu.tsx  # ✅ 이미 구현됨 (context-menu 필요)
+│       └── TerminalContextMenu.tsx  # ✅ 완료 (context-menu 사용 중)
 ├── pages/
-│   └── ComponentDemo.tsx            # ⏳ 생성 필요
-├── config.ts                        # ⏳ 생성 필요 (개발 모드 플래그)
-└── App.tsx                          # 🔧 수정 필요 (데모 라우팅)
+│   └── ComponentDemo.tsx            # ✅ 완료
+├── config.ts                        # ✅ 완료 (개발 모드 플래그)
+└── App.tsx                          # ✅ 완료 (데모 상태 관리)
 ```
 
 ---

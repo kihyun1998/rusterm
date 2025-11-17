@@ -3,18 +3,23 @@ import { TabBar } from './TabBar';
 import { Terminal } from '@/components/terminal/Terminal';
 import { useTabStore } from '@/stores';
 
+interface MainLayoutProps {
+  showDemoButton?: boolean;
+  onDemoClick?: () => void;
+}
+
 /**
  * MainLayout component
  * Manages the overall application layout with title bar, tab bar and terminal area
  */
-export function MainLayout() {
+export function MainLayout({ showDemoButton, onDemoClick }: MainLayoutProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       {/* Title bar */}
-      <TitleBar />
+      <TitleBar showDemoButton={showDemoButton} onDemoClick={onDemoClick} />
 
       {/* Tab bar */}
       <TabBar />
