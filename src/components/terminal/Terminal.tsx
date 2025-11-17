@@ -156,8 +156,13 @@ export function Terminal({ id, className = '' }: TerminalProps) {
         const cols = terminal.cols;
         const rows = terminal.rows;
 
-        // Notify PTY of size change
-        if (isConnected) {
+        // Minimum size to prevent PTY corruption
+        const MIN_COLS = 20;
+        const MIN_ROWS = 5;
+
+        // Only notify PTY if size is reasonable
+        // This prevents content loss when window becomes very small
+        if (isConnected && cols >= MIN_COLS && rows >= MIN_ROWS) {
           resizePty(cols, rows);
         }
       } catch (err) {
