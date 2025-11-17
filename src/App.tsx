@@ -4,8 +4,8 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { isDevelopment } from '@/config';
 import { useShortcuts } from '@/hooks/use-shortcuts';
-import { useSettingsStore } from '@/stores';
 import ComponentDemo from '@/pages/ComponentDemo';
+import { useSettingsStore } from '@/stores';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);

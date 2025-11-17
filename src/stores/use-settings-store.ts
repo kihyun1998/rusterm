@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
+import { create } from 'zustand';
 import type { Settings, TerminalSettings, TerminalTheme } from '@/types/settings';
 
 interface SettingsState {
