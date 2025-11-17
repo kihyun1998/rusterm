@@ -7,11 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { AppearanceTab } from './AppearanceTab';
-import { AdvancedTab } from './AdvancedTab';
-import { AboutTab } from './AboutTab';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { useTheme } from '@/hooks/use-theme';
+import { useSettingsStore } from '@/stores';
+import { Moon, Sun } from 'lucide-react';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -20,41 +21,70 @@ interface SettingsDialogProps {
 
 /**
  * Settings Dialog Component
- * Main settings dialog with tabs for different setting categories
+ * Simple settings dialog with theme toggle
  */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+  const { theme, toggleTheme } = useTheme();
+  const updateTerminalTheme = useSettingsStore((state) => state.updateTheme);
+  const isDark = theme === 'dark';
+
+  const handleThemeToggle = () => {
+    toggleTheme();
+
+    // Sync terminal theme with UI theme
+    if (isDark) {
+      // Switching to Light
+      updateTerminalTheme({
+        background: '#ffffff',
+        foreground: '#000000',
+        cursor: '#000000',
+        cursorAccent: '#ffffff',
+        selectionBackground: '#add6ff',
+      });
+    } else {
+      // Switching to Dark
+      updateTerminalTheme({
+        background: '#1e1e1e',
+        foreground: '#cccccc',
+        cursor: '#ffffff',
+        cursorAccent: '#000000',
+        selectionBackground: '#264f78',
+      });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
-            Customize your terminal settings
+            Customize your terminal appearance
           </DialogDescription>
         </DialogHeader>
 
-        {/* Tabs for different sections */}
-        <Tabs defaultValue="appearance" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="advanced">Advanced</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-          </TabsList>
-
-          <div className="flex-1 overflow-hidden">
-            <TabsContent value="appearance" className="h-full mt-4">
-              <AppearanceTab />
-            </TabsContent>
-
-            <TabsContent value="advanced" className="h-full mt-4">
-              <AdvancedTab />
-            </TabsContent>
-
-            <TabsContent value="about" className="h-full mt-4">
-              <AboutTab />
-            </TabsContent>
+        <div className="py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {isDark ? (
+                <Moon className="h-5 w-5 text-muted-foreground" />
+              ) : (
+                <Sun className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="space-y-0.5">
+                <Label htmlFor="theme-toggle">Theme</Label>
+                <p className="text-sm text-muted-foreground">
+                  {isDark ? 'Dark' : 'Light'}
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="theme-toggle"
+              checked={isDark}
+              onCheckedChange={handleThemeToggle}
+            />
           </div>
-        </Tabs>
+        </div>
 
         <DialogFooter>
           <DialogClose asChild>
