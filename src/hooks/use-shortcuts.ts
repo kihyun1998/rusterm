@@ -52,6 +52,51 @@ export function useShortcuts(options: UseShortcutsOptions) {
         target.tagName === 'TEXTAREA' ||
         target.isContentEditable;
 
+      // ========== Terminal Actions (Process BEFORE input field check) ==========
+
+      // Terminal actions should work regardless of where focus is
+      // as long as it's not in an actual input field
+
+      // Ctrl/Cmd + L: Clear terminal
+      if (e.key === 'l' && modifier && !e.shiftKey && !isInputField) {
+        e.preventDefault();
+        e.stopPropagation();
+        emitTerminalEvent(TERMINAL_EVENTS.CLEAR);
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + C: Copy
+      if (e.key === 'C' && modifier && e.shiftKey && !isInputField) {
+        e.preventDefault();
+        e.stopPropagation();
+        emitTerminalEvent(TERMINAL_EVENTS.COPY);
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + V: Paste
+      if (e.key === 'V' && modifier && e.shiftKey && !isInputField) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          const { readText } = await import('@tauri-apps/plugin-clipboard-manager');
+          const text = await readText();
+          if (text) {
+            emitTerminalEvent(TERMINAL_EVENTS.PASTE, { text });
+          }
+        } catch (err) {
+          console.error('Failed to paste:', err);
+        }
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + A: Select all
+      if (e.key === 'A' && modifier && e.shiftKey && !isInputField) {
+        e.preventDefault();
+        e.stopPropagation();
+        emitTerminalEvent(TERMINAL_EVENTS.SELECT_ALL);
+        return;
+      }
+
       // ========== Tab Management ==========
 
       // Ctrl/Cmd + Shift + T: New tab
@@ -140,49 +185,6 @@ export function useShortcuts(options: UseShortcutsOptions) {
         const defaultSize = 14;
         updateSettings({ fontSize: defaultSize });
         emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: defaultSize });
-        return;
-      }
-
-      // ========== Terminal Actions ==========
-
-      // Don't handle terminal actions if we're in an input field
-      if (isInputField) {
-        return;
-      }
-
-      // Ctrl/Cmd + L: Clear terminal
-      if (e.key === 'l' && modifier && !e.shiftKey) {
-        e.preventDefault();
-        emitTerminalEvent(TERMINAL_EVENTS.CLEAR);
-        return;
-      }
-
-      // Ctrl/Cmd + Shift + C: Copy
-      if (e.key === 'C' && modifier && e.shiftKey) {
-        e.preventDefault();
-        emitTerminalEvent(TERMINAL_EVENTS.COPY);
-        return;
-      }
-
-      // Ctrl/Cmd + Shift + V: Paste
-      if (e.key === 'V' && modifier && e.shiftKey) {
-        e.preventDefault();
-        try {
-          const { readText } = await import('@tauri-apps/plugin-clipboard-manager');
-          const text = await readText();
-          if (text) {
-            emitTerminalEvent(TERMINAL_EVENTS.PASTE, { text });
-          }
-        } catch (err) {
-          console.error('Failed to paste:', err);
-        }
-        return;
-      }
-
-      // Ctrl/Cmd + Shift + A: Select all
-      if (e.key === 'A' && modifier && e.shiftKey) {
-        e.preventDefault();
-        emitTerminalEvent(TERMINAL_EVENTS.SELECT_ALL);
         return;
       }
     };
