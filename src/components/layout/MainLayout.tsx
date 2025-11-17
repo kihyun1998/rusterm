@@ -1,10 +1,11 @@
+import { TitleBar } from './TitleBar';
 import { TabBar } from './TabBar';
 import { Terminal } from '@/components/terminal/Terminal';
 import { useTabStore } from '@/stores';
 
 /**
  * MainLayout component
- * Manages the overall application layout with tab bar and terminal area
+ * Manages the overall application layout with title bar, tab bar and terminal area
  */
 export function MainLayout() {
   const tabs = useTabStore((state) => state.tabs);
@@ -12,6 +13,9 @@ export function MainLayout() {
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
+      {/* Title bar */}
+      <TitleBar />
+
       {/* Tab bar */}
       <TabBar />
 
