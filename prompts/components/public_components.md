@@ -3,6 +3,18 @@
 ## 개요
 rusterm 프로젝트에서 사용할 shadcn/ui 공통 컴포넌트들을 설치하고 데모 페이지를 구성합니다.
 
+### Shadcn MCP 활용
+**이 작업은 Claude Code의 Shadcn MCP를 활용하여 구현합니다.**
+
+MCP 도구 사용 방법:
+- `mcp__shadcn__get_project_registries`: 프로젝트 레지스트리 확인
+- `mcp__shadcn__search_items_in_registries`: 컴포넌트 검색
+- `mcp__shadcn__view_items_in_registries`: 컴포넌트 상세 정보 확인
+- `mcp__shadcn__get_add_command_for_items`: 설치 명령어 생성
+- `mcp__shadcn__get_item_examples_from_registries`: 사용 예제 확인
+
+**중요**: 각 컴포넌트 설치 시 MCP 도구를 사용하여 공식 예제와 베스트 프랙티스를 확인하고 구현합니다.
+
 ---
 
 ## Phase 1: 필수 컴포넌트 설치 (Phase 4용)
@@ -124,9 +136,17 @@ rusterm 프로젝트에서 사용할 shadcn/ui 공통 컴포넌트들을 설치�
 ```
 
 ### Task 3: 데모 페이지 접근 방법
-- **옵션 A**: 개발 모드에서만 접근 가능한 숨겨진 라우트 (`/demo`)
-- **옵션 B**: 타이틀바에 개발 모드 버튼 추가
-- **옵션 C**: 단순히 별도 컴포넌트로 만들어서 App.tsx에서 조건부 렌더링
+**선택된 방식: 타이틀바에 개발 모드 Demo 버튼 추가**
+
+구현 방법:
+1. 개발 모드(`import.meta.env.DEV`)일 때만 타이틀바에 "Demo" 버튼 표시
+2. Demo 버튼 클릭 시 App.tsx의 상태를 토글하여 데모 페이지 표시
+3. 데모 페이지에서 "Back" 버튼으로 메인 화면 복귀
+
+장점:
+- 별도의 라우팅 라이브러리 불필요
+- 간단한 상태 관리만으로 구현 가능
+- 개발자가 쉽게 접근 가능
 
 ### Task 4: 컴포넌트별 데모 내용
 
@@ -302,18 +322,28 @@ rusterm 프로젝트에서 사용할 shadcn/ui 공통 컴포넌트들을 설치�
 ## 구현 순서
 
 ### Step 1: 우선순위 높은 컴포넌트 설치
+**MCP 도구를 사용하여 설치:**
+1. `mcp__shadcn__get_add_command_for_items`로 설치 명령어 확인
+2. `mcp__shadcn__get_item_examples_from_registries`로 예제 확인
+3. Bash 도구로 컴포넌트 설치
+
+설치 순서:
 1. `context-menu` (현재 필요)
 2. `command` (Phase 4.2)
 3. `dialog`, `tabs`, `select`, `input`, `label` (Phase 5)
 
 ### Step 2: 데모 페이지 기본 구조 생성
-1. `src/pages/ComponentDemo.tsx` 생성
-2. 기본 레이아웃 및 섹션 구조 구현
-3. App.tsx에서 조건부 렌더링 추가 (개발 모드 플래그)
+1. `src/config.ts` 생성 (개발 모드 플래그)
+2. `src/pages/ComponentDemo.tsx` 생성
+3. 기본 레이아웃 및 섹션 구조 구현
+4. `TitleBar` 컴포넌트에 Demo 버튼 추가
+5. `MainLayout`에 Demo 버튼 props 전달
+6. `App.tsx`에서 상태 관리 및 조건부 렌더링 추가
 
 ### Step 3: 각 컴포넌트 데모 추가
+- **MCP 도구로 예제 확인**: `mcp__shadcn__get_item_examples_from_registries`
 - 컴포넌트 설치 후 즉시 데모 섹션 추가
-- 실제 사용 예제와 유사하게 구성
+- 공식 예제를 참고하여 실제 사용 예제와 유사하게 구성
 
 ### Step 4: 추가 컴포넌트 설치
 - `sonner`, `skeleton`, `dropdown-menu` 등
@@ -331,16 +361,72 @@ export const isDevelopment = import.meta.env.DEV;
 
 ### App.tsx 수정
 ```typescript
-import { isDevelopment } from './config';
+import { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import ComponentDemo from './pages/ComponentDemo';
+import { isDevelopment } from './config';
 
 function App() {
-  // 개발 모드일 때만 데모 페이지 표시
-  if (isDevelopment && window.location.pathname === '/demo') {
-    return <ComponentDemo />;
+  const [showDemo, setShowDemo] = useState(false);
+
+  // 개발 모드에서만 데모 페이지 표시 가능
+  if (isDevelopment && showDemo) {
+    return <ComponentDemo onBack={() => setShowDemo(false)} />;
   }
 
-  return <MainLayout />;
+  return <MainLayout showDemoButton={isDevelopment} onDemoClick={() => setShowDemo(true)} />;
+}
+```
+
+### TitleBar 컴포넌트 수정
+```typescript
+// src/components/layout/TitleBar.tsx
+interface TitleBarProps {
+  showDemoButton?: boolean;
+  onDemoClick?: () => void;
+}
+
+export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
+  return (
+    <div className="titlebar">
+      {/* 기존 타이틀바 내용 */}
+
+      {/* 개발 모드 전용 Demo 버튼 */}
+      {showDemoButton && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onDemoClick}
+          className="ml-2"
+        >
+          Demo
+        </Button>
+      )}
+    </div>
+  );
+}
+```
+
+### ComponentDemo 페이지
+```typescript
+// src/pages/ComponentDemo.tsx
+interface ComponentDemoProps {
+  onBack: () => void;
+}
+
+export default function ComponentDemo({ onBack }: ComponentDemoProps) {
+  return (
+    <div className="h-screen overflow-auto p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Component Demo</h1>
+          <Button onClick={onBack}>Back to Main</Button>
+        </div>
+
+        {/* 데모 섹션들 */}
+      </div>
+    </div>
+  );
 }
 ```
 
