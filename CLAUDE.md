@@ -13,6 +13,11 @@ RusTerm은 Tauri 2 기반의 크로스 플랫폼 터미널 에뮬레이터입니
 - **Theming**: next-themes
 - **Package Manager**: pnpm
 
+## IMPORTANT
+- ALWAYS use Shadcn MCP to create UI
+- ALWAYS ask user for permission when implementing a plan
+- NEVER use emoji for design.
+
 ## 프로젝트 구조
 
 ```
