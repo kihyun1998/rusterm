@@ -66,6 +66,23 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { BadgeCheckIcon } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { useState, useEffect } from 'react';
 
@@ -967,6 +984,237 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
                   <li>테마 프리뷰 이미지 로딩 (AppearanceTab)</li>
                   <li>프로필 목록 로딩 (향후 프로필 관리 기능)</li>
                   <li>비동기 데이터 로딩 전반 (전역)</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Dropdown Menu Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Dropdown Menu</h2>
+              <p className="text-sm text-muted-foreground">
+                드롭다운 메뉴 컴포넌트. 옵션, 설정 등을 표시하는 메뉴.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Basic Example */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">Open Menu</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="start">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem>
+                        Profile
+                        <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        Billing
+                        <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        Settings
+                        <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        Keyboard shortcuts
+                        <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem>Team</DropdownMenuItem>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem>Email</DropdownMenuItem>
+                            <DropdownMenuItem>Message</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>More...</DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                      <DropdownMenuItem>
+                        New Team
+                        <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>GitHub</DropdownMenuItem>
+                    <DropdownMenuItem>Support</DropdownMenuItem>
+                    <DropdownMenuItem disabled>API</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      Log out
+                      <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Usage Note */}
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">Rusterm에서 사용 예정</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  이 컴포넌트는 다음과 같은 곳에서 사용될 예정입니다:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>타이틀바 메뉴 (File, Edit, View 등)</li>
+                  <li>탭 우클릭 메뉴 (TabBar)</li>
+                  <li>설정 옵션 메뉴</li>
+                  <li>프로필 선택 메뉴</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Checkbox Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Checkbox</h2>
+              <p className="text-sm text-muted-foreground">
+                체크박스 컴포넌트. 옵션 선택에 사용.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Basic Examples */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-center gap-3">
+                    <Checkbox id="terms" />
+                    <Label htmlFor="terms">Accept terms and conditions</Label>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Checkbox id="terms-2" defaultChecked />
+                    <div className="grid gap-2">
+                      <Label htmlFor="terms-2">Accept terms and conditions</Label>
+                      <p className="text-muted-foreground text-sm">
+                        By clicking this checkbox, you agree to the terms and conditions.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Checkbox id="toggle" disabled />
+                    <Label htmlFor="toggle">Enable notifications</Label>
+                  </div>
+                  <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
+                    <Checkbox
+                      id="toggle-2"
+                      defaultChecked
+                      className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
+                    />
+                    <div className="grid gap-1.5 font-normal">
+                      <p className="text-sm leading-none font-medium">
+                        Enable notifications
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        You can enable or disable notifications at any time.
+                      </p>
+                    </div>
+                  </Label>
+                </div>
+              </div>
+
+              {/* Usage Note */}
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">Rusterm에서 사용 예정</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  이 컴포넌트는 다음과 같은 곳에서 사용될 예정입니다:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>설정 옵션 체크박스 (SettingsDialog)</li>
+                  <li>기능 활성화/비활성화 토글</li>
+                  <li>다중 선택 리스트</li>
+                  <li>약관 동의 체크박스</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Badge Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Badge</h2>
+              <p className="text-sm text-muted-foreground">
+                뱃지 컴포넌트. 상태, 레이블 등을 표시.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Basic Variants */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 Variants</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge>Badge</Badge>
+                  <Badge variant="secondary">Secondary</Badge>
+                  <Badge variant="destructive">Destructive</Badge>
+                  <Badge variant="outline">Outline</Badge>
+                </div>
+              </div>
+
+              {/* Custom Badges */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">커스텀 스타일 & 아이콘</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-500 text-white dark:bg-blue-600"
+                  >
+                    <BadgeCheckIcon className="h-3 w-3 mr-1" />
+                    Verified
+                  </Badge>
+                  <Badge className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums">
+                    8
+                  </Badge>
+                  <Badge
+                    className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums"
+                    variant="destructive"
+                  >
+                    99
+                  </Badge>
+                  <Badge
+                    className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums"
+                    variant="outline"
+                  >
+                    20+
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Terminal-related Examples */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">터미널 관련 예제</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">PowerShell</Badge>
+                  <Badge variant="secondary">Bash</Badge>
+                  <Badge variant="outline">WSL</Badge>
+                  <Badge className="bg-green-500 text-white dark:bg-green-600">Running</Badge>
+                  <Badge className="bg-yellow-500 text-white dark:bg-yellow-600">Idle</Badge>
+                  <Badge variant="destructive">Error</Badge>
+                  <Badge variant="outline">Dev Mode</Badge>
+                </div>
+              </div>
+
+              {/* Usage Note */}
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">Rusterm에서 사용 예정</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  이 컴포넌트는 다음과 같은 곳에서 사용될 예정입니다:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>탭 상태 표시 (Running, Idle, Error)</li>
+                  <li>프로필 타입 표시 (PowerShell, Bash, WSL)</li>
+                  <li>설정 카테고리 레이블</li>
+                  <li>알림 개수 표시</li>
+                  <li>개발 모드 표시</li>
                 </ul>
               </div>
             </div>
