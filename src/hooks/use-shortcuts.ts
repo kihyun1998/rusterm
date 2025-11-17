@@ -38,7 +38,7 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
   // Settings store
   const settings = useSettingsStore((state) => state.settings);
-  const updateSettings = useSettingsStore((state) => state.updateSettings);
+  const updateTerminalSettings = useSettingsStore((state) => state.updateTerminalSettings);
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -168,8 +168,9 @@ export function useShortcuts(options: UseShortcutsOptions) {
       // Ctrl/Cmd + +: Increase font size
       if ((e.key === '+' || e.key === '=') && modifier && !e.shiftKey) {
         e.preventDefault();
-        const newSize = Math.min(settings.fontSize + 2, 30); // Max 30
-        updateSettings({ fontSize: newSize });
+        if (!settings) return;
+        const newSize = Math.min(settings.terminal.fontSize + 2, 30); // Max 30
+        updateTerminalSettings({ fontSize: newSize });
         emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
         return;
       }
@@ -177,8 +178,9 @@ export function useShortcuts(options: UseShortcutsOptions) {
       // Ctrl/Cmd + -: Decrease font size
       if (e.key === '-' && modifier && !e.shiftKey) {
         e.preventDefault();
-        const newSize = Math.max(settings.fontSize - 2, 8); // Min 8
-        updateSettings({ fontSize: newSize });
+        if (!settings) return;
+        const newSize = Math.max(settings.terminal.fontSize - 2, 8); // Min 8
+        updateTerminalSettings({ fontSize: newSize });
         emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
         return;
       }
@@ -187,7 +189,7 @@ export function useShortcuts(options: UseShortcutsOptions) {
       if (e.key === '0' && modifier) {
         e.preventDefault();
         const defaultSize = 14;
-        updateSettings({ fontSize: defaultSize });
+        updateTerminalSettings({ fontSize: defaultSize });
         emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: defaultSize });
         return;
       }
@@ -200,5 +202,14 @@ export function useShortcuts(options: UseShortcutsOptions) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
-  }, [tabs, activeTabId, addTab, closeTab, setActiveTab, settings, updateSettings, onOpenSettings]);
+  }, [
+    tabs,
+    activeTabId,
+    addTab,
+    closeTab,
+    setActiveTab,
+    settings,
+    updateTerminalSettings,
+    onOpenSettings,
+  ]);
 }

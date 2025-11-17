@@ -2,11 +2,15 @@ import { Keyboard, Settings, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTabStore } from '@/stores';
 
+interface HomeProps {
+  onShowSettings?: () => void;
+}
+
 /**
  * Home component
  * Displays the welcome screen with quick actions
  */
-export function Home() {
+export function Home({ onShowSettings }: HomeProps) {
   const addTab = useTabStore((state) => state.addTab);
   const tabs = useTabStore((state) => state.tabs);
 
@@ -47,13 +51,9 @@ export function Home() {
             size="lg"
             className="h-24 flex flex-col gap-2"
             onClick={() => {
-              // Will be handled by global keyboard shortcut
-              const event = new KeyboardEvent('keydown', {
-                key: ',',
-                ctrlKey: true,
-                bubbles: true,
-              });
-              document.dispatchEvent(event);
+              if (onShowSettings) {
+                onShowSettings();
+              }
             }}
           >
             <Settings className="w-6 h-6" />
