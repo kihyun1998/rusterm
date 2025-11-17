@@ -11,6 +11,7 @@ RusTerm은 Tauri 2 기반의 크로스 플랫폼 터미널 에뮬레이터입니
 - **Terminal**: xterm.js (@xterm/xterm)
 - **State Management**: Zustand
 - **Theming**: next-themes
+- **Package Manager**: pnpm
 
 ## 프로젝트 구조
 
@@ -18,7 +19,7 @@ RusTerm은 Tauri 2 기반의 크로스 플랫폼 터미널 에뮬레이터입니
 rusterm/
 ├── src/                          # React 프론트엔드
 │   ├── components/
-│   │   ├── ui/                   # Shadcn/ui 컴포넌트
+│   │   ├── ui/                   # Shadcn/ui 컴포넌트 (📄 [상세 문서](src/components/ui/CLAUDE.md))
 │   │   ├── layout/               # 레이아웃 컴포넌트
 │   │   │   ├── MainLayout.tsx
 │   │   │   ├── TitleBar.tsx
@@ -74,6 +75,7 @@ rusterm/
    - Shadcn/ui 기반 (Radix UI + Tailwind CSS)
    - `src/components/ui/`에 위치
    - 다크모드 지원 (next-themes)
+   - 📄 **[공통 컴포넌트 상세 가이드](src/components/ui/CLAUDE.md)** 참고
 
 ### Backend (Rust)
 
@@ -100,13 +102,13 @@ rusterm/
 
 ```bash
 # 의존성 설치
-npm install
+pnpm install
 
 # 개발 서버 실행
-npm run tauri dev
+pnpm tauri dev
 
 # 프로덕션 빌드
-npm run tauri build
+pnpm tauri build
 ```
 
 ### 코드 스타일
@@ -165,13 +167,13 @@ npm run tauri build
 
 ```bash
 # TypeScript 타입 체크
-npm run build
+pnpm run build
 
 # Tauri 개발 모드
-npm run tauri dev
+pnpm tauri dev
 
 # 프로덕션 빌드
-npm run tauri build
+pnpm tauri build
 ```
 
 ### 디버깅
@@ -197,14 +199,14 @@ npm run tauri build
 
 ```bash
 # Shadcn/ui 컴포넌트 추가
-npx shadcn@latest add <component-name>
+pnpm dlx shadcn@latest add <component-name>
 
 # 의존성 업데이트
-npm update
+pnpm update
 cargo update
 
 # 린트 (설정 시)
-npm run lint
+pnpm run lint
 cargo clippy
 ```
 
