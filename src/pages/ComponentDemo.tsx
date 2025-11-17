@@ -14,7 +14,24 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { useState } from 'react';
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from '@/components/ui/command';
+import {
+  PlusIcon,
+  Cross2Icon,
+  GearIcon,
+  CodeIcon,
+} from '@radix-ui/react-icons';
+import { useState, useEffect } from 'react';
 
 interface ComponentDemoProps {
   onBack: () => void;
@@ -29,6 +46,19 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
   const [bookmarksChecked, setBookmarksChecked] = useState(true);
   const [urlsChecked, setUrlsChecked] = useState(false);
   const [person, setPerson] = useState('pedro');
+  const [commandDialogOpen, setCommandDialogOpen] = useState(false);
+
+  // Ctrl+K to open command dialog demo
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setCommandDialogOpen((open) => !open);
+      }
+    };
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
 
   return (
     <div className="h-screen overflow-auto bg-background">
@@ -164,16 +194,118 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
             </div>
           </section>
 
-          {/* Placeholder for future components */}
-          <section className="opacity-50">
+          {/* Command Demo */}
+          <section>
             <div className="mb-4">
-              <h2 className="text-2xl font-semibold mb-2">Command (Coming Soon)</h2>
+              <h2 className="text-2xl font-semibold mb-2">Command</h2>
               <p className="text-sm text-muted-foreground">
-                커맨드 팔레트 컴포넌트 (Phase 4.2)
+                커맨드 팔레트 컴포넌트. 검색 가능한 명령어 리스트.
               </p>
             </div>
-            <div className="h-[150px] w-full max-w-md rounded-lg border-2 border-dashed border-border bg-muted/30 flex items-center justify-center">
-              아직 설치되지 않음
+
+            <div className="space-y-6">
+              {/* Inline Command Example */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제 (인라인)</h3>
+                <Command className="rounded-lg border shadow-md max-w-md">
+                  <CommandInput placeholder="Type a command or search..." />
+                  <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup heading="Suggestions">
+                      <CommandItem>
+                        <PlusIcon className="mr-2 h-4 w-4" />
+                        <span>New Tab</span>
+                      </CommandItem>
+                      <CommandItem>
+                        <Cross2Icon className="mr-2 h-4 w-4" />
+                        <span>Close Tab</span>
+                      </CommandItem>
+                    </CommandGroup>
+                    <CommandSeparator />
+                    <CommandGroup heading="Settings">
+                      <CommandItem>
+                        <GearIcon className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                        <CommandShortcut>Ctrl+,</CommandShortcut>
+                      </CommandItem>
+                      <CommandItem>
+                        <CodeIcon className="mr-2 h-4 w-4" />
+                        <span>Developer Tools</span>
+                        <CommandShortcut>F12</CommandShortcut>
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </div>
+
+              {/* CommandDialog Example */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">다이얼로그 형태 (모달)</h3>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Press{' '}
+                    <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                      <span className="text-xs">⌘</span>K
+                    </kbd>{' '}
+                    or click the button below
+                  </p>
+                  <Button onClick={() => setCommandDialogOpen(true)} variant="outline">
+                    Open Command Dialog (Demo)
+                  </Button>
+                </div>
+
+                <CommandDialog open={commandDialogOpen} onOpenChange={setCommandDialogOpen}>
+                  <CommandInput placeholder="Type a command or search..." />
+                  <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup heading="Suggestions">
+                      <CommandItem>
+                        <PlusIcon className="mr-2 h-4 w-4" />
+                        <span>New Tab</span>
+                        <CommandShortcut>Ctrl+Shift+T</CommandShortcut>
+                      </CommandItem>
+                      <CommandItem>
+                        <Cross2Icon className="mr-2 h-4 w-4" />
+                        <span>Close Tab</span>
+                        <CommandShortcut>Ctrl+Shift+W</CommandShortcut>
+                      </CommandItem>
+                    </CommandGroup>
+                    <CommandSeparator />
+                    <CommandGroup heading="Settings">
+                      <CommandItem>
+                        <GearIcon className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                        <CommandShortcut>Ctrl+,</CommandShortcut>
+                      </CommandItem>
+                      <CommandItem>
+                        <CodeIcon className="mr-2 h-4 w-4" />
+                        <span>Developer Tools</span>
+                        <CommandShortcut>F12</CommandShortcut>
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </CommandDialog>
+              </div>
+
+              {/* Usage Note */}
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">전역 커맨드 팔레트 사용 중</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  이 컴포넌트는 <code className="bg-background px-1.5 py-0.5 rounded">CommandPalette</code>로 전역에서 사용되고 있습니다.
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    Ctrl+Shift+P
+                  </kbd>{' '}
+                  를 눌러 전역 커맨드 팔레트를 열 수 있습니다.
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>탭 관리 (New Tab, Close Tab, Next/Previous Tab)</li>
+                  <li>터미널 작업 (Clear, Copy, Paste, Select All)</li>
+                  <li>설정 (Settings, Theme, Font Size)</li>
+                  <li>개발자 도구 (DevTools, Demo, Reload)</li>
+                </ul>
+              </div>
             </div>
           </section>
         </div>

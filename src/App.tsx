@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import ComponentDemo from '@/pages/ComponentDemo';
+import { CommandPalette } from '@/components/command/CommandPalette';
 import { useTabStore } from '@/stores';
 import { isDevelopment } from '@/config';
 
@@ -25,12 +26,17 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-background">
-      <MainLayout
-        showDemoButton={isDevelopment}
-        onDemoClick={() => setShowDemo(true)}
-      />
-    </div>
+    <>
+      <div className="h-screen w-screen overflow-hidden bg-background">
+        <MainLayout
+          showDemoButton={isDevelopment}
+          onDemoClick={() => setShowDemo(true)}
+        />
+      </div>
+
+      {/* Global Command Palette */}
+      <CommandPalette onShowDemo={() => setShowDemo(true)} />
+    </>
   );
 }
 

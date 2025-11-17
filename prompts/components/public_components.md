@@ -36,8 +36,17 @@ MCP 도구 사용 방법:
 ### 2. command
 - **용도**: 커맨드 팔레트 (Phase 4.2)
 - **설치**: `npx shadcn@latest add command`
-- **파일**: `src/components/ui/command.tsx`
-- **상태**: ⏳ 다음 단계
+- **파일**:
+  - `src/components/ui/command.tsx` ✅
+  - `src/components/command/CommandPalette.tsx` ✅
+- **상태**: ✅ **완료** (구현 완료 및 데모 페이지 추가됨)
+- **기능**:
+  - 전역 커맨드 팔레트 (Ctrl+Shift+P)
+  - 탭 관리 (New Tab, Close Tab, Next/Previous Tab)
+  - 터미널 작업 (Clear, Copy, Paste, Select All)
+  - 설정 (Settings, Theme Toggle, Font Size)
+  - 개발자 도구 (DevTools, Demo, Reload)
+- **데모**: 개발 모드에서 타이틀바 "Demo" 버튼 → Command 섹션
 
 ---
 
@@ -46,7 +55,8 @@ MCP 도구 사용 방법:
 ### 3. dialog
 - **용도**: 설정 다이얼로그 모달 (Phase 5.2)
 - **설치**: `npx shadcn@latest add dialog`
-- **파일**: `src/components/ui/dialog.tsx`
+- **파일**: `src/components/ui/dialog.tsx` ✅
+- **상태**: ✅ **설치됨** (command 설치 시 자동 설치됨, 데모 대기 중)
 
 ### 4. tabs
 - **용도**: 설정 다이얼로그 내부 탭 (Appearance, Profiles, Keybindings)
@@ -448,8 +458,8 @@ src/
 │   ├── ui/                          # shadcn/ui 컴포넌트
 │   │   ├── button.tsx               # ✅ 이미 존재
 │   │   ├── context-menu.tsx         # ✅ 완료
-│   │   ├── command.tsx              # ⏳ 추가 필요
-│   │   ├── dialog.tsx               # ⏳ 추가 필요
+│   │   ├── command.tsx              # ✅ 완료
+│   │   ├── dialog.tsx               # ✅ 설치됨
 │   │   ├── tabs.tsx                 # ⏳ 추가 필요
 │   │   ├── select.tsx               # ⏳ 추가 필요
 │   │   ├── input.tsx                # ⏳ 추가 필요
@@ -463,8 +473,10 @@ src/
 │   │   ├── badge.tsx                # ⏳ 추가 필요
 │   │   ├── card.tsx                 # ⏳ 추가 필요
 │   │   └── scroll-area.tsx          # ⏳ 추가 필요
-│   └── menu/
-│       └── TerminalContextMenu.tsx  # ✅ 완료 (context-menu 사용 중)
+│   ├── menu/
+│   │   └── TerminalContextMenu.tsx  # ✅ 완료 (context-menu 사용 중)
+│   └── command/
+│       └── CommandPalette.tsx       # ✅ 완료 (전역 커맨드 팔레트)
 ├── pages/
 │   └── ComponentDemo.tsx            # ✅ 완료
 ├── config.ts                        # ✅ 완료 (개발 모드 플래그)
