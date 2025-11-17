@@ -1,6 +1,6 @@
-import { useTabStore } from '@/stores';
-import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useTabStore } from '@/stores';
 
 /**
  * TabBar component
@@ -48,9 +48,7 @@ export function TabBar() {
             `}
           >
             {/* Tab title */}
-            <span className="flex-1 text-sm truncate select-none">
-              {tab.title}
-            </span>
+            <span className="flex-1 text-sm truncate select-none">{tab.title}</span>
 
             {/* Close button (only for closable tabs) */}
             {tab.closable && (

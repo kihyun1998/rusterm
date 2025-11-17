@@ -8,16 +8,14 @@ export function SettingsExample() {
   const resetSettings = useSettingsStore((state) => state.resetSettings);
 
   const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateSettings({ fontSize: parseInt(e.target.value) || 14 });
+    updateSettings({ fontSize: parseInt(e.target.value, 10) || 14 });
   };
 
   const handleFontFamilyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateSettings({ fontFamily: e.target.value });
   };
 
-  const handleCursorStyleChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
+  const handleCursorStyleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     updateSettings({
       cursorStyle: e.target.value as 'block' | 'underline' | 'bar',
     });
@@ -111,12 +109,14 @@ export function SettingsExample() {
         <div className="space-y-2">
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={applyDarkTheme}
               className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700"
             >
               Dark Theme
             </button>
             <button
+              type="button"
               onClick={applyLightTheme}
               className="px-4 py-2 bg-white text-black border rounded hover:bg-gray-100"
             >
@@ -124,17 +124,23 @@ export function SettingsExample() {
             </button>
           </div>
 
-          <div className="p-4 rounded" style={{
-            backgroundColor: settings.theme.background,
-            color: settings.theme.foreground,
-          }}>
+          <div
+            className="p-4 rounded"
+            style={{
+              backgroundColor: settings.theme.background,
+              color: settings.theme.foreground,
+            }}
+          >
             <p style={{ fontFamily: settings.fontFamily, fontSize: settings.fontSize }}>
               Terminal Preview: Hello, World!
             </p>
-            <div className="mt-2 h-4 w-2" style={{
-              backgroundColor: settings.theme.cursor,
-              animation: settings.cursorBlink ? 'blink 1s infinite' : 'none',
-            }} />
+            <div
+              className="mt-2 h-4 w-2"
+              style={{
+                backgroundColor: settings.theme.cursor,
+                animation: settings.cursorBlink ? 'blink 1s infinite' : 'none',
+              }}
+            />
           </div>
         </div>
       </div>
@@ -142,6 +148,7 @@ export function SettingsExample() {
       {/* Reset Button */}
       <div className="mt-6">
         <button
+          type="button"
           onClick={resetSettings}
           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
         >
@@ -152,9 +159,7 @@ export function SettingsExample() {
       {/* Current Settings (Debug) */}
       <div className="mt-6 p-4 bg-gray-50 rounded">
         <h4 className="font-semibold mb-2">Current Settings (Debug)</h4>
-        <pre className="text-xs overflow-auto">
-          {JSON.stringify(settings, null, 2)}
-        </pre>
+        <pre className="text-xs overflow-auto">{JSON.stringify(settings, null, 2)}</pre>
       </div>
 
       <style>{`

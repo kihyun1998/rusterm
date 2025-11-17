@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
-import ComponentDemo from '@/pages/ComponentDemo';
 import { CommandPalette } from '@/components/command/CommandPalette';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { isDevelopment } from '@/config';
 import { useShortcuts } from '@/hooks/use-shortcuts';
+import ComponentDemo from '@/pages/ComponentDemo';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
@@ -23,10 +23,7 @@ function App() {
   return (
     <>
       <div className="h-screen w-screen overflow-hidden bg-background">
-        <MainLayout
-          showDemoButton={isDevelopment}
-          onDemoClick={() => setShowDemo(true)}
-        />
+        <MainLayout showDemoButton={isDevelopment} onDemoClick={() => setShowDemo(true)} />
       </div>
 
       {/* Global Command Palette */}

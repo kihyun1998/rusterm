@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
 import {
-  PlusIcon,
-  Cross2Icon,
-  ReloadIcon,
-  GearIcon,
-  MoonIcon,
-  SunIcon,
-  FontSizeIcon,
+  ClipboardIcon,
   CodeIcon,
   CopyIcon,
-  ClipboardIcon,
-  TextAlignJustifyIcon,
+  Cross2Icon,
   EraserIcon,
+  FontSizeIcon,
+  GearIcon,
+  MoonIcon,
+  PlusIcon,
+  ReloadIcon,
+  SunIcon,
+  TextAlignJustifyIcon,
 } from '@radix-ui/react-icons';
+import { useEffect, useState } from 'react';
 
 import {
   CommandDialog,
@@ -24,12 +24,12 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@/components/ui/command';
+import { isDevelopment } from '@/config';
+import { useClipboard } from '@/hooks/use-clipboard';
+import { useTheme } from '@/hooks/use-theme';
+import { emitTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 import { useTabStore } from '@/stores';
 import { useSettingsStore } from '@/stores/use-settings-store';
-import { useTheme } from '@/hooks/use-theme';
-import { useClipboard } from '@/hooks/use-clipboard';
-import { emitTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
-import { isDevelopment } from '@/config';
 
 interface CommandPaletteProps {
   onShowDemo?: () => void;
@@ -89,7 +89,7 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
   const handleCloseTab = () => {
     if (activeTabId) {
       const activeTab = tabs.find((t) => t.id === activeTabId);
-      if (activeTab && activeTab.closable) {
+      if (activeTab?.closable) {
         closeTab(activeTabId);
       }
     }
@@ -192,26 +192,17 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
             <span>New Tab</span>
             <CommandShortcut>Ctrl+Shift+T</CommandShortcut>
           </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(handleCloseTab)}
-            disabled={tabs.length === 0}
-          >
+          <CommandItem onSelect={() => runCommand(handleCloseTab)} disabled={tabs.length === 0}>
             <Cross2Icon className="mr-2 h-4 w-4" />
             <span>Close Tab</span>
             <CommandShortcut>Ctrl+Shift+W</CommandShortcut>
           </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(handleNextTab)}
-            disabled={tabs.length <= 1}
-          >
+          <CommandItem onSelect={() => runCommand(handleNextTab)} disabled={tabs.length <= 1}>
             <span className="mr-2">→</span>
             <span>Next Tab</span>
             <CommandShortcut>Ctrl+Tab</CommandShortcut>
           </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(handlePreviousTab)}
-            disabled={tabs.length <= 1}
-          >
+          <CommandItem onSelect={() => runCommand(handlePreviousTab)} disabled={tabs.length <= 1}>
             <span className="mr-2">←</span>
             <span>Previous Tab</span>
             <CommandShortcut>Ctrl+Shift+Tab</CommandShortcut>

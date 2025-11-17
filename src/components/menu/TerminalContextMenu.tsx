@@ -1,5 +1,6 @@
-import { useCallback, useState, type ReactNode, type RefObject } from 'react';
-import { Terminal as XTerm } from '@xterm/xterm';
+import type { Terminal as XTerm } from '@xterm/xterm';
+import { ClipboardPaste, Copy, Eraser, TextSelect } from 'lucide-react';
+import { type ReactNode, type RefObject, useCallback, useState } from 'react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -8,7 +9,6 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Copy, ClipboardPaste, TextSelect, Eraser } from 'lucide-react';
 import { useClipboard } from '@/hooks/use-clipboard';
 
 interface TerminalContextMenuProps {
@@ -21,22 +21,21 @@ interface TerminalContextMenuProps {
  * Context menu for terminal operations
  * Provides copy, paste, select all, and clear functionality
  */
-export function TerminalContextMenu({
-  terminalRef,
-  onPaste,
-  children,
-}: TerminalContextMenuProps) {
+export function TerminalContextMenu({ terminalRef, onPaste, children }: TerminalContextMenuProps) {
   const { copyToClipboard, pasteFromClipboard } = useClipboard();
   const [hasSelection, setHasSelection] = useState(false);
 
   /**
    * Update selection state when context menu opens
    */
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (open && terminalRef.current) {
-      setHasSelection(terminalRef.current.hasSelection());
-    }
-  }, [terminalRef]);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && terminalRef.current) {
+        setHasSelection(terminalRef.current.hasSelection());
+      }
+    },
+    [terminalRef]
+  );
 
   /**
    * Copy selected text to clipboard
@@ -106,14 +105,9 @@ export function TerminalContextMenu({
 
   return (
     <ContextMenu onOpenChange={handleOpenChange}>
-      <ContextMenuTrigger asChild>
-        {children}
-      </ContextMenuTrigger>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem
-          onClick={handleCopy}
-          disabled={!hasSelection}
-        >
+        <ContextMenuItem onClick={handleCopy} disabled={!hasSelection}>
           <Copy className="mr-2 h-4 w-4" />
           <span>복사</span>
           <ContextMenuShortcut>Ctrl+Shift+C</ContextMenuShortcut>

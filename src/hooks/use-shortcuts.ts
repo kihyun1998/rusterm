@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
+import { emitTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 import { useTabStore } from '@/stores';
 import { useSettingsStore } from '@/stores/use-settings-store';
-import { emitTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 
 /**
  * Options for the useShortcuts hook
@@ -50,15 +50,11 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
       // Check if target is xterm's internal textarea
       const isXtermTextarea =
-        target.classList?.contains('xterm-helper-textarea') ||
-        target.closest('.xterm');
+        target.classList?.contains('xterm-helper-textarea') || target.closest('.xterm');
 
       const isInputField =
-        !isXtermTextarea && (
-          target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable
-        );
+        !isXtermTextarea &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
 
       // ========== Terminal Actions (Process BEFORE input field check) ==========
 
@@ -125,7 +121,7 @@ export function useShortcuts(options: UseShortcutsOptions) {
         e.preventDefault();
         if (activeTabId) {
           const activeTab = tabs.find((t) => t.id === activeTabId);
-          if (activeTab && activeTab.closable) {
+          if (activeTab?.closable) {
             closeTab(activeTabId);
           }
         }
@@ -204,14 +200,5 @@ export function useShortcuts(options: UseShortcutsOptions) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
-  }, [
-    tabs,
-    activeTabId,
-    addTab,
-    closeTab,
-    setActiveTab,
-    settings,
-    updateSettings,
-    onOpenSettings,
-  ]);
+  }, [tabs, activeTabId, addTab, closeTab, setActiveTab, settings, updateSettings, onOpenSettings]);
 }

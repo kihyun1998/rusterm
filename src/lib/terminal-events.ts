@@ -12,7 +12,7 @@ export const TERMINAL_EVENTS = {
   UPDATE_FONT_SIZE: 'terminal:update-font-size',
 } as const;
 
-export type TerminalEventType = typeof TERMINAL_EVENTS[keyof typeof TERMINAL_EVENTS];
+export type TerminalEventType = (typeof TERMINAL_EVENTS)[keyof typeof TERMINAL_EVENTS];
 
 export interface TerminalEventDetail {
   [TERMINAL_EVENTS.PASTE]: { text: string };

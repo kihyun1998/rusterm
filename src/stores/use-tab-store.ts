@@ -80,9 +80,7 @@ export const useTabStore = create<TabState>((set) => ({
 
   updateTab: (id, updates) =>
     set((state) => ({
-      tabs: state.tabs.map((tab) =>
-        tab.id === id ? { ...tab, ...updates } : tab
-      ),
+      tabs: state.tabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab)),
     })),
 
   closeTab: (id) =>

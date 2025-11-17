@@ -1,8 +1,8 @@
-import { TitleBar } from './TitleBar';
-import { TabBar } from './TabBar';
-import { Terminal } from '@/components/terminal/Terminal';
 import { Home } from '@/components/home/Home';
+import { Terminal } from '@/components/terminal/Terminal';
 import { useTabStore } from '@/stores';
+import { TabBar } from './TabBar';
+import { TitleBar } from './TitleBar';
 
 interface MainLayoutProps {
   showDemoButton?: boolean;

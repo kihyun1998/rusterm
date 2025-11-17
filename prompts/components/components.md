@@ -95,11 +95,11 @@
   - Terminal.tsx 이벤트 리스너 통합
 
 ### 4.3 키보드 단축키
-- [ ] `src/hooks/use-shortcuts.ts` 훅
+- [x] `src/hooks/use-shortcuts.ts` 훅
   - Ctrl+T: 새 탭
   - Ctrl+W: 탭 닫기
   - Ctrl+Shift+F: 검색
-- [ ] 전역 단축키 등록
+- [x] 전역 단축키 등록
 
 ---
 

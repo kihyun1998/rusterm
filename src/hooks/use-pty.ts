@@ -1,11 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import type {
-  CreatePtyResponse,
-  PtyOutputEvent,
-  PtyExitEvent,
-} from '@/types/pty';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CreatePtyResponse, PtyExitEvent, PtyOutputEvent } from '@/types/pty';
 
 interface UsePtyOptions {
   onOutput?: (data: string) => void;
@@ -61,8 +57,8 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       // Call Tauri command to create PTY
       const response = await invoke<CreatePtyResponse>('create_pty', {
         shell: null, // Use default shell
-        cwd: null,   // Use default working directory
-        env: null,   // Use default environment
+        cwd: null, // Use default working directory
+        env: null, // Use default environment
         cols,
         rows,
       });
@@ -83,17 +79,13 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
       outputUnlistenRef.current = outputUnlisten;
 
       // Set up exit event listener
-      const exitUnlisten = await listen<PtyExitEvent>(
-        `pty-exit-${response.pty_id}`,
-        (event) => {
-          setIsConnected(false);
-          if (onExitRef.current) {
-            onExitRef.current(event.payload.exit_code);
-          }
+      const exitUnlisten = await listen<PtyExitEvent>(`pty-exit-${response.pty_id}`, (event) => {
+        setIsConnected(false);
+        if (onExitRef.current) {
+          onExitRef.current(event.payload.exit_code);
         }
-      );
+      });
       exitUnlistenRef.current = exitUnlisten;
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(errorMessage);

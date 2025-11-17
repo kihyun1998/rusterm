@@ -1,3 +1,5 @@
+import { Moon, Sun } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -7,12 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/stores';
-import { Moon, Sun } from 'lucide-react';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -58,9 +58,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>
-            Customize your terminal appearance
-          </DialogDescription>
+          <DialogDescription>Customize your terminal appearance</DialogDescription>
         </DialogHeader>
 
         <div className="py-6">
@@ -73,16 +71,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               )}
               <div className="space-y-0.5">
                 <Label htmlFor="theme-toggle">Theme</Label>
-                <p className="text-sm text-muted-foreground">
-                  {isDark ? 'Dark' : 'Light'}
-                </p>
+                <p className="text-sm text-muted-foreground">{isDark ? 'Dark' : 'Light'}</p>
               </div>
             </div>
-            <Switch
-              id="theme-toggle"
-              checked={isDark}
-              onCheckedChange={handleThemeToggle}
-            />
+            <Switch id="theme-toggle" checked={isDark} onCheckedChange={handleThemeToggle} />
           </div>
         </div>
 

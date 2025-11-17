@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useEffect, useState } from 'react';
 import type { Platform, UseWindowControlsReturn } from '@/types/window';
 
 /**

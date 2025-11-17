@@ -7,8 +7,7 @@
 
   // 저장 시 code action 실행 (import 정리 등)
   "editor.codeActionsOnSave": {
-    "quickfix.biome": "explicit",
-    "source.organizeImports.biome": "explicit"
+    "source.fixAll.biome": "explicit"
   },
 
   // TypeScript/JavaScript 파일에 대한 설정

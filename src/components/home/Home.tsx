@@ -1,6 +1,6 @@
-import { useTabStore } from '@/stores';
+import { Keyboard, Settings, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Terminal, Settings, Keyboard } from 'lucide-react';
+import { useTabStore } from '@/stores';
 
 /**
  * Home component
@@ -26,9 +26,7 @@ export function Home() {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">RusTerm</h1>
-          <p className="text-lg text-muted-foreground">
-            Modern Terminal Emulator
-          </p>
+          <p className="text-lg text-muted-foreground">Modern Terminal Emulator</p>
         </div>
 
         {/* Quick Actions */}

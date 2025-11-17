@@ -1,6 +1,6 @@
-import { WindowControls } from './WindowControls';
-import { useWindowControls } from '@/hooks/use-window-controls';
 import { Button } from '@/components/ui/button';
+import { useWindowControls } from '@/hooks/use-window-controls';
+import { WindowControls } from './WindowControls';
 
 interface TitleBarProps {
   showDemoButton?: boolean;
@@ -44,12 +44,7 @@ export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
       {/* Center section: Dev tools (development mode only) */}
       {showDemoButton && (
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onDemoClick}
-            className="h-6 px-2 text-xs"
-          >
+          <Button variant="outline" size="sm" onClick={onDemoClick} className="h-6 px-2 text-xs">
             Demo
           </Button>
         </div>

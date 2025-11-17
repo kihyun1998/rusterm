@@ -1,0 +1,7 @@
+# CSS files (Tailwind 4 syntax not supported by Biome)
+*.css
+src/globals.css
+
+# Build outputs
+dist/
+build/

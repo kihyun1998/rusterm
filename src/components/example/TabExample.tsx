@@ -50,10 +50,7 @@ export function TabExample() {
               cursor-pointer
             `}
           >
-            <span
-              onClick={() => setActiveTab(tab.id)}
-              className="flex-1"
-            >
+            <span onClick={() => setActiveTab(tab.id)} className="flex-1">
               {tab.title}
             </span>
 
@@ -81,9 +78,7 @@ export function TabExample() {
 
       {activeTabId && (
         <div className="mt-4 p-4 bg-gray-50 rounded">
-          <p className="text-sm text-gray-600">
-            Active Tab ID: {activeTabId}
-          </p>
+          <p className="text-sm text-gray-600">Active Tab ID: {activeTabId}</p>
         </div>
       )}
 

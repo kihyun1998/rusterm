@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
-import { usePty } from '@/hooks/use-pty';
-import { getTerminalConfig } from '@/lib/xterm-config';
+import { Terminal as XTerm } from '@xterm/xterm';
+import { useEffect, useRef, useState } from 'react';
 import { TerminalContextMenu } from '@/components/menu/TerminalContextMenu';
-import { TERMINAL_EVENTS, listenTerminalEvent } from '@/lib/terminal-events';
 import { useClipboard } from '@/hooks/use-clipboard';
+import { usePty } from '@/hooks/use-pty';
+import { listenTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
+import { getTerminalConfig } from '@/lib/xterm-config';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -43,9 +43,10 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     onExit: (exitCode) => {
       // Display exit message
       if (xtermRef.current) {
-        const message = exitCode !== null
-          ? `\r\n\x1b[1;33m[Process exited with code ${exitCode}]\x1b[0m\r\n`
-          : `\r\n\x1b[1;33m[Process terminated]\x1b[0m\r\n`;
+        const message =
+          exitCode !== null
+            ? `\r\n\x1b[1;33m[Process exited with code ${exitCode}]\x1b[0m\r\n`
+            : `\r\n\x1b[1;33m[Process terminated]\x1b[0m\r\n`;
         xtermRef.current.write(message);
       }
     },
@@ -294,15 +295,8 @@ export function Terminal({ id, className = '' }: TerminalProps) {
 
   return (
     <div ref={wrapperRef} className="w-full h-full bg-[#1e1e1e] p-2">
-      <TerminalContextMenu
-        terminalRef={xtermRef}
-        onPaste={(text) => writeToPty(text)}
-      >
-        <div
-          ref={terminalRef}
-          className={`w-full h-full ${className}`}
-          data-terminal-id={id}
-        />
+      <TerminalContextMenu terminalRef={xtermRef} onPaste={(text) => writeToPty(text)}>
+        <div ref={terminalRef} className={`w-full h-full ${className}`} data-terminal-id={id} />
       </TerminalContextMenu>
     </div>
   );

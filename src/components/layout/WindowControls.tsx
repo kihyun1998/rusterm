@@ -1,4 +1,4 @@
-import { Minus, Square, Copy, X } from 'lucide-react';
+import { Copy, Minus, Square, X } from 'lucide-react';
 import { useWindowControls } from '@/hooks/use-window-controls';
 import type { Platform } from '@/types/window';
 
@@ -19,11 +19,7 @@ export function WindowControls() {
     },
     {
       type: 'maximize' as const,
-      icon: isMaximized ? (
-        <Copy className="w-3.5 h-3.5" />
-      ) : (
-        <Square className="w-3.5 h-3.5" />
-      ),
+      icon: isMaximized ? <Copy className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />,
       onClick: toggleMaximize,
       ariaLabel: isMaximized ? 'Restore window' : 'Maximize window',
     },
@@ -39,7 +35,9 @@ export function WindowControls() {
   const orderedButtons = getOrderedButtons(buttons, platform);
 
   return (
-    <div className={`flex items-center h-full ${platform === 'macos' ? 'order-first ml-2' : 'order-last -mr-2'}`}>
+    <div
+      className={`flex items-center h-full ${platform === 'macos' ? 'order-first ml-2' : 'order-last -mr-2'}`}
+    >
       {orderedButtons.map((button) => (
         <button
           key={button.type}
