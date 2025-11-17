@@ -55,33 +55,50 @@ MCP 도구 사용 방법:
 ### 3. dialog
 - **용도**: 설정 다이얼로그 모달 (Phase 5.2)
 - **설치**: `npx shadcn@latest add dialog`
-- **파일**: `src/components/ui/dialog.tsx` ✅
-- **상태**: ✅ **설치됨** (command 설치 시 자동 설치됨, 데모 대기 중)
+- **파일**:
+  - `src/components/ui/dialog.tsx` ✅
+  - `src/components/ui/alert-dialog.tsx` ✅
+  - `src/components/settings/SettingsDialog.tsx` ✅
+  - `src/components/settings/AppearanceTab.tsx` ✅
+  - `src/components/settings/AdvancedTab.tsx` ✅
+  - `src/components/settings/AboutTab.tsx` ✅
+- **상태**: ✅ **완료** (설정 다이얼로그 구현 완료)
+- **기능**:
+  - SettingsDialog: Tabs로 설정 섹션 분리
+  - AppearanceTab: Font, Cursor, Theme 설정
+  - AdvancedTab: Shell, Scrollback 설정
+  - AboutTab: 버전 정보, AlertDialog로 설정 리셋
+- **데모**: 개발 모드에서 타이틀바 "Demo" 버튼 → Dialog 섹션
 
 ### 4. tabs
-- **용도**: 설정 다이얼로그 내부 탭 (Appearance, Profiles, Keybindings)
+- **용도**: 설정 다이얼로그 내부 탭 (Appearance, Advanced, About)
 - **설치**: `npx shadcn@latest add tabs`
-- **파일**: `src/components/ui/tabs.tsx`
+- **파일**: `src/components/ui/tabs.tsx` ✅
+- **상태**: ✅ **완료** (SettingsDialog에서 사용 중)
 
 ### 5. select
-- **용도**: 테마/프로필 선택 드롭다운
+- **용도**: Cursor Style 선택 드롭다운
 - **설치**: `npx shadcn@latest add select`
-- **파일**: `src/components/ui/select.tsx`
+- **파일**: `src/components/ui/select.tsx` ✅
+- **상태**: ✅ **완료** (AppearanceTab에서 사용 중)
 
 ### 6. input
-- **용도**: 폰트 크기, 경로 입력 필드
+- **용도**: Font Size, Font Family, Shell 등 입력 필드
 - **설치**: `npx shadcn@latest add input`
-- **파일**: `src/components/ui/input.tsx`
+- **파일**: `src/components/ui/input.tsx` ✅
+- **상태**: ✅ **완료** (설정 폼 전반에 사용 중)
 
 ### 7. label
 - **용도**: 폼 라벨
 - **설치**: `npx shadcn@latest add label`
-- **파일**: `src/components/ui/label.tsx`
+- **파일**: `src/components/ui/label.tsx` ✅
+- **상태**: ✅ **완료** (설정 폼 전반에 사용 중)
 
 ### 8. separator
 - **용도**: 설정 섹션 구분선
 - **설치**: `npx shadcn@latest add separator`
-- **파일**: `src/components/ui/separator.tsx`
+- **파일**: `src/components/ui/separator.tsx` ✅
+- **상태**: ✅ **완료** (AppearanceTab에서 사용 중)
 
 ---
 
@@ -111,26 +128,31 @@ MCP 도구 사용 방법:
 - **용도**: 옵션 체크박스 (설정)
 - **설치**: `npx shadcn@latest add checkbox`
 - **파일**: `src/components/ui/checkbox.tsx`
+- **상태**: ⏳ 설치 필요
 
 ### 13. switch
-- **용도**: 토글 스위치 (설정 온/오프)
+- **용도**: 토글 스위치 (Cursor Blink 등)
 - **설치**: `npx shadcn@latest add switch`
-- **파일**: `src/components/ui/switch.tsx`
+- **파일**: `src/components/ui/switch.tsx` ✅
+- **상태**: ✅ **완료** (AppearanceTab에서 사용 중)
 
 ### 14. badge
 - **용도**: 상태 표시 (탭 상태, 프로필 종류)
 - **설치**: `npx shadcn@latest add badge`
 - **파일**: `src/components/ui/badge.tsx`
+- **상태**: ⏳ 설치 필요
 
 ### 15. card
 - **용도**: 설정 그룹핑, 프리뷰 박스
 - **설치**: `npx shadcn@latest add card`
-- **파일**: `src/components/ui/card.tsx`
+- **파일**: `src/components/ui/card.tsx` ✅
+- **상태**: ✅ **완료** (설정 탭들에서 사용 중)
 
 ### 16. scroll-area
-- **용도**: 긴 리스트 스크롤 (프로필 리스트, 커맨드 팔레트)
+- **용도**: 긴 리스트 스크롤 (설정 다이얼로그)
 - **설치**: `npx shadcn@latest add scroll-area`
-- **파일**: `src/components/ui/scroll-area.tsx`
+- **파일**: `src/components/ui/scroll-area.tsx` ✅
+- **상태**: ✅ **완료** (설정 탭들에서 사용 중)
 
 ---
 
@@ -459,24 +481,30 @@ src/
 │   │   ├── button.tsx               # ✅ 이미 존재
 │   │   ├── context-menu.tsx         # ✅ 완료
 │   │   ├── command.tsx              # ✅ 완료
-│   │   ├── dialog.tsx               # ✅ 설치됨
-│   │   ├── tabs.tsx                 # ⏳ 추가 필요
-│   │   ├── select.tsx               # ⏳ 추가 필요
-│   │   ├── input.tsx                # ⏳ 추가 필요
-│   │   ├── label.tsx                # ⏳ 추가 필요
-│   │   ├── separator.tsx            # ⏳ 추가 필요
+│   │   ├── dialog.tsx               # ✅ 완료
+│   │   ├── alert-dialog.tsx         # ✅ 완료
+│   │   ├── tabs.tsx                 # ✅ 완료
+│   │   ├── select.tsx               # ✅ 완료
+│   │   ├── input.tsx                # ✅ 완료
+│   │   ├── label.tsx                # ✅ 완료
+│   │   ├── separator.tsx            # ✅ 완료
+│   │   ├── switch.tsx               # ✅ 완료
+│   │   ├── card.tsx                 # ✅ 완료
+│   │   ├── scroll-area.tsx          # ✅ 완료
 │   │   ├── sonner.tsx               # ⏳ 추가 필요
 │   │   ├── skeleton.tsx             # ⏳ 추가 필요
 │   │   ├── dropdown-menu.tsx        # ⏳ 추가 필요
 │   │   ├── checkbox.tsx             # ⏳ 추가 필요
-│   │   ├── switch.tsx               # ⏳ 추가 필요
-│   │   ├── badge.tsx                # ⏳ 추가 필요
-│   │   ├── card.tsx                 # ⏳ 추가 필요
-│   │   └── scroll-area.tsx          # ⏳ 추가 필요
+│   │   └── badge.tsx                # ⏳ 추가 필요
 │   ├── menu/
 │   │   └── TerminalContextMenu.tsx  # ✅ 완료 (context-menu 사용 중)
-│   └── command/
-│       └── CommandPalette.tsx       # ✅ 완료 (전역 커맨드 팔레트)
+│   ├── command/
+│   │   └── CommandPalette.tsx       # ✅ 완료 (전역 커맨드 팔레트)
+│   └── settings/
+│       ├── SettingsDialog.tsx       # ✅ 완료 (메인 설정 다이얼로그)
+│       ├── AppearanceTab.tsx        # ✅ 완료 (Font, Cursor, Theme)
+│       ├── AdvancedTab.tsx          # ✅ 완료 (Shell, Scrollback)
+│       └── AboutTab.tsx             # ✅ 완료 (버전 정보, Reset)
 ├── pages/
 │   └── ComponentDemo.tsx            # ✅ 완료
 ├── config.ts                        # ✅ 완료 (개발 모드 플래그)

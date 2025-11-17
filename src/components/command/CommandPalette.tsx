@@ -29,9 +29,10 @@ import { isDevelopment } from '@/config';
 
 interface CommandPaletteProps {
   onShowDemo?: () => void;
+  onShowSettings?: () => void;
 }
 
-export function CommandPalette({ onShowDemo }: CommandPaletteProps) {
+export function CommandPalette({ onShowDemo, onShowSettings }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
 
   // Tab management store
@@ -117,8 +118,9 @@ export function CommandPalette({ onShowDemo }: CommandPaletteProps) {
 
   // Settings handlers
   const handleOpenSettings = () => {
-    // TODO: Implement settings dialog
-    console.log('Open settings');
+    if (onShowSettings) {
+      onShowSettings();
+    }
   };
 
   const handleToggleTheme = () => {

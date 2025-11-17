@@ -31,6 +31,40 @@ import {
   GearIcon,
   CodeIcon,
 } from '@radix-ui/react-icons';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 
 interface ComponentDemoProps {
@@ -47,6 +81,11 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
   const [urlsChecked, setUrlsChecked] = useState(false);
   const [person, setPerson] = useState('pedro');
   const [commandDialogOpen, setCommandDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [alertDialogOpen, setAlertDialogOpen] = useState(false);
+  const [selectValue, setSelectValue] = useState('apple');
+  const [switchChecked, setSwitchChecked] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
   // Ctrl+K to open command dialog demo
   useEffect(() => {
@@ -305,6 +344,379 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
                   <li>설정 (Settings, Theme, Font Size)</li>
                   <li>개발자 도구 (DevTools, Demo, Reload)</li>
                 </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Dialog Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Dialog</h2>
+              <p className="text-sm text-muted-foreground">
+                모달 다이얼로그 컴포넌트. 설정, 확인 등에 사용.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Basic Dialog Example */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 Dialog</h3>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Open Dialog</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Edit profile</DialogTitle>
+                      <DialogDescription>
+                        Make changes to your profile here. Click save when you&apos;re done.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input id="name" defaultValue="Pedro Duarte" />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input id="username" defaultValue="@peduarte" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                      </DialogClose>
+                      <Button type="submit">Save changes</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* AlertDialog Example */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">AlertDialog (확인 다이얼로그)</h3>
+                <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">Delete Account</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your
+                        account and remove your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction className="bg-destructive hover:bg-destructive/90">
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+
+              {/* Usage Note */}
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">설정 다이얼로그에서 사용 중</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  이 컴포넌트는 <code className="bg-background px-1.5 py-0.5 rounded">SettingsDialog</code>에서 실제로 사용되고 있습니다.
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    Ctrl+,
+                  </kbd>{' '}
+                  를 눌러 설정 다이얼로그를 열거나, CommandPalette에서 &quot;Open Settings&quot; 명령을 선택하세요.
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>Dialog: 설정 모달 창</li>
+                  <li>Tabs: Appearance, Advanced, About 섹션 분리</li>
+                  <li>AlertDialog: 설정 리셋 확인</li>
+                  <li>Input, Label, Select, Switch: 설정 폼 요소들</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Tabs Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Tabs</h2>
+              <p className="text-sm text-muted-foreground">
+                탭 네비게이션 컴포넌트. 콘텐츠를 섹션별로 분리.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <Tabs defaultValue="account" className="w-full max-w-md">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="account">Account</TabsTrigger>
+                    <TabsTrigger value="password">Password</TabsTrigger>
+                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="account" className="space-y-2 p-4 border rounded-md mt-2">
+                    <h4 className="font-medium">Account Settings</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Make changes to your account here.
+                    </p>
+                  </TabsContent>
+                  <TabsContent value="password" className="space-y-2 p-4 border rounded-md mt-2">
+                    <h4 className="font-medium">Password Settings</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Change your password here.
+                    </p>
+                  </TabsContent>
+                  <TabsContent value="settings" className="space-y-2 p-4 border rounded-md mt-2">
+                    <h4 className="font-medium">General Settings</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Configure general preferences.
+                    </p>
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">SettingsDialog에서 사용 중</h3>
+                <p className="text-sm text-muted-foreground">
+                  설정 다이얼로그에서 Appearance, Advanced, About 섹션을 분리하는데 사용됩니다.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Select Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Select</h2>
+              <p className="text-sm text-muted-foreground">
+                드롭다운 선택 컴포넌트. 옵션 중 하나를 선택.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <div className="max-w-md space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fruit-select">Select a fruit</Label>
+                    <Select value={selectValue} onValueChange={setSelectValue}>
+                      <SelectTrigger id="fruit-select">
+                        <SelectValue placeholder="Select a fruit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="apple">Apple</SelectItem>
+                        <SelectItem value="banana">Banana</SelectItem>
+                        <SelectItem value="orange">Orange</SelectItem>
+                        <SelectItem value="grape">Grape</SelectItem>
+                        <SelectItem value="mango">Mango</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                      Selected: <code className="bg-background px-1.5 py-0.5 rounded">{selectValue}</code>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">AppearanceTab에서 사용 중</h3>
+                <p className="text-sm text-muted-foreground">
+                  Cursor Style 선택 (Block, Underline, Bar)에 사용됩니다.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Input & Label Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Input & Label</h2>
+              <p className="text-sm text-muted-foreground">
+                텍스트 입력 필드와 라벨 컴포넌트.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <div className="max-w-md space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name-input">Name</Label>
+                    <Input
+                      id="name-input"
+                      type="text"
+                      placeholder="Enter your name"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email-input">Email</Label>
+                    <Input
+                      id="email-input"
+                      type="email"
+                      placeholder="example@email.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="number-input">Number</Label>
+                    <Input
+                      id="number-input"
+                      type="number"
+                      placeholder="42"
+                      min={0}
+                      max={100}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password-input">Password</Label>
+                    <Input
+                      id="password-input"
+                      type="password"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">설정 폼 전반에서 사용 중</h3>
+                <p className="text-sm text-muted-foreground">
+                  Font Size, Font Family, Shell Path, Scrollback Lines 등 모든 입력 필드에 사용됩니다.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Separator Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Separator</h2>
+              <p className="text-sm text-muted-foreground">
+                구분선 컴포넌트. 콘텐츠를 시각적으로 분리.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <div className="max-w-md">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium">Section 1</h4>
+                    <p className="text-sm text-muted-foreground">
+                      This is the first section.
+                    </p>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium">Section 2</h4>
+                    <p className="text-sm text-muted-foreground">
+                      This is the second section.
+                    </p>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium">Section 3</h4>
+                    <p className="text-sm text-muted-foreground">
+                      This is the third section.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">AppearanceTab에서 사용 중</h3>
+                <p className="text-sm text-muted-foreground">
+                  Theme 설정에서 프리셋과 커스텀 색상을 구분하는데 사용됩니다.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Switch Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Switch</h2>
+              <p className="text-sm text-muted-foreground">
+                토글 스위치 컴포넌트. On/Off 상태 전환.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <div className="max-w-md space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="switch-demo">Airplane Mode</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Turn on airplane mode
+                      </p>
+                    </div>
+                    <Switch
+                      id="switch-demo"
+                      checked={switchChecked}
+                      onCheckedChange={setSwitchChecked}
+                    />
+                  </div>
+
+                  <div className="p-4 rounded-lg border">
+                    <p className="text-sm">
+                      Switch is: <code className="bg-background px-1.5 py-0.5 rounded">
+                        {switchChecked ? 'ON' : 'OFF'}
+                      </code>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">AppearanceTab에서 사용 중</h3>
+                <p className="text-sm text-muted-foreground">
+                  Cursor Blink 설정 토글에 사용됩니다.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Card Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Card</h2>
+              <p className="text-sm text-muted-foreground">
+                카드 컴포넌트. 콘텐츠를 그룹핑하고 시각적으로 구분.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제</h3>
+                <div className="max-w-md">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Card Title</CardTitle>
+                      <CardDescription>Card description goes here</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        This is the card content. You can put any content here.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">설정 탭들에서 사용 중</h3>
+                <p className="text-sm text-muted-foreground">
+                  모든 설정 섹션(Font, Cursor, Theme, Shell 등)을 Card로 그룹핑하여 표시합니다.
+                </p>
               </div>
             </div>
           </section>
