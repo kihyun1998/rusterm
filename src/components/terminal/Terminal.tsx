@@ -244,16 +244,18 @@ export function Terminal({ id, className = '' }: TerminalProps) {
   }, [isReady, writeToPty, isConnected, resizePty]);
 
   return (
-    <TerminalContextMenu
-      terminalRef={xtermRef}
-      onPaste={(text) => writeToPty(text)}
-    >
-      <div
-        ref={terminalRef}
-        className={`w-full h-full p-2 ${className}`}
-        data-terminal-id={id}
-      />
-    </TerminalContextMenu>
+    <div className="w-full h-full bg-[#1e1e1e] p-2">
+      <TerminalContextMenu
+        terminalRef={xtermRef}
+        onPaste={(text) => writeToPty(text)}
+      >
+        <div
+          ref={terminalRef}
+          className={`w-full h-full ${className}`}
+          data-terminal-id={id}
+        />
+      </TerminalContextMenu>
+    </div>
   );
 }
 
