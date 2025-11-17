@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 
+export type TabType = 'home' | 'terminal';
+
 export interface Tab {
   id: string;
   title: string;
+  type: TabType;
+  closable: boolean;
   ptyId?: number;
   isActive: boolean;
   workingDirectory?: string;

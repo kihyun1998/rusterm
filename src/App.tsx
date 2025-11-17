@@ -12,12 +12,14 @@ function App() {
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Initialize with first tab on app start
+  // Initialize with home tab on app start
   useEffect(() => {
     if (tabs.length === 0) {
       addTab({
-        id: crypto.randomUUID(),
-        title: 'Terminal 1',
+        id: 'home',
+        title: 'Home',
+        type: 'home',
+        closable: false,
       });
     }
   }, [tabs.length, addTab]);

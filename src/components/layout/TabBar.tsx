@@ -15,9 +15,12 @@ export function TabBar() {
 
   const handleNewTab = () => {
     const newTabId = crypto.randomUUID();
+    const terminalCount = tabs.filter((t) => t.type === 'terminal').length;
     addTab({
       id: newTabId,
-      title: `Terminal ${tabs.length + 1}`,
+      title: `Terminal ${terminalCount + 1}`,
+      type: 'terminal',
+      closable: true,
     });
   };
 
@@ -49,22 +52,24 @@ export function TabBar() {
               {tab.title}
             </span>
 
-            {/* Close button */}
-            <button
-              onClick={(e) => handleCloseTab(tab.id, e)}
-              className={`
-                flex items-center justify-center w-4 h-4 rounded-sm
-                transition-colors
-                ${
-                  tab.id === activeTabId
-                    ? 'hover:bg-muted/50'
-                    : 'opacity-0 group-hover:opacity-100 hover:bg-muted'
-                }
-              `}
-              aria-label="Close tab"
-            >
-              <X className="w-3 h-3" />
-            </button>
+            {/* Close button (only for closable tabs) */}
+            {tab.closable && (
+              <button
+                onClick={(e) => handleCloseTab(tab.id, e)}
+                className={`
+                  flex items-center justify-center w-4 h-4 rounded-sm
+                  transition-colors
+                  ${
+                    tab.id === activeTabId
+                      ? 'hover:bg-muted/50'
+                      : 'opacity-0 group-hover:opacity-100 hover:bg-muted'
+                  }
+                `}
+                aria-label="Close tab"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
         ))}
       </div>
