@@ -65,6 +65,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast, Toaster } from 'sonner';
 import { useState, useEffect } from 'react';
 
@@ -859,6 +860,113 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
                   <li>탭 생성/닫기 피드백 (TabBar)</li>
                   <li>커맨드 실행 결과 (CommandPalette)</li>
                   <li>에러 및 경고 메시지 (전역)</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Skeleton Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Skeleton</h2>
+              <p className="text-sm text-muted-foreground">
+                로딩 상태를 시각적으로 표시하는 플레이스홀더 컴포넌트
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Basic Example - Profile Loading */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">기본 예제 (프로필 로딩)</h3>
+                <div className="border rounded-lg p-6 max-w-md">
+                  <div className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[250px]" />
+                      <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  사용 예: 사용자 프로필 정보 로딩 (아바타 + 이름/설명)
+                </p>
+              </div>
+
+              {/* Card Loading Example */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">카드 로딩</h3>
+                <div className="border rounded-lg p-6 max-w-md">
+                  <div className="flex flex-col space-y-3">
+                    <Skeleton className="h-[125px] w-[250px] rounded-xl" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[250px]" />
+                      <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  사용 예: 카드형 콘텐츠 로딩 (썸네일 + 제목/설명)
+                </p>
+              </div>
+
+              {/* Real-world Example - Settings Form Loading */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">실제 적용 예제 (설정 폼 로딩)</h3>
+                <div className="border rounded-lg p-6 max-w-md">
+                  <div className="space-y-4">
+                    {/* Form Field Loading */}
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[100px]" />  {/* Label */}
+                      <Skeleton className="h-10 w-full" />     {/* Input */}
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[120px]" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[80px]" />
+                      <Skeleton className="h-10 w-[200px]" />  {/* Select */}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  사용 예: 설정 다이얼로그가 데이터를 로드하는 동안 표시
+                </p>
+              </div>
+
+              {/* Multiple Skeletons - List Loading */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">리스트 로딩 (여러 항목)</h3>
+                <div className="border rounded-lg p-6 max-w-md">
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="flex items-center space-x-4">
+                        <Skeleton className="h-10 w-10 rounded-md" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-3/4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  사용 예: 터미널 프로필 목록, 테마 목록 등 로딩
+                </p>
+              </div>
+
+              {/* Usage Note */}
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">Rusterm에서 사용 예정</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  이 컴포넌트는 다음과 같은 곳에서 사용될 예정입니다:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>설정 다이얼로그 로딩 (SettingsDialog)</li>
+                  <li>터미널 탭 초기화 중 (TabContent)</li>
+                  <li>테마 프리뷰 이미지 로딩 (AppearanceTab)</li>
+                  <li>프로필 목록 로딩 (향후 프로필 관리 기능)</li>
+                  <li>비동기 데이터 로딩 전반 (전역)</li>
                 </ul>
               </div>
             </div>
