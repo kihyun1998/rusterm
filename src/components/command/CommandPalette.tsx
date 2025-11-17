@@ -57,10 +57,10 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
   // Clipboard management
   const { copyToClipboard, pasteFromClipboard } = useClipboard();
 
-  // Ctrl+Shift+P (Windows) or Cmd+Shift+P (Mac) to toggle
+  // Ctrl+K (Windows) or Cmd+K (Mac) to toggle
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key === 'p' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((open) => !open);
       }

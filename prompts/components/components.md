@@ -85,7 +85,7 @@
 ### 4.2 커맨드 팔레트
 - [x] shadcn/ui `Command` 컴포넌트 추가
 - [x] `src/components/menu/CommandPalette.tsx`
-  - Ctrl+Shift+P로 토글
+  - Ctrl+K (Cmd+K)로 토글
   - 기본 명령 리스트 (새 탭, 분할, 설정 등)
   - Terminal Actions (clear, copy, paste, select all)
   - Settings (theme toggle, font size control)
