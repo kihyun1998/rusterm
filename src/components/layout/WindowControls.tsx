@@ -39,14 +39,14 @@ export function WindowControls() {
   const orderedButtons = getOrderedButtons(buttons, platform);
 
   return (
-    <div className={`flex items-center h-full ${platform === 'macos' ? 'order-first ml-2' : 'order-last'}`}>
+    <div className={`flex items-center h-full ${platform === 'macos' ? 'order-first ml-2' : 'order-last -mr-2'}`}>
       {orderedButtons.map((button) => (
         <button
           key={button.type}
           onClick={button.onClick}
           aria-label={button.ariaLabel}
           className={`
-            h-8 w-12
+            h-full w-11
             flex items-center justify-center
             transition-colors
             ${
