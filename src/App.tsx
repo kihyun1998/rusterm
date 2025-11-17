@@ -3,24 +3,11 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import ComponentDemo from '@/pages/ComponentDemo';
 import { CommandPalette } from '@/components/command/CommandPalette';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
-import { useTabStore } from '@/stores';
 import { isDevelopment } from '@/config';
 
 function App() {
-  const tabs = useTabStore((state) => state.tabs);
-  const addTab = useTabStore((state) => state.addTab);
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-
-  // Initialize with first tab on app start
-  useEffect(() => {
-    if (tabs.length === 0) {
-      addTab({
-        id: crypto.randomUUID(),
-        title: 'Terminal 1',
-      });
-    }
-  }, [tabs.length, addTab]);
 
   // Global keyboard shortcuts
   useEffect(() => {

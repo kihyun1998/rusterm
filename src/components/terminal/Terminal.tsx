@@ -20,10 +20,12 @@ interface TerminalProps {
  */
 export function Terminal({ id, className = '' }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const isInitializedRef = useRef(false);
   const ptyCreatedRef = useRef(false);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isReady, setIsReady] = useState(false);
 
@@ -142,44 +144,56 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     const fitAddon = fitAddonRef.current;
     const terminal = xtermRef.current;
 
-    // Resize handler
+    // Resize handler with debouncing
     const handleResize = () => {
       if (!terminalRef.current || !terminal || !fitAddon) {
         return;
       }
 
-      try {
-        // Fit terminal to container
-        fitAddon.fit();
-
-        // Get new dimensions
-        const cols = terminal.cols;
-        const rows = terminal.rows;
-
-        // Notify PTY of size change
-        if (isConnected) {
-          resizePty(cols, rows);
-        }
-      } catch (err) {
-        console.warn('Resize failed:', err);
+      // Clear previous timeout
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
       }
+
+      // Debounce resize to prevent multiple rapid calls
+      resizeTimeoutRef.current = setTimeout(() => {
+        try {
+          // Fit terminal to container
+          fitAddon.fit();
+
+          // Get new dimensions
+          const cols = terminal.cols;
+          const rows = terminal.rows;
+
+          // Minimum size to prevent PTY corruption
+          const MIN_COLS = 20;
+          const MIN_ROWS = 5;
+
+          // Only notify PTY if size is reasonable
+          // This prevents content loss when window becomes very small
+          if (isConnected && cols >= MIN_COLS && rows >= MIN_ROWS) {
+            resizePty(cols, rows);
+          }
+        } catch (err) {
+          console.warn('Resize failed:', err);
+        }
+      }, 50); // 50ms debounce
     };
 
-    // Listen for window resize
-    window.addEventListener('resize', handleResize);
-
-    // Use ResizeObserver for container size changes
+    // Use ResizeObserver for wrapper size changes
     const resizeObserver = new ResizeObserver(() => {
       handleResize();
     });
 
-    if (terminalRef.current) {
-      resizeObserver.observe(terminalRef.current);
+    if (wrapperRef.current) {
+      resizeObserver.observe(wrapperRef.current);
     }
 
     // Cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
       resizeObserver.disconnect();
     };
   }, [isReady, isConnected, resizePty]);
@@ -244,16 +258,18 @@ export function Terminal({ id, className = '' }: TerminalProps) {
   }, [isReady, writeToPty, isConnected, resizePty]);
 
   return (
-    <TerminalContextMenu
-      terminalRef={xtermRef}
-      onPaste={(text) => writeToPty(text)}
-    >
-      <div
-        ref={terminalRef}
-        className={`w-full h-full ${className}`}
-        data-terminal-id={id}
-      />
-    </TerminalContextMenu>
+    <div ref={wrapperRef} className="w-full h-full bg-[#1e1e1e] p-2">
+      <TerminalContextMenu
+        terminalRef={xtermRef}
+        onPaste={(text) => writeToPty(text)}
+      >
+        <div
+          ref={terminalRef}
+          className={`w-full h-full ${className}`}
+          data-terminal-id={id}
+        />
+      </TerminalContextMenu>
+    </div>
   );
 }
 

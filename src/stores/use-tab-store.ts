@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 
+export type TabType = 'home' | 'terminal';
+
 export interface Tab {
   id: string;
   title: string;
+  type: TabType;
+  closable: boolean;
   ptyId?: number;
   isActive: boolean;
   workingDirectory?: string;
@@ -21,8 +25,16 @@ interface TabState {
 }
 
 export const useTabStore = create<TabState>((set) => ({
-  tabs: [],
-  activeTabId: null,
+  tabs: [
+    {
+      id: 'home',
+      title: 'Home',
+      type: 'home',
+      closable: false,
+      isActive: true,
+    },
+  ],
+  activeTabId: 'home',
 
   addTab: (tab) =>
     set((state) => {

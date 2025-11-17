@@ -1,6 +1,7 @@
 import { TitleBar } from './TitleBar';
 import { TabBar } from './TabBar';
 import { Terminal } from '@/components/terminal/Terminal';
+import { Home } from '@/components/home/Home';
 import { useTabStore } from '@/stores';
 
 interface MainLayoutProps {
@@ -24,18 +25,18 @@ export function MainLayout({ showDemoButton, onDemoClick }: MainLayoutProps) {
       {/* Tab bar */}
       <TabBar />
 
-      {/* Terminal area */}
+      {/* Content area */}
       <div className="flex-1 relative overflow-hidden">
         {tabs.length === 0 ? (
-          // Empty state when no tabs
+          // Empty state when no tabs (should not happen)
           <div className="flex items-center justify-center h-full text-muted-foreground">
             <div className="text-center">
-              <p className="text-lg mb-2">No terminal tabs open</p>
-              <p className="text-sm">Click the + button to create a new terminal</p>
+              <p className="text-lg mb-2">No tabs open</p>
+              <p className="text-sm">Something went wrong</p>
             </div>
           </div>
         ) : (
-          // Render all terminals, show only active one
+          // Render all tabs, show only active one
           tabs.map((tab) => (
             <div
               key={tab.id}
@@ -45,7 +46,7 @@ export function MainLayout({ showDemoButton, onDemoClick }: MainLayoutProps) {
                 zIndex: tab.id === activeTabId ? 1 : 0,
               }}
             >
-              <Terminal id={tab.id} />
+              {tab.type === 'home' ? <Home /> : <Terminal id={tab.id} />}
             </div>
           ))
         )}

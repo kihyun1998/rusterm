@@ -78,15 +78,21 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
 
   // Tab management handlers
   const handleNewTab = () => {
+    const terminalCount = tabs.filter((t) => t.type === 'terminal').length;
     addTab({
       id: crypto.randomUUID(),
-      title: `Terminal ${tabs.length + 1}`,
+      title: `Terminal ${terminalCount + 1}`,
+      type: 'terminal',
+      closable: true,
     });
   };
 
   const handleCloseTab = () => {
     if (activeTabId) {
-      closeTab(activeTabId);
+      const activeTab = tabs.find((t) => t.id === activeTabId);
+      if (activeTab && activeTab.closable) {
+        closeTab(activeTabId);
+      }
     }
   };
 
