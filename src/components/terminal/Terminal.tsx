@@ -6,7 +6,6 @@ import { usePty } from '@/hooks/use-pty';
 import { getTerminalConfig } from '@/lib/xterm-config';
 import { TerminalContextMenu } from '@/components/menu/TerminalContextMenu';
 import { TERMINAL_EVENTS, listenTerminalEvent } from '@/lib/terminal-events';
-import { useSettingsStore } from '@/stores/use-settings-store';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {

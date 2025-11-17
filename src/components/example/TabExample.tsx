@@ -17,6 +17,8 @@ export function TabExample() {
     addTab({
       id: newTabId,
       title: `Terminal ${tabs.length + 1}`,
+      type: 'terminal',
+      closable: true,
     });
   };
 

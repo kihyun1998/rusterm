@@ -30,7 +30,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { emitTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 import { isDevelopment } from '@/config';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 interface CommandPaletteProps {
   onShowDemo?: () => void;
@@ -55,7 +54,7 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
   const { toggleTheme } = useTheme();
 
   // Clipboard management
-  const { copyToClipboard, pasteFromClipboard } = useClipboard();
+  const { pasteFromClipboard } = useClipboard();
 
   // Ctrl+K (Windows) or Cmd+K (Mac) to toggle
   useEffect(() => {
@@ -164,15 +163,10 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
   };
 
   // Developer tools handlers
-  const handleToggleDevTools = async () => {
-    try {
-      const webview = getCurrentWebviewWindow();
-      // Note: Tauri 2 doesn't have a direct toggleDevtools method
-      // DevTools can be opened through the system menu or F12
-      console.log('DevTools toggle - use F12 or system menu');
-    } catch (err) {
-      console.error('Failed to toggle DevTools:', err);
-    }
+  const handleToggleDevTools = () => {
+    // Note: Tauri 2 doesn't have a direct toggleDevtools method
+    // DevTools can be opened through the system menu or F12
+    console.log('DevTools toggle - use F12 or system menu');
   };
 
   const handleViewDemo = () => {
