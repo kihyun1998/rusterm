@@ -150,9 +150,27 @@ export function Terminal({ id, className = '' }: TerminalProps) {
         return;
       }
 
-      // Clear previous timeout
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
+
+
+      try {
+        // Fit terminal to container
+        fitAddon.fit();
+
+        // Get new dimensions
+        const cols = terminal.cols;
+        const rows = terminal.rows;
+
+        // Minimum size to prevent PTY corruption
+        const MIN_COLS = 20;
+        const MIN_ROWS = 5;
+
+        // Only notify PTY if size is reasonable
+        // This prevents content loss when window becomes very small
+        if (isConnected && cols >= MIN_COLS && rows >= MIN_ROWS) {
+          resizePty(cols, rows);
+        }
+      } catch (err) {
+        console.warn('Resize failed:', err);
       }
 
       // Debounce resize to prevent multiple rapid calls
