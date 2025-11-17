@@ -61,12 +61,12 @@
 ## Phase 3: 타이틀바 및 윈도우 컨트롤
 
 ### 3.1 커스텀 타이틀바
-- [ ] Tauri 설정 수정
+- [x] Tauri 설정 수정
   - `tauri.conf.json`: decorations false 설정
-- [ ] `src/components/layout/TitleBar.tsx` 생성
+- [x] `src/components/layout/TitleBar.tsx` 생성
   - `data-tauri-drag-region` 추가
   - 최소화/최대화/닫기 버튼
-- [ ] 윈도우 컨트롤 함수
+- [x] 윈도우 컨트롤 함수
   - `@tauri-apps/api/window` 사용
   - minimize, maximize/unmaximize, close
 
