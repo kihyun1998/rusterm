@@ -21,35 +21,39 @@ interface SettingsDialogProps {
 
 /**
  * Settings Dialog Component
- * Simple settings dialog with theme toggle
+ * Manages application settings with persistent storage via Rust backend
  */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { theme, toggleTheme } = useTheme();
-  const updateTerminalTheme = useSettingsStore((state) => state.updateTheme);
+  const updateTheme = useSettingsStore((state) => state.updateTheme);
   const isDark = theme === 'dark';
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = async () => {
     toggleTheme();
 
-    // Sync terminal theme with UI theme
-    if (isDark) {
-      // Switching to Light
-      updateTerminalTheme({
-        background: '#ffffff',
-        foreground: '#000000',
-        cursor: '#000000',
-        cursorAccent: '#ffffff',
-        selectionBackground: '#add6ff',
-      });
-    } else {
-      // Switching to Dark
-      updateTerminalTheme({
-        background: '#1e1e1e',
-        foreground: '#cccccc',
-        cursor: '#ffffff',
-        cursorAccent: '#000000',
-        selectionBackground: '#264f78',
-      });
+    // Sync terminal theme with UI theme and save to backend
+    try {
+      if (isDark) {
+        // Switching to Light
+        await updateTheme({
+          background: '#ffffff',
+          foreground: '#000000',
+          cursor: '#000000',
+          cursorAccent: '#ffffff',
+          selectionBackground: '#add6ff',
+        });
+      } else {
+        // Switching to Dark
+        await updateTheme({
+          background: '#1e1e1e',
+          foreground: '#cccccc',
+          cursor: '#ffffff',
+          cursorAccent: '#000000',
+          selectionBackground: '#264f78',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to save theme settings:', error);
     }
   };
 
@@ -58,7 +62,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>Customize your terminal appearance</DialogDescription>
+          <DialogDescription>Customize your terminal appearance and behavior</DialogDescription>
         </DialogHeader>
 
         <div className="py-6">

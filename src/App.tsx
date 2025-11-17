@@ -1,14 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CommandPalette } from '@/components/command/CommandPalette';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { isDevelopment } from '@/config';
 import { useShortcuts } from '@/hooks/use-shortcuts';
+import { useSettingsStore } from '@/stores';
 import ComponentDemo from '@/pages/ComponentDemo';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
+
+  // Load settings on app start
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   // Global keyboard shortcuts
   useShortcuts({
