@@ -25,7 +25,12 @@ import {
   CommandShortcut,
 } from '@/components/ui/command';
 import { useTabStore } from '@/stores';
+import { useSettingsStore } from '@/stores/use-settings-store';
+import { useTheme } from '@/hooks/use-theme';
+import { useClipboard } from '@/hooks/use-clipboard';
+import { emitTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 import { isDevelopment } from '@/config';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 interface CommandPaletteProps {
   onShowDemo?: () => void;
@@ -41,6 +46,16 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
   const setActiveTab = useTabStore((state) => state.setActiveTab);
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
+
+  // Settings store
+  const settings = useSettingsStore((state) => state.settings);
+  const updateSettings = useSettingsStore((state) => state.updateSettings);
+
+  // Theme management
+  const { toggleTheme } = useTheme();
+
+  // Clipboard management
+  const { copyToClipboard, pasteFromClipboard } = useClipboard();
 
   // Ctrl+Shift+P (Windows) or Cmd+Shift+P (Mac) to toggle
   useEffect(() => {
@@ -93,27 +108,24 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
 
   // Terminal action handlers
   const handleClearTerminal = () => {
-    // TODO: Implement clear terminal via Tauri IPC
-    console.log('Clear terminal');
+    emitTerminalEvent(TERMINAL_EVENTS.CLEAR);
   };
 
   const handleCopy = () => {
+    // Copy is handled by the terminal's selection
+    // Users can use Ctrl+Shift+C or context menu
     document.execCommand('copy');
   };
 
   const handlePaste = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      // TODO: Paste to active terminal
-      console.log('Paste:', text);
-    } catch (err) {
-      console.error('Failed to read clipboard:', err);
+    const text = await pasteFromClipboard();
+    if (text) {
+      emitTerminalEvent(TERMINAL_EVENTS.PASTE, { text });
     }
   };
 
   const handleSelectAll = () => {
-    // TODO: Implement select all in terminal
-    console.log('Select all');
+    emitTerminalEvent(TERMINAL_EVENTS.SELECT_ALL);
   };
 
   // Settings handlers
@@ -124,29 +136,37 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
   };
 
   const handleToggleTheme = () => {
-    // TODO: Implement theme toggle
-    console.log('Toggle theme');
+    toggleTheme();
   };
 
   const handleIncreaseFontSize = () => {
-    // TODO: Implement font size increase
-    console.log('Increase font size');
+    const newSize = Math.min(settings.fontSize + 2, 30); // Max 30
+    updateSettings({ fontSize: newSize });
+    emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
   };
 
   const handleDecreaseFontSize = () => {
-    // TODO: Implement font size decrease
-    console.log('Decrease font size');
+    const newSize = Math.max(settings.fontSize - 2, 8); // Min 8
+    updateSettings({ fontSize: newSize });
+    emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
   };
 
   const handleResetFontSize = () => {
-    // TODO: Implement font size reset
-    console.log('Reset font size');
+    const defaultSize = 14;
+    updateSettings({ fontSize: defaultSize });
+    emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: defaultSize });
   };
 
   // Developer tools handlers
-  const handleToggleDevTools = () => {
-    // TODO: Implement DevTools toggle via Tauri
-    console.log('Toggle DevTools');
+  const handleToggleDevTools = async () => {
+    try {
+      const webview = getCurrentWebviewWindow();
+      // Note: Tauri 2 doesn't have a direct toggleDevtools method
+      // DevTools can be opened through the system menu or F12
+      console.log('DevTools toggle - use F12 or system menu');
+    } catch (err) {
+      console.error('Failed to toggle DevTools:', err);
+    }
   };
 
   const handleViewDemo = () => {

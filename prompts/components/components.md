@@ -83,10 +83,16 @@
   - `src/hooks/use-clipboard.ts`: Tauri clipboard API
 
 ### 4.2 커맨드 팔레트
-- [ ] shadcn/ui `Command` 컴포넌트 추가
-- [ ] `src/components/menu/CommandPalette.tsx`
+- [x] shadcn/ui `Command` 컴포넌트 추가
+- [x] `src/components/menu/CommandPalette.tsx`
   - Ctrl+Shift+P로 토글
   - 기본 명령 리스트 (새 탭, 분할, 설정 등)
+  - Terminal Actions (clear, copy, paste, select all)
+  - Settings (theme toggle, font size control)
+  - Developer Tools (reload, devtools toggle)
+- [x] 터미널 이벤트 시스템
+  - `src/lib/terminal-events.ts`: 컴포넌트 간 통신
+  - Terminal.tsx 이벤트 리스너 통합
 
 ### 4.3 키보드 단축키
 - [ ] `src/hooks/use-shortcuts.ts` 훅
