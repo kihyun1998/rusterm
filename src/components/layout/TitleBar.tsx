@@ -29,8 +29,8 @@ export function TitleBar() {
       "
     >
       {/* Left section: App title */}
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className="text-sm font-medium text-foreground truncate">
+      <div data-tauri-drag-region className="flex items-center gap-2 flex-1 min-w-0">
+        <span data-tauri-drag-region className="text-sm font-medium text-foreground truncate">
           rusterm
         </span>
       </div>
