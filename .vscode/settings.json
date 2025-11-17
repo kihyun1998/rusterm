@@ -1,0 +1,33 @@
+{
+  // Biome을 기본 포맷터로 설정
+  "editor.defaultFormatter": "biomejs.biome",
+
+  // 저장 시 자동 포맷 활성화
+  "editor.formatOnSave": true,
+
+  // 저장 시 code action 실행 (import 정리 등)
+  "editor.codeActionsOnSave": {
+    "quickfix.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+
+  // TypeScript/JavaScript 파일에 대한 설정
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
+}
