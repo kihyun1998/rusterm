@@ -46,23 +46,15 @@
 ## Phase 2: 탭 및 분할 패널
 
 ### 2.1 탭 관리
-- [ ] 탭 상태 관리 (Context API 사용)
+- [x] 탭 상태 관리 (Context API 사용)
   - `src/stores/tab-context.tsx`: TabProvider 생성
   - 탭 추가/제거/선택 함수
-- [ ] `src/components/layout/TabBar.tsx` 생성
+- [x] `src/components/layout/TabBar.tsx` 생성
   - 탭 리스트 렌더링
   - 새 탭 버튼
   - 탭 닫기 버튼
-- [ ] 탭별 터미널 인스턴스 관리
+- [x] 탭별 터미널 인스턴스 관리
   - 각 탭마다 독립적인 PTY 세션
-
-### 2.2 분할 패널
-- [ ] `react-resizable-panels` 설치
-- [ ] `src/components/layout/SplitPane.tsx` 생성
-  - Horizontal/Vertical 분할 지원
-  - 리사이즈 핸들
-- [ ] 분할 상태 관리
-  - 분할 트리 구조 (간단한 배열 또는 재귀 구조)
 
 ---
 
