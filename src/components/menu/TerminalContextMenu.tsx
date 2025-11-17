@@ -62,13 +62,36 @@ export function TerminalContextMenu({
   }, [pasteFromClipboard, onPaste]);
 
   /**
-   * Select all text in terminal
+   * Select all text in terminal (excluding trailing empty lines)
    */
   const handleSelectAll = useCallback(() => {
     const terminal = terminalRef.current;
     if (!terminal) return;
 
-    terminal.selectAll();
+    // Find the last non-empty line
+    const buffer = terminal.buffer.active;
+    let lastNonEmptyLine = buffer.length - 1;
+
+    // Search backwards from the end to find the last line with content
+    for (let i = buffer.length - 1; i >= 0; i--) {
+      const line = buffer.getLine(i);
+      if (line) {
+        // Check if line has any non-whitespace content
+        const lineText = line.translateToString(true).trim();
+        if (lineText.length > 0) {
+          lastNonEmptyLine = i;
+          break;
+        }
+      }
+    }
+
+    // Select from start (0,0) to the end of the last non-empty line
+    if (lastNonEmptyLine >= 0) {
+      terminal.selectLines(0, lastNonEmptyLine + 1);
+    } else {
+      // If no content found, select all anyway
+      terminal.selectAll();
+    }
   }, [terminalRef]);
 
   /**
