@@ -187,12 +187,12 @@ export function useShortcuts(options: UseShortcutsOptions) {
       }
     };
 
-    // Add event listener
-    document.addEventListener('keydown', handleKeyDown);
+    // Add event listener with capture to intercept before xterm.js
+    document.addEventListener('keydown', handleKeyDown, { capture: true });
 
     // Cleanup
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
   }, [
     tabs,
