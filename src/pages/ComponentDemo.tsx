@@ -65,6 +65,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast, Toaster } from 'sonner';
 import { useState, useEffect } from 'react';
 
 interface ComponentDemoProps {
@@ -100,20 +101,21 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
   }, []);
 
   return (
-    <div className="h-screen overflow-auto bg-background">
-      <div className="max-w-6xl mx-auto p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Component Demo</h1>
-            <p className="text-muted-foreground">
-              shadcn/ui 컴포넌트 데모 페이지 (개발 모드 전용)
-            </p>
+    <>
+      <div className="h-screen overflow-auto bg-background">
+        <div className="max-w-6xl mx-auto p-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Component Demo</h1>
+              <p className="text-muted-foreground">
+                shadcn/ui 컴포넌트 데모 페이지 (개발 모드 전용)
+              </p>
+            </div>
+            <Button onClick={onBack} variant="outline">
+              Back to Main
+            </Button>
           </div>
-          <Button onClick={onBack} variant="outline">
-            Back to Main
-          </Button>
-        </div>
 
         {/* Demos */}
         <div className="space-y-12">
@@ -720,8 +722,153 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
               </div>
             </div>
           </section>
+
+          {/* Sonner Toast Demo */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold mb-2">Sonner (Toast)</h2>
+              <p className="text-sm text-muted-foreground">
+                알림 메시지 표시 - 6가지 타입과 Action 버튼 지원
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Toast Types */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">Toast 타입들</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => toast("Event has been created")}
+                  >
+                    Default
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => toast.success("Settings saved successfully")}
+                  >
+                    Success
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => toast.info("New update available")}
+                  >
+                    Info
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => toast.warning("This action cannot be undone")}
+                  >
+                    Warning
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => toast.error("Failed to save settings")}
+                  >
+                    Error
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      toast.promise(
+                        new Promise((resolve) => setTimeout(() => resolve({ name: "Task" }), 2000)),
+                        {
+                          loading: "Processing...",
+                          success: (data) => `${(data as { name: string }).name} completed`,
+                          error: "Failed",
+                        }
+                      );
+                    }}
+                  >
+                    Promise
+                  </Button>
+                </div>
+              </div>
+
+              {/* Toast with Description */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">설명이 있는 Toast</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      toast.success("Settings saved", {
+                        description: "Your preferences have been updated successfully",
+                      })
+                    }
+                  >
+                    With Description
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      toast.error("Copy failed", {
+                        description: "No text selected in terminal",
+                      })
+                    }
+                  >
+                    Error with Description
+                  </Button>
+                </div>
+              </div>
+
+              {/* Toast with Action */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">Action 버튼이 있는 Toast</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      toast("Copied to clipboard", {
+                        description: "Text has been copied successfully",
+                        action: {
+                          label: "Undo",
+                          onClick: () => toast.info("Copy undone"),
+                        },
+                      })
+                    }
+                  >
+                    With Action
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      toast("Tab closed", {
+                        description: "Terminal 3 has been closed",
+                        action: {
+                          label: "Restore",
+                          onClick: () => toast.success("Tab restored"),
+                        },
+                      })
+                    }
+                  >
+                    Tab Action
+                  </Button>
+                </div>
+              </div>
+
+              {/* Usage Note */}
+              <div className="rounded-lg border border-border bg-muted/50 p-4">
+                <h3 className="text-sm font-semibold mb-2">Rusterm에서 사용 예정</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  이 컴포넌트는 다음과 같은 곳에서 사용될 예정입니다:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>설정 저장 성공/실패 알림 (SettingsDialog)</li>
+                  <li>복사/붙여넣기 완료 알림 (TerminalContextMenu)</li>
+                  <li>탭 생성/닫기 피드백 (TabBar)</li>
+                  <li>커맨드 실행 결과 (CommandPalette)</li>
+                  <li>에러 및 경고 메시지 (전역)</li>
+                </ul>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* Toast Notifications for Demo */}
+      <Toaster position="bottom-right" closeButton richColors />
+    </>
   );
 }
