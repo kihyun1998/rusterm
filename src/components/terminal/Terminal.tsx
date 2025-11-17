@@ -6,6 +6,7 @@ import { usePty } from '@/hooks/use-pty';
 import { getTerminalConfig } from '@/lib/xterm-config';
 import { TerminalContextMenu } from '@/components/menu/TerminalContextMenu';
 import { TERMINAL_EVENTS, listenTerminalEvent } from '@/lib/terminal-events';
+import { useClipboard } from '@/hooks/use-clipboard';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -27,6 +28,9 @@ export function Terminal({ id, className = '' }: TerminalProps) {
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isReady, setIsReady] = useState(false);
+
+  // Clipboard management
+  const { copyToClipboard } = useClipboard();
 
   // PTY connection management
   const { createPty, writeToPty, resizePty, closePty, isConnected, error } = usePty({
@@ -223,6 +227,14 @@ export function Terminal({ id, className = '' }: TerminalProps) {
       terminal.selectAll();
     });
 
+    // Copy selected text to clipboard
+    const unsubscribeCopy = listenTerminalEvent(TERMINAL_EVENTS.COPY, async () => {
+      const selection = terminal.getSelection();
+      if (selection) {
+        await copyToClipboard(selection);
+      }
+    });
+
     // Paste text
     const unsubscribePaste = listenTerminalEvent(TERMINAL_EVENTS.PASTE, (detail) => {
       if (detail?.text) {
@@ -251,10 +263,11 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     return () => {
       unsubscribeClear();
       unsubscribeSelectAll();
+      unsubscribeCopy();
       unsubscribePaste();
       unsubscribeFontSize();
     };
-  }, [isReady, writeToPty, isConnected, resizePty]);
+  }, [isReady, writeToPty, isConnected, resizePty, copyToClipboard]);
 
   return (
     <div ref={wrapperRef} className="w-full h-full bg-[#1e1e1e] p-2">

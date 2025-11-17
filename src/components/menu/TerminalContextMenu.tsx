@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode, type RefObject } from 'react';
+import { useCallback, useState, type ReactNode, type RefObject } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import {
   ContextMenu,
@@ -27,6 +27,16 @@ export function TerminalContextMenu({
   children,
 }: TerminalContextMenuProps) {
   const { copyToClipboard, pasteFromClipboard } = useClipboard();
+  const [hasSelection, setHasSelection] = useState(false);
+
+  /**
+   * Update selection state when context menu opens
+   */
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (open && terminalRef.current) {
+      setHasSelection(terminalRef.current.hasSelection());
+    }
+  }, [terminalRef]);
 
   /**
    * Copy selected text to clipboard
@@ -71,25 +81,15 @@ export function TerminalContextMenu({
     terminal.clear();
   }, [terminalRef]);
 
-  /**
-   * Check if terminal has selected text
-   */
-  const hasSelection = useCallback(() => {
-    const terminal = terminalRef.current;
-    if (!terminal) return false;
-
-    return terminal.hasSelection();
-  }, [terminalRef]);
-
   return (
-    <ContextMenu>
+    <ContextMenu onOpenChange={handleOpenChange}>
       <ContextMenuTrigger asChild>
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         <ContextMenuItem
           onClick={handleCopy}
-          disabled={!hasSelection()}
+          disabled={!hasSelection}
         >
           <Copy className="mr-2 h-4 w-4" />
           <span>복사</span>

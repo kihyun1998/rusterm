@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useTabStore } from '@/stores';
 import { useSettingsStore } from '@/stores/use-settings-store';
 import { emitTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
-import { useClipboard } from '@/hooks/use-clipboard';
 
 /**
  * Options for the useShortcuts hook
@@ -40,9 +39,6 @@ export function useShortcuts(options: UseShortcutsOptions) {
   // Settings store
   const settings = useSettingsStore((state) => state.settings);
   const updateSettings = useSettingsStore((state) => state.updateSettings);
-
-  // Clipboard
-  const { pasteFromClipboard } = useClipboard();
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -164,16 +160,21 @@ export function useShortcuts(options: UseShortcutsOptions) {
       // Ctrl/Cmd + Shift + C: Copy
       if (e.key === 'C' && modifier && e.shiftKey) {
         e.preventDefault();
-        document.execCommand('copy');
+        emitTerminalEvent(TERMINAL_EVENTS.COPY);
         return;
       }
 
       // Ctrl/Cmd + Shift + V: Paste
       if (e.key === 'V' && modifier && e.shiftKey) {
         e.preventDefault();
-        const text = await pasteFromClipboard();
-        if (text) {
-          emitTerminalEvent(TERMINAL_EVENTS.PASTE, { text });
+        try {
+          const { readText } = await import('@tauri-apps/plugin-clipboard-manager');
+          const text = await readText();
+          if (text) {
+            emitTerminalEvent(TERMINAL_EVENTS.PASTE, { text });
+          }
+        } catch (err) {
+          console.error('Failed to paste:', err);
         }
         return;
       }
@@ -202,6 +203,5 @@ export function useShortcuts(options: UseShortcutsOptions) {
     settings,
     updateSettings,
     onOpenSettings,
-    pasteFromClipboard,
   ]);
 }

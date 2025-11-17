@@ -7,6 +7,7 @@
 export const TERMINAL_EVENTS = {
   CLEAR: 'terminal:clear',
   SELECT_ALL: 'terminal:select-all',
+  COPY: 'terminal:copy',
   PASTE: 'terminal:paste',
   UPDATE_FONT_SIZE: 'terminal:update-font-size',
 } as const;
@@ -18,6 +19,7 @@ export interface TerminalEventDetail {
   [TERMINAL_EVENTS.UPDATE_FONT_SIZE]: { fontSize: number };
   [TERMINAL_EVENTS.CLEAR]: undefined;
   [TERMINAL_EVENTS.SELECT_ALL]: undefined;
+  [TERMINAL_EVENTS.COPY]: undefined;
 }
 
 /**
