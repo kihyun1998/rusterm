@@ -250,7 +250,7 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     >
       <div
         ref={terminalRef}
-        className={`w-full h-full ${className}`}
+        className={`w-full h-full p-2 ${className}`}
         data-terminal-id={id}
       />
     </TerminalContextMenu>
