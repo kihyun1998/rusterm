@@ -4,6 +4,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { usePty } from '@/hooks/use-pty';
 import { getTerminalConfig } from '@/lib/xterm-config';
+import { TerminalContextMenu } from '@/components/menu/TerminalContextMenu';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -189,11 +190,16 @@ export function Terminal({ id, className = '' }: TerminalProps) {
   }, [error]);
 
   return (
-    <div
-      ref={terminalRef}
-      className={`w-full h-full ${className}`}
-      data-terminal-id={id}
-    />
+    <TerminalContextMenu
+      terminalRef={xtermRef}
+      onPaste={(text) => writeToPty(text)}
+    >
+      <div
+        ref={terminalRef}
+        className={`w-full h-full ${className}`}
+        data-terminal-id={id}
+      />
+    </TerminalContextMenu>
   );
 }
 
