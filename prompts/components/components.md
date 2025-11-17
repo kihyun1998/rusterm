@@ -75,11 +75,11 @@
 ## Phase 4: 메뉴 및 단축키
 
 ### 4.1 컨텍스트 메뉴
-- [ ] shadcn/ui `ContextMenu` 컴포넌트 추가
-- [ ] `src/components/menu/TerminalContextMenu.tsx`
+- [x] shadcn/ui `ContextMenu` 컴포넌트 추가
+- [x] `src/components/menu/TerminalContextMenu.tsx`
   - 복사/붙여넣기
   - 선택 전체/지우기
-- [ ] 클립보드 접근
+- [x] 클립보드 접근
   - `src/hooks/use-clipboard.ts`: Tauri clipboard API
 
 ### 4.2 커맨드 팔레트
