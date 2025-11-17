@@ -47,23 +47,18 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
       // Check if we're in an input field (excluding terminal)
       const target = e.target as HTMLElement;
-      const isInputField =
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable;
 
-      // Debug logging for terminal shortcuts
-      if ((e.key === 'C' || e.key === 'A' || e.key === 'V' || e.key === 'l') && modifier) {
-        console.log('[Shortcut Debug]', {
-          key: e.key,
-          ctrlKey: e.ctrlKey,
-          metaKey: e.metaKey,
-          shiftKey: e.shiftKey,
-          modifier,
-          isInputField,
-          target: target.tagName,
-        });
-      }
+      // Check if target is xterm's internal textarea
+      const isXtermTextarea =
+        target.classList?.contains('xterm-helper-textarea') ||
+        target.closest('.xterm');
+
+      const isInputField =
+        !isXtermTextarea && (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable
+        );
 
       // ========== Terminal Actions (Process BEFORE input field check) ==========
 
@@ -72,7 +67,6 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
       // Ctrl/Cmd + L: Clear terminal
       if (e.key === 'l' && modifier && !e.shiftKey && !isInputField) {
-        console.log('[Shortcut] Clear terminal triggered');
         e.preventDefault();
         e.stopPropagation();
         emitTerminalEvent(TERMINAL_EVENTS.CLEAR);
@@ -81,7 +75,6 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
       // Ctrl/Cmd + Shift + C: Copy
       if (e.key === 'C' && modifier && e.shiftKey && !isInputField) {
-        console.log('[Shortcut] Copy triggered');
         e.preventDefault();
         e.stopPropagation();
         emitTerminalEvent(TERMINAL_EVENTS.COPY);
@@ -90,7 +83,6 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
       // Ctrl/Cmd + Shift + V: Paste
       if (e.key === 'V' && modifier && e.shiftKey && !isInputField) {
-        console.log('[Shortcut] Paste triggered');
         e.preventDefault();
         e.stopPropagation();
         try {
@@ -107,7 +99,6 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
       // Ctrl/Cmd + Shift + A: Select all
       if (e.key === 'A' && modifier && e.shiftKey && !isInputField) {
-        console.log('[Shortcut] Select all triggered');
         e.preventDefault();
         e.stopPropagation();
         emitTerminalEvent(TERMINAL_EVENTS.SELECT_ALL);
