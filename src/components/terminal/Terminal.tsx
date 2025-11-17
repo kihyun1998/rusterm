@@ -5,6 +5,8 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { usePty } from '@/hooks/use-pty';
 import { getTerminalConfig } from '@/lib/xterm-config';
 import { TerminalContextMenu } from '@/components/menu/TerminalContextMenu';
+import { TERMINAL_EVENTS, listenTerminalEvent } from '@/lib/terminal-events';
+import { useSettingsStore } from '@/stores/use-settings-store';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -188,6 +190,58 @@ export function Terminal({ id, className = '' }: TerminalProps) {
       xtermRef.current.write(`\r\n\x1b[1;31m[Error: ${error}]\x1b[0m\r\n`);
     }
   }, [error]);
+
+  // Listen to terminal events from CommandPalette and other components
+  useEffect(() => {
+    if (!isReady || !xtermRef.current || !fitAddonRef.current) {
+      return;
+    }
+
+    const terminal = xtermRef.current;
+    const fitAddon = fitAddonRef.current;
+
+    // Clear terminal
+    const unsubscribeClear = listenTerminalEvent(TERMINAL_EVENTS.CLEAR, () => {
+      terminal.clear();
+    });
+
+    // Select all text
+    const unsubscribeSelectAll = listenTerminalEvent(TERMINAL_EVENTS.SELECT_ALL, () => {
+      terminal.selectAll();
+    });
+
+    // Paste text
+    const unsubscribePaste = listenTerminalEvent(TERMINAL_EVENTS.PASTE, (detail) => {
+      if (detail?.text) {
+        writeToPty(detail.text);
+      }
+    });
+
+    // Update font size
+    const unsubscribeFontSize = listenTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, (detail) => {
+      if (detail?.fontSize && terminal.options) {
+        terminal.options.fontSize = detail.fontSize;
+        // Refit terminal after font size change
+        try {
+          fitAddon.fit();
+          // Notify PTY of potential size change
+          if (isConnected) {
+            resizePty(terminal.cols, terminal.rows);
+          }
+        } catch (err) {
+          console.warn('Failed to refit after font size change:', err);
+        }
+      }
+    });
+
+    // Cleanup all listeners
+    return () => {
+      unsubscribeClear();
+      unsubscribeSelectAll();
+      unsubscribePaste();
+      unsubscribeFontSize();
+    };
+  }, [isReady, writeToPty, isConnected, resizePty]);
 
   return (
     <TerminalContextMenu
