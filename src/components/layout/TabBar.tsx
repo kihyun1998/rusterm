@@ -36,10 +36,9 @@ export function TabBar() {
         {tabs.map((tab) => (
           <div
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
             className={`
               group flex items-center gap-2 px-3 py-1.5 min-w-[120px] max-w-[200px]
-              rounded-t-md cursor-pointer transition-colors
+              rounded-t-md transition-colors
               ${
                 tab.id === activeTabId
                   ? 'bg-background border border-border border-b-0 text-foreground'
@@ -47,16 +46,23 @@ export function TabBar() {
               }
             `}
           >
-            {/* Tab title */}
-            <span className="flex-1 text-sm truncate select-none">{tab.title}</span>
+            {/* Tab title button */}
+            <button
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className="flex-1 text-sm truncate select-none text-left"
+            >
+              {tab.title}
+            </button>
 
             {/* Close button (only for closable tabs) */}
             {tab.closable && (
               <button
+                type="button"
                 onClick={(e) => handleCloseTab(tab.id, e)}
                 className={`
                   flex items-center justify-center w-4 h-4 rounded-sm
-                  transition-colors
+                  transition-colors flex-shrink-0
                   ${
                     tab.id === activeTabId
                       ? 'hover:bg-muted/50'

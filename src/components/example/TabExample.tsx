@@ -50,9 +50,13 @@ export function TabExample() {
               cursor-pointer
             `}
           >
-            <span onClick={() => setActiveTab(tab.id)} className="flex-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className="flex-1 text-left cursor-pointer hover:opacity-80"
+            >
               {tab.title}
-            </span>
+            </button>
 
             <button
               onClick={() => handleRenameTab(tab.id)}

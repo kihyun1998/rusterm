@@ -22,7 +22,8 @@ export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
   };
 
   return (
-    <div
+    // biome-ignore lint/a11y/noStaticElementInteractions: Tauri drag region requires double-click on header
+    <header
       data-tauri-drag-region
       onDoubleClick={handleDoubleClick}
       className="
@@ -52,6 +53,6 @@ export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
 
       {/* Right section: Window controls */}
       <WindowControls />
-    </div>
+    </header>
   );
 }

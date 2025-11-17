@@ -929,15 +929,17 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
                   <h3 className="text-lg font-medium mb-3">리스트 로딩 (여러 항목)</h3>
                   <div className="border rounded-lg p-6 max-w-md">
                     <div className="space-y-4">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={`skeleton-item-${i}`} className="flex items-center space-x-4">
-                          <Skeleton className="h-10 w-10 rounded-md" />
-                          <div className="space-y-2 flex-1">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-3 w-3/4" />
+                      {Array.from({ length: 3 }, (_, i) => ({ id: `skeleton-${i}` })).map(
+                        (item) => (
+                          <div key={item.id} className="flex items-center space-x-4">
+                            <Skeleton className="h-10 w-10 rounded-md" />
+                            <div className="space-y-2 flex-1">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-3 w-3/4" />
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
