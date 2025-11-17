@@ -71,8 +71,21 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     // Mount terminal to DOM
     xterm.open(terminalRef.current);
 
-    // Initial fit
-    fitAddon.fit();
+    // Initial fit - delay to ensure DOM is fully rendered
+    requestAnimationFrame(() => {
+      try {
+        fitAddon.fit();
+      } catch (err) {
+        console.warn('Initial fit failed, retrying...', err);
+        setTimeout(() => {
+          try {
+            fitAddon.fit();
+          } catch (retryErr) {
+            console.error('Fit retry failed:', retryErr);
+          }
+        }, 100);
+      }
+    });
 
     // Handle user input
     xterm.onData((data) => {
@@ -128,20 +141,24 @@ export function Terminal({ id, className = '' }: TerminalProps) {
 
     // Resize handler
     const handleResize = () => {
-      if (!terminalRef.current) {
+      if (!terminalRef.current || !terminal || !fitAddon) {
         return;
       }
 
-      // Fit terminal to container
-      fitAddon.fit();
+      try {
+        // Fit terminal to container
+        fitAddon.fit();
 
-      // Get new dimensions
-      const cols = terminal.cols;
-      const rows = terminal.rows;
+        // Get new dimensions
+        const cols = terminal.cols;
+        const rows = terminal.rows;
 
-      // Notify PTY of size change
-      if (isConnected) {
-        resizePty(cols, rows);
+        // Notify PTY of size change
+        if (isConnected) {
+          resizePty(cols, rows);
+        }
+      } catch (err) {
+        console.warn('Resize failed:', err);
       }
     };
 
