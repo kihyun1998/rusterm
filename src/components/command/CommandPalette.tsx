@@ -41,6 +41,7 @@ interface CommandPaletteProps {
   onOpenChange?: (open: boolean) => void;
   onShowDemo?: () => void;
   onShowSettings?: () => void;
+  onOpenSshDialog?: () => void;
 }
 
 export function CommandPalette({
@@ -49,6 +50,7 @@ export function CommandPalette({
   onOpenChange,
   onShowDemo,
   onShowSettings,
+  onOpenSshDialog,
 }: CommandPaletteProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -256,8 +258,14 @@ export function CommandPalette({
         connectionType: 'local',
       });
       setOpen(false);
+    } else if (type === 'ssh') {
+      // Open SSH connection dialog
+      if (onOpenSshDialog) {
+        onOpenSshDialog();
+      }
+      setOpen(false);
     } else {
-      // TODO: Open connection dialog (Phase 5)
+      // TODO: Open connection dialog for other types (telnet, rdp, sftp)
       console.log(`TODO: Open ${type} connection dialog`);
       setOpen(false);
     }
