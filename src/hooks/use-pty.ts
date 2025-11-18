@@ -8,11 +8,18 @@ interface UsePtyOptions {
   onExit?: (exitCode: number | null) => void;
 }
 
+interface CreatePtyOptions {
+  shell?: string;
+  args?: string[];
+  cwd?: string;
+  env?: Record<string, string>;
+}
+
 interface UsePtyReturn {
   ptyId: string | null;
   isConnected: boolean;
   error: string | null;
-  createPty: (cols: number, rows: number) => Promise<void>;
+  createPty: (cols: number, rows: number, options?: CreatePtyOptions) => Promise<void>;
   writeToPty: (data: string) => Promise<void>;
   resizePty: (cols: number, rows: number) => Promise<void>;
   closePty: () => Promise<void>;
@@ -50,15 +57,16 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
   /**
    * Create a new PTY session
    */
-  const createPty = useCallback(async (cols: number, rows: number) => {
+  const createPty = useCallback(async (cols: number, rows: number, createOptions?: CreatePtyOptions) => {
     try {
       setError(null);
 
       // Call Tauri command to create PTY
       const response = await invoke<CreatePtyResponse>('create_pty', {
-        shell: null, // Use default shell
-        cwd: null, // Use default working directory
-        env: null, // Use default environment
+        shell: createOptions?.shell || null, // Use default shell if not provided
+        args: createOptions?.args || null, // Command arguments (for ssh, etc.)
+        cwd: createOptions?.cwd || null, // Use default working directory
+        env: createOptions?.env || null, // Use default environment
         cols,
         rows,
       });

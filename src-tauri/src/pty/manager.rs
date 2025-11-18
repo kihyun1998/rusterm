@@ -23,6 +23,7 @@ impl PtyManager {
     pub async fn create_session(
         &self,
         shell: Option<String>,
+        args: Option<Vec<String>>,
         cwd: Option<String>,
         env: Option<HashMap<String, String>>,
         cols: u16,
@@ -36,6 +37,7 @@ impl PtyManager {
         let session = PtySession::new(
             pty_id.clone(),
             shell,
+            args,
             cwd,
             env,
             cols,

@@ -8,13 +8,14 @@ pub async fn create_pty(
     state: State<'_, PtyManager>,
     app_handle: AppHandle,
     shell: Option<String>,
+    args: Option<Vec<String>>,
     cwd: Option<String>,
     env: Option<HashMap<String, String>>,
     cols: u16,
     rows: u16,
 ) -> Result<CreatePtyResponse, String> {
     state
-        .create_session(shell, cwd, env, cols, rows, app_handle)
+        .create_session(shell, args, cwd, env, cols, rows, app_handle)
         .await
         .map_err(|e| e.to_string())
 }

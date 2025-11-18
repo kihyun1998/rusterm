@@ -241,9 +241,22 @@ export function Terminal({
         return;
       }
 
-      // Convert UI config to backend config
-      const backendConfig = toBackendSshConfig(connectionConfig);
-      sshHook.connect(backendConfig, cols, rows);
+      // Check if password or privateKey is provided
+      const hasAuth = connectionConfig.password || connectionConfig.privateKey;
+
+      if (hasAuth) {
+        // Use SSH library for direct connection with credentials
+        const backendConfig = toBackendSshConfig(connectionConfig);
+        sshHook.connect(backendConfig, cols, rows);
+      } else {
+        // Use PTY with ssh command for interactive authentication
+        const sshArgs = [
+          `${connectionConfig.username}@${connectionConfig.host}`,
+          '-p',
+          connectionConfig.port.toString(),
+        ];
+        ptyHook.createPty(cols, rows, { shell: 'ssh', args: sshArgs });
+      }
     }
 
     ptyCreatedRef.current = true;
@@ -254,7 +267,15 @@ export function Terminal({
       if (isLocalConnection) {
         ptyHook.closePty();
       } else if (isSshConnection) {
-        sshHook.disconnect();
+        // Check if we used PTY or SSH library
+        if (connectionConfig && isSSHConfig(connectionConfig)) {
+          const hasAuth = connectionConfig.password || connectionConfig.privateKey;
+          if (hasAuth) {
+            sshHook.disconnect();
+          } else {
+            ptyHook.closePty();
+          }
+        }
       }
       ptyCreatedRef.current = false;
     };

@@ -23,6 +23,7 @@ impl PtySession {
     pub fn new(
         pty_id: String,
         shell: Option<String>,
+        args: Option<Vec<String>>,
         cwd: Option<String>,
         env: Option<std::collections::HashMap<String, String>>,
         cols: u16,
@@ -50,6 +51,13 @@ impl PtySession {
 
         // 커맨드 빌더 생성
         let mut cmd = CommandBuilder::new(&shell_path);
+
+        // 인자 추가 (예: ssh 명령어의 경우 ["user@host", "-p", "22"])
+        if let Some(args_vec) = args {
+            for arg in args_vec {
+                cmd.arg(arg);
+            }
+        }
 
         // 작업 디렉토리 설정
         if let Some(cwd_path) = cwd {
