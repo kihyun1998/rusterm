@@ -122,7 +122,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <DialogDescription>Customize your terminal appearance and behavior</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-6 max-h-[60vh] overflow-y-auto pr-2">
+        <div className="space-y-6 py-6 max-h-[60vh] overflow-y-auto settings-scrollbar">
           {/* Theme Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
