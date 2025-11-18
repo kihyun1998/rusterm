@@ -47,16 +47,26 @@ export function TabBar({ isTerminalActive, terminalTheme }: TabBarProps) {
     return color;
   };
 
+  // Helper function to darken or lighten a color
+  const adjustBrightness = (color: string, amount: number) => {
+    if (color.startsWith('#')) {
+      const r = Math.max(0, Math.min(255, parseInt(color.slice(1, 3), 16) + amount));
+      const g = Math.max(0, Math.min(255, parseInt(color.slice(3, 5), 16) + amount));
+      const b = Math.max(0, Math.min(255, parseInt(color.slice(5, 7), 16) + amount));
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+    return color;
+  };
+
   return (
     <div
-      className={`flex items-center gap-1 px-2 py-1 border-b border-border ${
-        isTerminalActive ? '' : 'bg-muted'
-      }`}
+      className={`flex items-center gap-1 px-2 py-1 border-b ${isTerminalActive ? '' : 'bg-muted border-border'}`}
       style={
         isTerminalActive && terminalTheme
           ? {
               backgroundColor: terminalTheme.background,
               color: terminalTheme.foreground,
+              borderBottomColor: addOpacity(terminalTheme.foreground, 0.2),
             }
           : undefined
       }
@@ -66,6 +76,23 @@ export function TabBar({ isTerminalActive, terminalTheme }: TabBarProps) {
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const useTerminalColors = isTerminalActive && terminalTheme;
+
+          // Prepare styles for inactive tabs with hover effect
+          const inactiveTabStyle = useTerminalColors
+            ? {
+                backgroundColor: adjustBrightness(terminalTheme.background, -40),
+                color: addOpacity(terminalTheme.foreground, 0.6),
+                borderColor: 'transparent',
+              }
+            : {};
+
+          const activeTabStyle = useTerminalColors
+            ? {
+                backgroundColor: terminalTheme.background,
+                color: terminalTheme.foreground,
+                borderColor: addOpacity(terminalTheme.foreground, 0.2),
+              }
+            : {};
 
           return (
             <div
@@ -79,20 +106,21 @@ export function TabBar({ isTerminalActive, terminalTheme }: TabBarProps) {
                       ? 'bg-background border border-border border-b-0 text-foreground'
                       : 'bg-muted/50 text-muted-foreground hover:bg-muted/80'
                     : isActive
-                      ? 'border border-border border-b-0'
+                      ? 'border border-b-0'
                       : ''
                 }
               `}
-              style={
-                useTerminalColors
-                  ? {
-                      backgroundColor: isActive
-                        ? terminalTheme.background
-                        : addOpacity(terminalTheme.background, 0.5),
-                      color: isActive ? terminalTheme.foreground : addOpacity(terminalTheme.foreground, 0.7),
-                    }
-                  : undefined
-              }
+              style={isActive ? activeTabStyle : inactiveTabStyle}
+              onMouseEnter={(e) => {
+                if (!isActive && useTerminalColors) {
+                  e.currentTarget.style.backgroundColor = adjustBrightness(terminalTheme.background, -25);
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive && useTerminalColors) {
+                  e.currentTarget.style.backgroundColor = adjustBrightness(terminalTheme.background, -40);
+                }
+              }}
             >
               {/* Tab title button */}
               <button
