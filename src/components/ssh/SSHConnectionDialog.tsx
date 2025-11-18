@@ -83,7 +83,7 @@ export function SSHConnectionDialog({
     host: initialConfig?.host || '',
     port: initialConfig?.port || 22,
     username: initialConfig?.username || '',
-    authMethod: initialConfig?.password ? 'password' : 'privateKey',
+    authMethod: initialConfig?.privateKey ? 'privateKey' : 'password',
     password: '', // Never pre-fill for security
     privateKeyPath: initialConfig?.privateKey || '',
     passphrase: '',
@@ -250,7 +250,7 @@ export function SSHConnectionDialog({
       host: initialConfig?.host || '',
       port: initialConfig?.port || 22,
       username: initialConfig?.username || '',
-      authMethod: initialConfig?.password ? 'password' : 'privateKey',
+      authMethod: initialConfig?.privateKey ? 'privateKey' : 'password',
       password: '',
       privateKeyPath: initialConfig?.privateKey || '',
       passphrase: '',
@@ -292,6 +292,7 @@ export function SSHConnectionDialog({
               value={formState.host}
               onChange={(e) => handleFieldChange('host', e.target.value)}
               className={errors.host ? 'border-destructive' : ''}
+              autoComplete="off"
             />
             {errors.host && <p className="text-sm text-destructive">{errors.host}</p>}
           </div>
@@ -310,6 +311,7 @@ export function SSHConnectionDialog({
                 value={formState.port}
                 onChange={(e) => handleFieldChange('port', parseInt(e.target.value) || 22)}
                 className={errors.port ? 'border-destructive' : ''}
+                autoComplete="off"
               />
               {errors.port && <p className="text-sm text-destructive">{errors.port}</p>}
             </div>
@@ -323,6 +325,7 @@ export function SSHConnectionDialog({
                 value={formState.username}
                 onChange={(e) => handleFieldChange('username', e.target.value)}
                 className={errors.username ? 'border-destructive' : ''}
+                autoComplete="off"
               />
               {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
             </div>
@@ -356,6 +359,7 @@ export function SSHConnectionDialog({
                 value={formState.password}
                 onChange={(e) => handleFieldChange('password', e.target.value)}
                 className={errors.password ? 'border-destructive' : ''}
+                autoComplete="off"
               />
               {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
@@ -374,6 +378,7 @@ export function SSHConnectionDialog({
                   value={formState.privateKeyPath}
                   onChange={(e) => handleFieldChange('privateKeyPath', e.target.value)}
                   className={errors.privateKeyPath ? 'border-destructive' : ''}
+                  autoComplete="off"
                 />
                 {errors.privateKeyPath && (
                   <p className="text-sm text-destructive">{errors.privateKeyPath}</p>
@@ -388,6 +393,7 @@ export function SSHConnectionDialog({
                   placeholder="Leave empty if no passphrase"
                   value={formState.passphrase}
                   onChange={(e) => handleFieldChange('passphrase', e.target.value)}
+                  autoComplete="off"
                 />
               </div>
             </>
@@ -420,6 +426,7 @@ export function SSHConnectionDialog({
                 value={formState.profileName}
                 onChange={(e) => handleFieldChange('profileName', e.target.value)}
                 className={errors.profileName ? 'border-destructive' : ''}
+                autoComplete="off"
               />
               {errors.profileName && (
                 <p className="text-sm text-destructive">{errors.profileName}</p>
