@@ -56,7 +56,7 @@ export function Terminal({
   const sshErrorRef = useRef<string | null>(null);
   const connectionConfigRef = useRef(connectionConfig);
   // Track if SSH connection is using PTY (for interactive auth without credentials)
-  const useSshViaPtyRef = useRef(false);
+  const [useSshViaPty, setUseSshViaPty] = useState(false);
 
   useEffect(() => {
     connectionConfigRef.current = connectionConfig;
@@ -144,11 +144,11 @@ export function Terminal({
 
   // Store write function in ref to avoid recreating xterm on every render
   const writeInputRef = useRef<(data: string) => Promise<void>>(
-    isLocalConnection || useSshViaPtyRef.current ? ptyHook.writeToPty : sshHook.sendInput
+    isLocalConnection || useSshViaPty ? ptyHook.writeToPty : sshHook.sendInput
   );
   useEffect(() => {
-    writeInputRef.current = isLocalConnection || useSshViaPtyRef.current ? ptyHook.writeToPty : sshHook.sendInput;
-  }, [isLocalConnection, ptyHook.writeToPty, sshHook.sendInput]);
+    writeInputRef.current = isLocalConnection || useSshViaPty ? ptyHook.writeToPty : sshHook.sendInput;
+  }, [isLocalConnection, useSshViaPty, ptyHook.writeToPty, sshHook.sendInput]);
 
   // Initialize xterm.js
   useEffect(() => {
@@ -248,12 +248,12 @@ export function Terminal({
 
       if (hasAuth) {
         // Use SSH library for direct connection with credentials
-        useSshViaPtyRef.current = false;
+        setUseSshViaPty(false);
         const backendConfig = toBackendSshConfig(connectionConfig);
         sshHook.connect(backendConfig, cols, rows);
       } else {
         // Use PTY with ssh command for interactive authentication
-        useSshViaPtyRef.current = true;
+        setUseSshViaPty(true);
         const sshArgs = [
           `${connectionConfig.username}@${connectionConfig.host}`,
           '-p',
@@ -324,7 +324,7 @@ export function Terminal({
           // Only notify backend if size is reasonable
           // This prevents content loss when window becomes very small
           if (isConnected && cols >= MIN_COLS && rows >= MIN_ROWS) {
-            if (isLocalConnection || useSshViaPtyRef.current) {
+            if (isLocalConnection || useSshViaPty) {
               ptyResizeRef.current(cols, rows);
             } else if (isSshConnection) {
               sshResizeRef.current(cols, rows);
@@ -352,7 +352,7 @@ export function Terminal({
       }
       resizeObserver.disconnect();
     };
-  }, [isReady, isConnected, isLocalConnection, isSshConnection]);
+  }, [isReady, isConnected, isLocalConnection, isSshConnection, useSshViaPty]);
 
   // Display error for local PTY connections (SSH errors handled in onStateChange)
   useEffect(() => {
@@ -376,7 +376,7 @@ export function Terminal({
       try {
         fitAddon.fit();
         if (isConnected) {
-          if (isLocalConnection || useSshViaPtyRef.current) {
+          if (isLocalConnection || useSshViaPty) {
             ptyResizeRef.current(terminal.cols, terminal.rows);
           } else if (isSshConnection) {
             sshResizeRef.current(terminal.cols, terminal.rows);
@@ -397,7 +397,7 @@ export function Terminal({
         ...theme,
       };
     }
-  }, [settings, isReady, isConnected, isLocalConnection, isSshConnection]);
+  }, [settings, isReady, isConnected, isLocalConnection, isSshConnection, useSshViaPty]);
 
   // Listen to terminal events from CommandPalette and other components
   useEffect(() => {
@@ -465,7 +465,7 @@ export function Terminal({
           fitAddon.fit();
           // Notify backend of potential size change
           if (isConnected) {
-            if (isLocalConnection || useSshViaPtyRef.current) {
+            if (isLocalConnection || useSshViaPty) {
               ptyResizeRef.current(terminal.cols, terminal.rows);
             } else if (isSshConnection) {
               sshResizeRef.current(terminal.cols, terminal.rows);
@@ -490,6 +490,7 @@ export function Terminal({
     isConnected,
     isLocalConnection,
     isSshConnection,
+    useSshViaPty,
     copyToClipboard,
   ]);
 
