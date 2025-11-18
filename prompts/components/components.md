@@ -106,22 +106,26 @@
 ## Phase 5: 설정 시스템
 
 ### 5.1 설정 저장/로드
-- [ ] 설정 타입 정의
+- [x] 설정 타입 정의
   - `src/types/settings.ts`: 테마, 폰트, 키바인딩 등
-- [ ] 백엔드 설정 관리
-  - `src-tauri/src/commands/settings.rs`
-  - JSON 파일로 저장 (앱 데이터 디렉토리)
-- [ ] 프론트엔드 훅
-  - `src/hooks/use-settings.ts`: 설정 로드/저장
+- [x] 백엔드 설정 관리
+  - `src-tauri/src/commands/settings_commands.rs`
+  - `src-tauri/src/settings/manager.rs`
+  - JSON 파일로 저장 (앱 데이터 디렉토리: `~/.config/rusterm/settings.json`)
+- [x] 프론트엔드 훅
+  - `src/stores/use-settings-store.ts`: Zustand 스토어로 설정 로드/저장
 
 ### 5.2 설정 UI
-- [ ] shadcn/ui `Dialog` 컴포넌트 추가
-- [ ] `src/components/settings/SettingsDialog.tsx`
-  - 탭 형식 (Appearance, Profiles, Keybindings)
-- [ ] `src/components/settings/AppearanceSettings.tsx`
-  - 폰트 크기/패밀리
-  - 테마 선택 (드롭다운)
-  - 테마 프리뷰 (작은 터미널 샘플)
+- [x] shadcn/ui `Dialog` 컴포넌트 추가
+- [x] `src/components/settings/SettingsDialog.tsx`
+  - App Theme (Dark/Light)
+  - Font Size/Family
+  - Terminal Color Theme 선택
+- [x] Terminal Theme 프리셋
+  - `src/constants/terminal-themes.ts`: 10개 테마 (Dracula, Monokai, Solarized, One Dark, Nord, Gruvbox, Tokyo Night 등)
+- [x] `src/components/settings/TerminalPreview.tsx`
+  - xterm.js 기반 터미널 프리뷰
+  - 실시간 테마 미리보기
 
 ### 5.3 프로필 관리
 - [ ] 프로필 타입 정의
