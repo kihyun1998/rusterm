@@ -1,9 +1,11 @@
 mod commands;
 mod pty;
 mod settings;
+mod ssh;
 
 use pty::PtyManager;
 use settings::SettingsManager;
+use ssh::SshManager;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -21,6 +23,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(PtyManager::new())
+        .manage(SshManager::new())
         .manage(settings_manager)
         .invoke_handler(tauri::generate_handler![
             greet,
