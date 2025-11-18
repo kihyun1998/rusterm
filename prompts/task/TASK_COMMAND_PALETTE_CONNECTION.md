@@ -27,24 +27,24 @@
 ## Phase 2: Connection Profile Store 구현 (보안 강화)
 
 ### 2.1 프로필 스토어 생성 (메타데이터 관리)
-- [ ] `src/stores/use-connection-profile-store.ts` 파일 생성
-  - [ ] 상태 정의
-    - [ ] `profiles: ConnectionProfile[]` (비민감 정보만)
-    - [ ] `recentConnections: string[]` (profile IDs)
-  - [ ] Actions 정의
-    - [ ] `addProfile(profile: ConnectionProfile)`
-    - [ ] `updateProfile(id: string, profile: Partial<ConnectionProfile>)`
-    - [ ] `deleteProfile(id: string)`
-    - [ ] `toggleFavorite(id: string)`
-    - [ ] `addToRecent(id: string)`
-    - [ ] `getRecentProfiles(limit?: number)`
-    - [ ] `getFavoriteProfiles()`
+- [x] `src/stores/use-connection-profile-store.ts` 파일 생성
+  - [x] 상태 정의
+    - [x] `profiles: ConnectionProfile[]` (비민감 정보만)
+    - [x] `recentConnections: string[]` (profile IDs)
+  - [x] Actions 정의
+    - [x] `addProfile(profile: ConnectionProfile)`
+    - [x] `updateProfile(id: string, profile: Partial<ConnectionProfile>)`
+    - [x] `deleteProfile(id: string)`
+    - [x] `toggleFavorite(id: string)`
+    - [x] `addToRecent(id: string)`
+    - [x] `getRecentProfiles(limit?: number)`
+    - [x] `getFavoriteProfiles()`
 
 ### 2.2 로컬 스토리지 연동 (비민감 정보)
-- [ ] Zustand persist middleware 설정
-  - [ ] 프로필 메타데이터만 localStorage에 저장
-  - [ ] 앱 시작 시 자동 로드
-  - [ ] 민감 정보(password, privateKey) 제외
+- [x] Zustand persist middleware 설정
+  - [x] 프로필 메타데이터만 localStorage에 저장
+  - [x] 앱 시작 시 자동 로드
+  - [x] 민감 정보(password, privateKey) 제외
 
 ### 2.3 Keyring 통합 (민감 정보 보안 저장)
 - [ ] Rust 백엔드: keyring-rs 설정
@@ -278,5 +278,5 @@ save_credential("rusterm-ssh", "abc123-passphrase", "keypass")
 ---
 
 **작성일**: 2025-11-18
-**수정일**: 2025-11-18 (Phase 3.2 즐겨찾기 토글 기능 추가)
+**수정일**: 2025-11-18 (Phase 2.1, 2.2 완료)
 **관련 Task**: TASK_SSH_CONNECTION.md
