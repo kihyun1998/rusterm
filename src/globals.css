@@ -234,16 +234,16 @@ body {
 }
 
 .settings-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: #444;
   border-radius: 3px;
 }
 
 .settings-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: #666;
 }
 
 /* Firefox scrollbar */
 .settings-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  scrollbar-color: #444 transparent;
 }
