@@ -337,7 +337,13 @@ export function Terminal({ id, className = '' }: TerminalProps) {
   }, [isReady, writeToPty, isConnected, resizePty, copyToClipboard]);
 
   return (
-    <div ref={wrapperRef} className="w-full h-full bg-[#1e1e1e] p-2">
+    <div
+      ref={wrapperRef}
+      className="w-full h-full p-2"
+      style={{
+        backgroundColor: settings?.theme?.background || '#1e1e1e',
+      }}
+    >
       <TerminalContextMenu terminalRef={xtermRef} onPaste={(text) => writeToPty(text)}>
         <div ref={terminalRef} className={`w-full h-full ${className}`} data-terminal-id={id} />
       </TerminalContextMenu>
