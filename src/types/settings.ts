@@ -11,6 +11,7 @@ export interface Settings {
   fontSize: number;
   fontFamily: string;
   theme: TerminalTheme;
+  terminalThemeId?: string;
 }
 
 export interface TerminalTheme {

@@ -10,6 +10,8 @@ pub struct Settings {
     pub font_size: u32,
     pub font_family: String,
     pub theme: TerminalTheme,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub terminal_theme_id: Option<String>,
 }
 
 fn default_app_theme() -> String {
@@ -71,6 +73,7 @@ impl Default for Settings {
             font_size: 14,
             font_family: "Cascadia Code, Consolas, Monaco, monospace".to_string(),
             theme: TerminalTheme::default(),
+            terminal_theme_id: None,
         }
     }
 }
