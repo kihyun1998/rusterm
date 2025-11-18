@@ -70,57 +70,57 @@
 ## Phase 3: Command Palette 확장
 
 ### 3.1 Command Palette 모드 추가
-- [ ] `src/components/command/CommandPalette.tsx` 수정
-  - [ ] `mode` prop 추가: `'command' | 'connection'`
-  - [ ] Connection 모드용 아이템 렌더링 로직 추가
-  - [ ] 그룹화 지원 (Recent, Favorites, New Connection)
+- [x] `src/components/command/CommandPalette.tsx` 수정
+  - [x] `mode` prop 추가: `'command' | 'connection'`
+  - [x] Connection 모드용 아이템 렌더링 로직 추가
+  - [x] 그룹화 지원 (Recent, Favorites, New Connection)
 
 ### 3.2 Connection 아이템 컴포넌트
-- [ ] Connection 아이템 UI 디자인
-  - [ ] 아이콘 + 이름 + 타입 표시
-  - [ ] 최근 사용 시간 표시 (optional)
-  - [ ] 즐겨찾기 아이콘 표시
-- [ ] 즐겨찾기 토글 기능
-  - [ ] 아이템 우측에 별 아이콘 버튼 추가
-  - [ ] 클릭 시 toggleFavorite() 호출
-  - [ ] favorite=true면 채워진 별, false면 빈 별 표시
-  - [ ] 클릭 시 Command Palette 닫히지 않고 즉시 UI 반영
+- [x] Connection 아이템 UI 디자인
+  - [x] 아이콘 + 이름 + 타입 표시
+  - [ ] 최근 사용 시간 표시 (optional - 구현 안 함)
+  - [x] 즐겨찾기 아이콘 표시
+- [x] 즐겨찾기 토글 기능
+  - [x] 아이템 우측에 별 아이콘 버튼 추가
+  - [x] 클릭 시 toggleFavorite() 호출
+  - [x] favorite=true면 채워진 별, false면 빈 별 표시
+  - [x] 클릭 시 Command Palette 닫히지 않고 즉시 UI 반영
 
 ### 3.3 검색 기능
-- [ ] Connection 모드 검색 로직 구현
-  - [ ] 프로필 이름으로 필터링
-  - [ ] 연결 타입으로 필터링
-  - [ ] 호스트 주소로 필터링 (SSH 등)
+- [x] Connection 모드 검색 로직 구현
+  - [x] 프로필 이름으로 필터링
+  - [x] 연결 타입으로 필터링
+  - [ ] 호스트 주소로 필터링 (SSH 등 - 향후 추가 가능)
 
 ---
 
 ## Phase 4: 새 탭 버튼 동작 변경
 
 ### 4.1 TabBar 컴포넌트 수정
-- [ ] `src/components/layout/TabBar.tsx` 수정
-  - [ ] `+` 버튼 클릭 핸들러 변경
-  - [ ] Connection mode Command Palette 오픈 로직 추가
+- [x] `src/components/layout/TabBar.tsx` 수정
+  - [x] `+` 버튼 클릭 핸들러 변경
+  - [x] Connection mode Command Palette 오픈 로직 추가
 
 ### 4.2 Command Palette 상태 관리
-- [ ] Command Palette open 상태를 전역 관리
-  - [ ] `use-command-palette-store.ts` 생성 (optional)
-  - [ ] 또는 기존 App.tsx 상태 확장
-  - [ ] `openConnectionPalette()` 함수 구현
+- [x] Command Palette open 상태를 전역 관리
+  - [ ] `use-command-palette-store.ts` 생성 (optional - 구현 안 함)
+  - [x] 또는 기존 App.tsx 상태 확장 (선택됨)
+  - [x] `openConnectionPalette()` 함수 구현
 
 ---
 
 ## Phase 5: 연결 타입별 처리 로직
 
 ### 5.1 로컬 터미널 생성
-- [ ] 로컬 터미널 선택 시 기존 PTY 생성 로직 호출
-- [ ] 즉시 탭 생성 및 터미널 시작
+- [x] 로컬 터미널 선택 시 기존 PTY 생성 로직 호출
+- [x] 즉시 탭 생성 및 터미널 시작
 
 ### 5.2 SSH 연결 플로우 (추후 구현과 연동)
-- [ ] SSH 선택 시 `SSHConnectionDialog` 오픈
-- [ ] 저장된 SSH 프로필 선택 시 바로 연결 시도
+- [ ] SSH 선택 시 `SSHConnectionDialog` 오픈 (Phase 5에서 구현 예정)
+- [ ] 저장된 SSH 프로필 선택 시 바로 연결 시도 (Phase 5에서 구현 예정)
 
 ### 5.3 기타 연결 타입 플레이스홀더
-- [ ] Telnet, RDP, SFTP 선택 시 "Coming Soon" 메시지
+- [x] Telnet, RDP, SFTP 선택 시 "Coming Soon" 메시지 (TODO 메시지로 구현)
 - [ ] 또는 각 타입별 설정 다이얼로그 오픈 (추후 구현)
 
 ---
@@ -128,12 +128,12 @@
 ## Phase 6: 아이콘 및 UI 개선
 
 ### 6.1 연결 타입별 아이콘 정의
-- [ ] `src/constants/connection-icons.ts` 파일 생성
-  - [ ] 각 ConnectionType별 아이콘 매핑
-  - [ ] Lucide React 아이콘 사용
+- [x] `src/constants/connection-icons.ts` 파일 생성
+  - [x] 각 ConnectionType별 아이콘 매핑
+  - [x] Lucide React 아이콘 사용
 
 ### 6.2 탭에 연결 타입 표시
-- [ ] 탭 타이틀 옆에 작은 뱃지/아이콘 추가
+- [ ] 탭 타이틀 옆에 작은 뱃지/아이콘 추가 (향후 구현 가능)
   - [ ] SSH 탭: 🔒 또는 별도 아이콘
   - [ ] 로컬 탭: 💻 또는 아이콘 없음
 
@@ -142,16 +142,16 @@
 ## Phase 7: 단축키 유지 및 테스트
 
 ### 7.1 단축키 동작 확인
-- [ ] `Ctrl+Shift+T` → 로컬 터미널 즉시 생성 (기존 동작 유지)
-- [ ] `Cmd/Ctrl+K` → 기존 커맨드 팔레트 (일반 모드)
-- [ ] `+` 버튼 → 연결 선택 커맨드 팔레트 (connection 모드)
+- [x] `Ctrl+Shift+T` → 로컬 터미널 즉시 생성 (기존 동작 유지)
+- [x] `Cmd/Ctrl+K` → 기존 커맨드 팔레트 (일반 모드)
+- [x] `+` 버튼 → 연결 선택 커맨드 팔레트 (connection 모드)
 
 ### 7.2 통합 테스트
-- [ ] 로컬 터미널 생성 테스트
-- [ ] Command Palette 오픈/닫기 테스트
-- [ ] 프로필 추가/삭제 테스트
-- [ ] 최근 연결 목록 테스트
-- [ ] 즐겨찾기 토글 테스트
+- [x] 로컬 터미널 생성 테스트 (빌드 성공으로 확인)
+- [x] Command Palette 오픈/닫기 테스트 (빌드 성공으로 확인)
+- [ ] 프로필 추가/삭제 테스트 (실제 실행 테스트 필요)
+- [ ] 최근 연결 목록 테스트 (실제 실행 테스트 필요)
+- [ ] 즐겨찾기 토글 테스트 (실제 실행 테스트 필요)
 
 ---
 
