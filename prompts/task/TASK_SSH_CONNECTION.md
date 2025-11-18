@@ -74,15 +74,17 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
     - [x] 셸 시작
 
 ### 3.2 SSH Session I/O 처리
-- [ ] `read()` 메서드: 채널에서 데이터 읽기 - 백그라운드 스레드에서 처리 중
-- [x] `write()` 메서드: 채널로 데이터 쓰기
-- [x] `resize()` 메서드: PTY 크기 조정
-- [ ] `close()` 메서드: 연결 종료 및 리소스 정리 - Drop으로 자동 처리 중
+- [x] `read()` 메서드: 채널에서 데이터 읽기 - start_io_thread에서 통합 처리
+- [x] `write()` 메서드: 채널로 데이터 쓰기 - mpsc 채널을 통한 명령 전송
+- [x] `resize()` 메서드: PTY 크기 조정 - mpsc 채널을 통한 명령 전송
+- [x] `close()` 메서드: 연결 종료 및 리소스 정리 - Drop으로 자동 처리
 
 ### 3.3 비동기 I/O 처리
-- [x] 백그라운드 스레드에서 SSH 출력 읽기 (TODO: 채널 공유 방식 개선 필요)
+- [x] 백그라운드 스레드에서 SSH 출력 읽기 - mpsc 채널로 개선 완료
 - [x] Tauri event로 프론트엔드에 데이터 전송
   - [x] `ssh://output/{session_id}` 이벤트
+- [x] SshCommand enum으로 Write/Resize 명령 처리
+- [x] start_io_thread에서 동일 채널로 읽기/쓰기 통합 처리
 
 ---
 
