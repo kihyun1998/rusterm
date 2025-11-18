@@ -3,6 +3,7 @@ use thiserror::Error;
 
 /// SSH 연결 설정
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SshConfig {
     pub host: String,
     pub port: u16,
