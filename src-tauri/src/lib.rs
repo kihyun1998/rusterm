@@ -37,6 +37,11 @@ pub fn run() {
             commands::keyring_commands::save_credential,
             commands::keyring_commands::get_credential,
             commands::keyring_commands::delete_credential,
+            // SSH commands
+            commands::ssh_commands::create_ssh_session,
+            commands::ssh_commands::write_to_ssh,
+            commands::ssh_commands::resize_ssh_session,
+            commands::ssh_commands::close_ssh_session,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
