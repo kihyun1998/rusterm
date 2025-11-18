@@ -52,16 +52,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const updateFontFamily = useSettingsStore((state) => state.updateFontFamily);
   const isDark = theme === 'dark';
 
-  // Find current theme ID - prefer stored ID, fallback to property matching
-  const currentThemeId =
-    settings?.terminalThemeId ||
-    TERMINAL_THEMES.find(
-      (t) =>
-        t.theme.background === settings?.theme?.background &&
-        t.theme.foreground === settings?.theme?.foreground &&
-        t.theme.cursor === settings?.theme?.cursor
-    )?.id ||
-    TERMINAL_THEMES[0].id;
+  // Find current theme ID from stored terminalThemeId
+  const currentThemeId = settings?.terminalThemeId || TERMINAL_THEMES[0].id;
 
   const handleThemeToggle = async () => {
     toggleTheme();
