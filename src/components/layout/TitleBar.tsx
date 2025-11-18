@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useWindowControls } from '@/hooks/use-window-controls';
-import { WindowControls } from './WindowControls';
 import type { TerminalTheme } from '@/types/settings';
+import { WindowControls } from './WindowControls';
 
 interface TitleBarProps {
   showDemoButton?: boolean;
@@ -82,7 +82,10 @@ export function TitleBar({
       )}
 
       {/* Right section: Window controls */}
-      <WindowControls isTerminalActive={isTerminalActive} terminalForegroundColor={terminalTheme?.foreground} />
+      <WindowControls
+        isTerminalActive={isTerminalActive}
+        terminalForegroundColor={terminalTheme?.foreground}
+      />
     </header>
   );
 }

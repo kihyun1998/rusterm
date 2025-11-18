@@ -113,12 +113,18 @@ export function TabBar({ isTerminalActive, terminalTheme }: TabBarProps) {
               style={isActive ? activeTabStyle : inactiveTabStyle}
               onMouseEnter={(e) => {
                 if (!isActive && useTerminalColors) {
-                  e.currentTarget.style.backgroundColor = adjustBrightness(terminalTheme.background, -25);
+                  e.currentTarget.style.backgroundColor = adjustBrightness(
+                    terminalTheme.background,
+                    -25
+                  );
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive && useTerminalColors) {
-                  e.currentTarget.style.backgroundColor = adjustBrightness(terminalTheme.background, -40);
+                  e.currentTarget.style.backgroundColor = adjustBrightness(
+                    terminalTheme.background,
+                    -40
+                  );
                 }
               }}
             >
@@ -173,9 +179,7 @@ export function TabBar({ isTerminalActive, terminalTheme }: TabBarProps) {
         onClick={handleNewTab}
         className="h-8 w-8 p-0 flex-shrink-0"
         aria-label="New tab"
-        style={
-          isTerminalActive && terminalTheme ? { color: terminalTheme.foreground } : undefined
-        }
+        style={isTerminalActive && terminalTheme ? { color: terminalTheme.foreground } : undefined}
       >
         <Plus className="w-4 h-4" />
       </Button>

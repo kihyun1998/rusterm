@@ -1,4 +1,4 @@
-import { Moon, Sun, Palette } from 'lucide-react';
+import { Moon, Palette, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,8 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -19,9 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { getThemeById, TERMINAL_THEMES } from '@/constants/terminal-themes';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/stores';
-import { TERMINAL_THEMES, getThemeById } from '@/constants/terminal-themes';
 import { TerminalPreview } from './TerminalPreview';
 
 interface SettingsDialogProps {
@@ -183,9 +183,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Palette className="h-5 w-5 text-muted-foreground" />
               <div className="space-y-0.5">
                 <Label htmlFor="terminal-theme">Terminal Color Theme</Label>
-                <p className="text-sm text-muted-foreground">
-                  Choose from preset color schemes
-                </p>
+                <p className="text-sm text-muted-foreground">Choose from preset color schemes</p>
               </div>
             </div>
             <Select value={currentThemeId} onValueChange={handleTerminalThemeChange}>

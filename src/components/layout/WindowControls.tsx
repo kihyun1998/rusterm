@@ -59,7 +59,9 @@ export function WindowControls({ isTerminalActive, terminalForegroundColor }: Wi
             }
           `}
           style={
-            isTerminalActive && terminalForegroundColor ? { color: terminalForegroundColor } : undefined
+            isTerminalActive && terminalForegroundColor
+              ? { color: terminalForegroundColor }
+              : undefined
           }
         >
           {button.icon}

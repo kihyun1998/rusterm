@@ -1,7 +1,7 @@
 import { Home } from '@/components/home/Home';
 import { Terminal } from '@/components/terminal/Terminal';
-import { useTabStore, useSettingsStore } from '@/stores';
 import { getThemeById } from '@/constants/terminal-themes';
+import { useSettingsStore, useTabStore } from '@/stores';
 import { TabBar } from './TabBar';
 import { TitleBar } from './TitleBar';
 
@@ -61,7 +61,11 @@ export function MainLayout({ showDemoButton, onDemoClick, onShowSettings }: Main
                 zIndex: tab.id === activeTabId ? 1 : 0,
               }}
             >
-              {tab.type === 'home' ? <Home onShowSettings={onShowSettings} /> : <Terminal id={tab.id} />}
+              {tab.type === 'home' ? (
+                <Home onShowSettings={onShowSettings} />
+              ) : (
+                <Terminal id={tab.id} />
+              )}
             </div>
           ))
         )}

@@ -202,14 +202,5 @@ export function useShortcuts(options: UseShortcutsOptions) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
-  }, [
-    tabs,
-    activeTabId,
-    addTab,
-    closeTab,
-    setActiveTab,
-    settings,
-    updateFontSize,
-    onOpenSettings,
-  ]);
+  }, [tabs, activeTabId, addTab, closeTab, setActiveTab, settings, updateFontSize, onOpenSettings]);
 }

@@ -70,14 +70,17 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     }
 
     // Create terminal instance with settings if available
-    const theme = settings?.terminalThemeId ? getThemeById(settings.terminalThemeId)?.theme : undefined;
-    const config = settings && theme
-      ? getTerminalConfig({
-          fontSize: settings.fontSize,
-          fontFamily: settings.fontFamily,
-          theme,
-        })
-      : getTerminalConfig();
+    const theme = settings?.terminalThemeId
+      ? getThemeById(settings.terminalThemeId)?.theme
+      : undefined;
+    const config =
+      settings && theme
+        ? getTerminalConfig({
+            fontSize: settings.fontSize,
+            fontFamily: settings.fontFamily,
+            theme,
+          })
+        : getTerminalConfig();
 
     const xterm = new XTerm(config);
     xtermRef.current = xterm;
@@ -246,7 +249,9 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     }
 
     // Update theme
-    const theme = settings.terminalThemeId ? getThemeById(settings.terminalThemeId)?.theme : undefined;
+    const theme = settings.terminalThemeId
+      ? getThemeById(settings.terminalThemeId)?.theme
+      : undefined;
     if (theme && terminal.options.theme) {
       terminal.options.theme = {
         ...terminal.options.theme,
@@ -339,7 +344,9 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     };
   }, [isReady, writeToPty, isConnected, resizePty, copyToClipboard]);
 
-  const currentTheme = settings?.terminalThemeId ? getThemeById(settings.terminalThemeId)?.theme : undefined;
+  const currentTheme = settings?.terminalThemeId
+    ? getThemeById(settings.terminalThemeId)?.theme
+    : undefined;
 
   return (
     <div
