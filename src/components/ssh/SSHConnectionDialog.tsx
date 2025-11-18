@@ -310,7 +310,7 @@ export function SSHConnectionDialog({
                 max="65535"
                 value={formState.port}
                 onChange={(e) => handleFieldChange('port', parseInt(e.target.value) || 22)}
-                className={errors.port ? 'border-destructive' : ''}
+                className={`[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.port ? 'border-destructive' : ''}`}
                 autoComplete="off"
               />
               {errors.port && <p className="text-sm text-destructive">{errors.port}</p>}
