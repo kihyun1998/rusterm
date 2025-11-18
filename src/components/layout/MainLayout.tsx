@@ -30,11 +30,11 @@ export function MainLayout({ showDemoButton, onDemoClick, onShowSettings }: Main
         showDemoButton={showDemoButton}
         onDemoClick={onDemoClick}
         isTerminalActive={isTerminalActive}
-        terminalBackgroundColor={terminalTheme?.background}
+        terminalTheme={terminalTheme}
       />
 
       {/* Tab bar */}
-      <TabBar isTerminalActive={isTerminalActive} terminalBackgroundColor={terminalTheme?.background} />
+      <TabBar isTerminalActive={isTerminalActive} terminalTheme={terminalTheme} />
 
       {/* Content area */}
       <div className="flex-1 relative overflow-hidden">

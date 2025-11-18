@@ -2,11 +2,16 @@ import { Copy, Minus, Square, X } from 'lucide-react';
 import { useWindowControls } from '@/hooks/use-window-controls';
 import type { Platform } from '@/types/window';
 
+interface WindowControlsProps {
+  isTerminalActive?: boolean;
+  terminalForegroundColor?: string;
+}
+
 /**
  * WindowControls component
  * Renders minimize, maximize/restore, and close buttons for custom title bar
  */
-export function WindowControls() {
+export function WindowControls({ isTerminalActive, terminalForegroundColor }: WindowControlsProps) {
   const { minimize, toggleMaximize, close, isMaximized, platform } = useWindowControls();
 
   // Button configuration
@@ -53,6 +58,9 @@ export function WindowControls() {
                 : 'hover:bg-muted-foreground/10'
             }
           `}
+          style={
+            isTerminalActive && terminalForegroundColor ? { color: terminalForegroundColor } : undefined
+          }
         >
           {button.icon}
         </button>

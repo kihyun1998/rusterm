@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { useWindowControls } from '@/hooks/use-window-controls';
 import { WindowControls } from './WindowControls';
+import type { TerminalTheme } from '@/types/settings';
 
 interface TitleBarProps {
   showDemoButton?: boolean;
   onDemoClick?: () => void;
   isTerminalActive?: boolean;
-  terminalBackgroundColor?: string;
+  terminalTheme?: TerminalTheme;
 }
 
 /**
@@ -17,7 +18,7 @@ export function TitleBar({
   showDemoButton,
   onDemoClick,
   isTerminalActive,
-  terminalBackgroundColor,
+  terminalTheme,
 }: TitleBarProps) {
   const { toggleMaximize, platform } = useWindowControls();
 
@@ -41,14 +42,20 @@ export function TitleBar({
         ${isTerminalActive ? '' : 'bg-muted'}
       `}
       style={
-        isTerminalActive && terminalBackgroundColor
-          ? { backgroundColor: terminalBackgroundColor }
+        isTerminalActive && terminalTheme
+          ? {
+              backgroundColor: terminalTheme.background,
+              color: terminalTheme.foreground,
+            }
           : undefined
       }
     >
       {/* Left section: App title */}
       <div data-tauri-drag-region className="flex items-center gap-2 flex-1 min-w-0">
-        <span data-tauri-drag-region className="text-sm font-medium text-foreground truncate">
+        <span
+          data-tauri-drag-region
+          className={`text-sm font-medium truncate ${isTerminalActive ? '' : 'text-foreground'}`}
+        >
           rusterm
         </span>
       </div>
@@ -63,7 +70,7 @@ export function TitleBar({
       )}
 
       {/* Right section: Window controls */}
-      <WindowControls />
+      <WindowControls isTerminalActive={isTerminalActive} terminalForegroundColor={terminalTheme?.foreground} />
     </header>
   );
 }
