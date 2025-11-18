@@ -116,13 +116,16 @@
   - `src/stores/use-settings-store.ts`: Zustand 스토어로 설정 로드/저장
 
 ### 5.2 설정 UI
-- [ ] shadcn/ui `Dialog` 컴포넌트 추가
-- [ ] `src/components/settings/SettingsDialog.tsx`
-  - 탭 형식 (Appearance, Profiles, Keybindings)
-- [ ] `src/components/settings/AppearanceSettings.tsx`
-  - 폰트 크기/패밀리
-  - 테마 선택 (드롭다운)
-  - 테마 프리뷰 (작은 터미널 샘플)
+- [x] shadcn/ui `Dialog` 컴포넌트 추가
+- [x] `src/components/settings/SettingsDialog.tsx`
+  - App Theme (Dark/Light)
+  - Font Size/Family
+  - Terminal Color Theme 선택
+- [x] Terminal Theme 프리셋
+  - `src/constants/terminal-themes.ts`: 10개 테마 (Dracula, Monokai, Solarized, One Dark, Nord, Gruvbox, Tokyo Night 등)
+- [x] `src/components/settings/TerminalPreview.tsx`
+  - xterm.js 기반 터미널 프리뷰
+  - 실시간 테마 미리보기
 
 ### 5.3 프로필 관리
 - [ ] 프로필 타입 정의

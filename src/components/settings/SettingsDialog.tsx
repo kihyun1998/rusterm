@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/stores';
+import { TERMINAL_THEMES, getThemeById } from '@/constants/terminal-themes';
+import { TerminalPreview } from './TerminalPreview';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -97,13 +99,24 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     }
   };
 
+  const handleTerminalThemeChange = async (themeId: string) => {
+    const themePreset = getThemeById(themeId);
+    if (!themePreset) return;
+
+    try {
+      await updateTheme(themePreset.theme);
+    } catch (error) {
+      console.error('Failed to save terminal theme:', error);
+    }
+  };
+
   if (!settings) {
     return null;
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>Customize your terminal appearance and behavior</DialogDescription>
@@ -158,6 +171,50 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Separator */}
+          <div className="border-t border-border" />
+
+          {/* Terminal Theme Select */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Palette className="h-5 w-5 text-muted-foreground" />
+              <div className="space-y-0.5">
+                <Label htmlFor="terminal-theme">Terminal Color Theme</Label>
+                <p className="text-sm text-muted-foreground">
+                  Choose from preset color schemes
+                </p>
+              </div>
+            </div>
+            <Select
+              defaultValue={TERMINAL_THEMES[0].id}
+              onValueChange={handleTerminalThemeChange}
+            >
+              <SelectTrigger id="terminal-theme">
+                <SelectValue placeholder="Select theme" />
+              </SelectTrigger>
+              <SelectContent>
+                {TERMINAL_THEMES.map((theme) => (
+                  <SelectItem key={theme.id} value={theme.id}>
+                    <div>
+                      <div className="font-medium">{theme.name}</div>
+                      <div className="text-xs text-muted-foreground">{theme.description}</div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Terminal Preview */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Preview</Label>
+              <TerminalPreview
+                theme={settings.theme}
+                fontSize={settings.fontSize}
+                fontFamily={settings.fontFamily}
+              />
+            </div>
           </div>
         </div>
 
