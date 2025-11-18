@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+import type { ConnectionConfig, ConnectionType } from '@/types/connection';
+
 export type TabType = 'home' | 'terminal';
 
 export interface Tab {
@@ -10,6 +12,10 @@ export interface Tab {
   ptyId?: number;
   isActive: boolean;
   workingDirectory?: string;
+  // Connection-related fields (Phase 1: Command Palette Connection)
+  connectionType?: ConnectionType; // Connection type (default: 'local' if not specified)
+  connectionConfig?: ConnectionConfig; // Connection configuration (optional)
+  connectionProfileId?: string; // Profile ID if created from a saved profile (optional)
 }
 
 interface TabState {

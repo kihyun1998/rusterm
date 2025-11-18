@@ -10,26 +10,26 @@
 ## Phase 1: 기본 구조 설계 및 타입 정의
 
 ### 1.1 타입 정의
-- [ ] `src/types/connection.ts` 파일 생성
-  - [ ] `ConnectionType` 타입 정의 (`'local' | 'ssh' | 'telnet' | 'rdp' | 'sftp'`)
-  - [ ] `ConnectionConfig` 유니온 타입 정의
-  - [ ] `ConnectionProfile` 타입 정의 (id, name, icon, type, config, favorite, lastUsed)
-  - [ ] 각 연결 타입별 Config 인터페이스 정의 (LocalConfig, SSHConfig, etc.)
+- [x] `src/types/connection.ts` 파일 생성
+  - [x] `ConnectionType` 타입 정의 (`'local' | 'ssh' | 'telnet' | 'rdp' | 'sftp'`)
+  - [x] `ConnectionConfig` 유니온 타입 정의
+  - [x] `ConnectionProfile` 타입 정의 (id, name, icon, type, config, favorite, lastUsed)
+  - [x] 각 연결 타입별 Config 인터페이스 정의 (LocalConfig, SSHConfig, etc.)
 
 ### 1.2 탭 스토어 확장
-- [ ] `src/stores/use-tab-store.ts` 수정
-  - [ ] Tab 타입에 `connectionType` 필드 추가
-  - [ ] Tab 타입에 `connectionConfig` 필드 추가 (optional)
-  - [ ] 기존 PTY 관련 필드와 호환성 유지
+- [x] `src/stores/use-tab-store.ts` 수정
+  - [x] Tab 타입에 `connectionType` 필드 추가
+  - [x] Tab 타입에 `connectionConfig` 필드 추가 (optional)
+  - [x] 기존 PTY 관련 필드와 호환성 유지
 
 ---
 
-## Phase 2: Connection Profile Store 구현
+## Phase 2: Connection Profile Store 구현 (보안 강화)
 
-### 2.1 프로필 스토어 생성
+### 2.1 프로필 스토어 생성 (메타데이터 관리)
 - [ ] `src/stores/use-connection-profile-store.ts` 파일 생성
   - [ ] 상태 정의
-    - [ ] `profiles: ConnectionProfile[]`
+    - [ ] `profiles: ConnectionProfile[]` (비민감 정보만)
     - [ ] `recentConnections: string[]` (profile IDs)
   - [ ] Actions 정의
     - [ ] `addProfile(profile: ConnectionProfile)`
@@ -40,10 +40,31 @@
     - [ ] `getRecentProfiles(limit?: number)`
     - [ ] `getFavoriteProfiles()`
 
-### 2.2 로컬 스토리지 연동
+### 2.2 로컬 스토리지 연동 (비민감 정보)
 - [ ] Zustand persist middleware 설정
-  - [ ] 프로필 데이터 localStorage에 저장
+  - [ ] 프로필 메타데이터만 localStorage에 저장
   - [ ] 앱 시작 시 자동 로드
+  - [ ] 민감 정보(password, privateKey) 제외
+
+### 2.3 Keyring 통합 (민감 정보 보안 저장)
+- [ ] Rust 백엔드: keyring-rs 설정
+  - [ ] `src-tauri/Cargo.toml`에 keyring 의존성 추가
+  - [ ] `src-tauri/src/keyring/` 디렉토리 생성
+  - [ ] `mod.rs`, `types.rs`, `commands.rs` 파일 구조 설정
+- [ ] Tauri 커맨드 구현
+  - [ ] `save_credential(service: string, account: string, secret: string)` 커맨드
+  - [ ] `get_credential(service: string, account: string)` 커맨드
+  - [ ] `delete_credential(service: string, account: string)` 커맨드
+  - [ ] 에러 처리 (credential not found, access denied 등)
+- [ ] TypeScript 타입 정의
+  - [ ] `src/types/keyring.ts` 파일 생성
+  - [ ] CredentialService 타입 정의
+  - [ ] Keyring 관련 인터페이스 정의
+- [ ] 프론트엔드 통합
+  - [ ] `src/lib/keyring.ts` 유틸리티 생성
+  - [ ] Keyring 커맨드 래퍼 함수 구현
+  - [ ] 프로필 저장 시 민감 정보 keyring에 분리 저장
+  - [ ] 프로필 로드 시 keyring에서 민감 정보 가져오기
 
 ---
 
@@ -147,15 +168,16 @@
 ## 우선순위
 
 **High Priority (반드시 구현):**
-- Phase 1: 타입 정의
+- Phase 1: 타입 정의 ✅
+- Phase 2: Connection Profile Store (보안 강화 포함)
 - Phase 3: Command Palette 확장
 - Phase 4: 새 탭 버튼 동작 변경
 - Phase 5.1: 로컬 터미널 생성
 
 **Medium Priority (핵심 기능):**
-- Phase 2: Connection Profile Store
 - Phase 6: 아이콘 및 UI 개선
 - Phase 7: 단축키 및 테스트
+- Phase 5.2-5.3: SSH/기타 연결 타입
 
 **Low Priority (추후 개선):**
 - Phase 8: 문서 업데이트
@@ -202,5 +224,54 @@
 
 ---
 
+## 보안 아키텍처 (Phase 2.3)
+
+### 데이터 분리 전략
+
+**localStorage (비민감 정보)**:
+- 프로필 ID, 이름, 아이콘
+- 연결 타입, 호스트, 포트, 사용자명
+- 즐겨찾기 여부, 최근 사용 시간
+- 태그, 메타데이터
+
+**OS Keychain (민감 정보)**:
+- SSH 비밀번호
+- SSH Private Key 내용
+- SSH Passphrase
+- Telnet 비밀번호
+- 기타 인증 정보
+
+### Keychain 저장 구조
+
+**Service 이름**: `rusterm-{connection-type}`
+- 예: `rusterm-ssh`, `rusterm-telnet`
+
+**Account 이름**: `{profile-id}-{credential-type}`
+- 예: `abc123-password`, `abc123-privatekey`, `abc123-passphrase`
+
+**예시**:
+```rust
+// SSH 프로필 "my-server" (ID: abc123) 저장
+save_credential("rusterm-ssh", "abc123-password", "secret123")
+save_credential("rusterm-ssh", "abc123-privatekey", "-----BEGIN RSA PRIVATE KEY-----...")
+save_credential("rusterm-ssh", "abc123-passphrase", "keypass")
+```
+
+### 보안 고려사항
+
+1. **Keychain 접근 권한**: 첫 실행 시 OS가 사용자에게 권한 요청
+2. **프로필 삭제**: 프로필 삭제 시 keychain에서도 자동 삭제
+3. **에러 처리**: Keychain 접근 실패 시 사용자에게 재입력 요청
+4. **백업**: Keychain은 OS가 관리 (iCloud Keychain, Windows Backup 등)
+
+### 플랫폼별 동작
+
+- **macOS**: Keychain Access에 저장 (암호화됨)
+- **Windows**: Credential Manager에 저장
+- **Linux**: Secret Service (libsecret) 사용
+
+---
+
 **작성일**: 2025-11-18
+**수정일**: 2025-11-18 (Phase 2 보안 강화)
 **관련 Task**: TASK_SSH_CONNECTION.md
