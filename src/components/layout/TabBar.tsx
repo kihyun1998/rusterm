@@ -2,11 +2,16 @@ import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTabStore } from '@/stores';
 
+interface TabBarProps {
+  isTerminalActive?: boolean;
+  terminalBackgroundColor?: string;
+}
+
 /**
  * TabBar component
  * Displays all terminal tabs with controls for switching, closing, and adding tabs
  */
-export function TabBar() {
+export function TabBar({ isTerminalActive, terminalBackgroundColor }: TabBarProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
   const addTab = useTabStore((state) => state.addTab);
@@ -30,7 +35,16 @@ export function TabBar() {
   };
 
   return (
-    <div className="flex items-center gap-1 px-2 py-1 bg-muted border-b border-border">
+    <div
+      className={`flex items-center gap-1 px-2 py-1 border-b border-border ${
+        isTerminalActive ? '' : 'bg-muted'
+      }`}
+      style={
+        isTerminalActive && terminalBackgroundColor
+          ? { backgroundColor: terminalBackgroundColor }
+          : undefined
+      }
+    >
       {/* Tab list */}
       <div className="flex items-center gap-1 flex-1 overflow-x-auto">
         {tabs.map((tab) => (

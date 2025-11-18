@@ -5,13 +5,20 @@ import { WindowControls } from './WindowControls';
 interface TitleBarProps {
   showDemoButton?: boolean;
   onDemoClick?: () => void;
+  isTerminalActive?: boolean;
+  terminalBackgroundColor?: string;
 }
 
 /**
  * TitleBar component
  * Custom title bar with drag region and window controls
  */
-export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
+export function TitleBar({
+  showDemoButton,
+  onDemoClick,
+  isTerminalActive,
+  terminalBackgroundColor,
+}: TitleBarProps) {
   const { toggleMaximize, platform } = useWindowControls();
 
   const handleDoubleClick = () => {
@@ -25,14 +32,19 @@ export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
     <header
       data-tauri-drag-region
       onDoubleClick={handleDoubleClick}
-      className="
+      className={`
         h-8
         flex items-center justify-between
         px-2
-        bg-muted
         border-b border-border
         select-none
-      "
+        ${isTerminalActive ? '' : 'bg-muted'}
+      `}
+      style={
+        isTerminalActive && terminalBackgroundColor
+          ? { backgroundColor: terminalBackgroundColor }
+          : undefined
+      }
     >
       {/* Left section: App title */}
       <div data-tauri-drag-region className="flex items-center gap-2 flex-1 min-w-0">
