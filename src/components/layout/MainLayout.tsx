@@ -9,13 +9,19 @@ interface MainLayoutProps {
   showDemoButton?: boolean;
   onDemoClick?: () => void;
   onShowSettings?: () => void;
+  onOpenConnectionPalette?: () => void;
 }
 
 /**
  * MainLayout component
  * Manages the overall application layout with title bar, tab bar and terminal area
  */
-export function MainLayout({ showDemoButton, onDemoClick, onShowSettings }: MainLayoutProps) {
+export function MainLayout({
+  showDemoButton,
+  onDemoClick,
+  onShowSettings,
+  onOpenConnectionPalette,
+}: MainLayoutProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
   const terminalThemeId = useSettingsStore((state) => state.settings?.terminalThemeId);
@@ -38,7 +44,11 @@ export function MainLayout({ showDemoButton, onDemoClick, onShowSettings }: Main
       />
 
       {/* Tab bar */}
-      <TabBar isTerminalActive={isTerminalActive} terminalTheme={terminalTheme} />
+      <TabBar
+        isTerminalActive={isTerminalActive}
+        terminalTheme={terminalTheme}
+        onOpenConnectionPalette={onOpenConnectionPalette}
+      />
 
       {/* Content area */}
       <div className="flex-1 relative overflow-hidden">

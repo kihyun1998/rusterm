@@ -6,13 +6,18 @@ import type { TerminalTheme } from '@/types/settings';
 interface TabBarProps {
   isTerminalActive?: boolean;
   terminalTheme?: TerminalTheme;
+  onOpenConnectionPalette?: () => void;
 }
 
 /**
  * TabBar component
  * Displays all terminal tabs with controls for switching, closing, and adding tabs
  */
-export function TabBar({ isTerminalActive, terminalTheme }: TabBarProps) {
+export function TabBar({
+  isTerminalActive,
+  terminalTheme,
+  onOpenConnectionPalette,
+}: TabBarProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
   const addTab = useTabStore((state) => state.addTab);
@@ -20,14 +25,20 @@ export function TabBar({ isTerminalActive, terminalTheme }: TabBarProps) {
   const closeTab = useTabStore((state) => state.closeTab);
 
   const handleNewTab = () => {
-    const newTabId = crypto.randomUUID();
-    const terminalCount = tabs.filter((t) => t.type === 'terminal').length;
-    addTab({
-      id: newTabId,
-      title: `Terminal ${terminalCount + 1}`,
-      type: 'terminal',
-      closable: true,
-    });
+    if (onOpenConnectionPalette) {
+      // Open connection selection palette
+      onOpenConnectionPalette();
+    } else {
+      // Fallback: create local terminal immediately
+      const newTabId = crypto.randomUUID();
+      const terminalCount = tabs.filter((t) => t.type === 'terminal').length;
+      addTab({
+        id: newTabId,
+        title: `Terminal ${terminalCount + 1}`,
+        type: 'terminal',
+        closable: true,
+      });
+    }
   };
 
   const handleCloseTab = (tabId: string, e: React.MouseEvent) => {

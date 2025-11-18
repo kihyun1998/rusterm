@@ -11,6 +11,10 @@ import { useSettingsStore } from '@/stores';
 function App() {
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [commandPaletteMode, setCommandPaletteMode] = useState<'command' | 'connection'>(
+    'command'
+  );
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { setTheme } = useTheme();
   const loadSettings = useSettingsStore((state) => state.loadSettings);
   const settings = useSettingsStore((state) => state.settings);
@@ -32,6 +36,12 @@ function App() {
     onOpenSettings: () => setShowSettings(true),
   });
 
+  // Open connection selection Command Palette
+  const openConnectionPalette = () => {
+    setCommandPaletteMode('connection');
+    setCommandPaletteOpen(true);
+  };
+
   // Show demo page in development mode
   if (isDevelopment && showDemo) {
     return <ComponentDemo onBack={() => setShowDemo(false)} />;
@@ -44,11 +54,21 @@ function App() {
           showDemoButton={isDevelopment}
           onDemoClick={() => setShowDemo(true)}
           onShowSettings={() => setShowSettings(true)}
+          onOpenConnectionPalette={openConnectionPalette}
         />
       </div>
 
       {/* Global Command Palette */}
       <CommandPalette
+        mode={commandPaletteMode}
+        open={commandPaletteOpen}
+        onOpenChange={(open) => {
+          setCommandPaletteOpen(open);
+          // Reset mode to 'command' when closing
+          if (!open) {
+            setCommandPaletteMode('command');
+          }
+        }}
         onShowDemo={() => setShowDemo(true)}
         onShowSettings={() => setShowSettings(true)}
       />
