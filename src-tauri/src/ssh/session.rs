@@ -74,14 +74,14 @@ impl SshSession {
     /// SSH 인증 수행
     fn authenticate(session: &mut Session, config: &SshConfig) -> Result<(), SshError> {
         match &config.auth_method {
-            AuthMethod::Password { password } => {
+            Some(AuthMethod::Password { password }) => {
                 session
                     .userauth_password(&config.username, password)
                     .map_err(|e| {
                         SshError::AuthenticationFailed(format!("Password auth failed: {}", e))
                     })?;
             }
-            AuthMethod::PrivateKey { path, passphrase } => {
+            Some(AuthMethod::PrivateKey { path, passphrase }) => {
                 session
                     .userauth_pubkey_file(
                         &config.username,
@@ -92,6 +92,15 @@ impl SshSession {
                     .map_err(|e| {
                         SshError::AuthenticationFailed(format!("Private key auth failed: {}", e))
                     })?;
+            }
+            None => {
+                // Try SSH agent authentication first
+                session.userauth_agent(&config.username).map_err(|e| {
+                    SshError::AuthenticationFailed(format!(
+                        "Agent auth failed: {}. Please provide password or private key.",
+                        e
+                    ))
+                })?;
             }
         }
 

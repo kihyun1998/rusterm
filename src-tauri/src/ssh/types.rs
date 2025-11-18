@@ -8,7 +8,8 @@ pub struct SshConfig {
     pub host: String,
     pub port: u16,
     pub username: String,
-    pub auth_method: AuthMethod,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auth_method: Option<AuthMethod>,
 }
 
 /// SSH 인증 방법

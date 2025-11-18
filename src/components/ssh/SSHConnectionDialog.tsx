@@ -162,14 +162,8 @@ export function SSHConnectionDialog({
       newErrors.username = 'Username is required';
     }
 
-    // Auth method validation
-    if (formState.authMethod === 'password' && !formState.password) {
-      newErrors.password = 'Password is required';
-    }
-
-    if (formState.authMethod === 'privateKey' && !formState.privateKeyPath.trim()) {
-      newErrors.privateKeyPath = 'Private key path is required';
-    }
+    // Auth method validation (optional - allows keyboard-interactive authentication)
+    // No validation for password/privateKey - they are optional
 
     // Profile name validation
     if (formState.saveAsProfile && !formState.profileName.trim()) {
@@ -351,7 +345,7 @@ export function SSHConnectionDialog({
           {formState.authMethod === 'password' && (
             <div className="space-y-2">
               <Label htmlFor="password">
-                Password <span className="text-destructive">*</span>
+                Password (Optional)
               </Label>
               <Input
                 id="password"
@@ -370,7 +364,7 @@ export function SSHConnectionDialog({
             <>
               <div className="space-y-2">
                 <Label htmlFor="privateKeyPath">
-                  Private Key Path <span className="text-destructive">*</span>
+                  Private Key Path (Optional)
                 </Label>
                 <Input
                   id="privateKeyPath"
