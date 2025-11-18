@@ -1,16 +1,22 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ConnectionProfile, StoredConnectionProfile } from '@/types/connection';
-import { sanitizeProfile } from '@/types/connection';
+import {
+  sanitizeProfile,
+  isSSHConfig,
+  isRDPConfig,
+  isSFTPConfig,
+} from '@/types/connection';
+import { saveCredential, deleteAllCredentials } from '@/lib/keyring';
 
 interface ConnectionProfileState {
   profiles: StoredConnectionProfile[];
   recentConnections: string[]; // Profile IDs (max 10)
 
   // Profile management
-  addProfile: (profile: ConnectionProfile) => void;
+  addProfile: (profile: ConnectionProfile) => Promise<void>;
   updateProfile: (id: string, updates: Partial<ConnectionProfile>) => void;
-  deleteProfile: (id: string) => void;
+  deleteProfile: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => void;
 
   // Recent connections
@@ -30,7 +36,42 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
       profiles: [],
       recentConnections: [],
 
-      addProfile: (profile: ConnectionProfile) => {
+      addProfile: async (profile: ConnectionProfile) => {
+        const { config, type, id } = profile;
+
+        // Save sensitive information to keyring
+        try {
+          if (isSSHConfig(config)) {
+            if (config.password) {
+              await saveCredential(id, type, 'password', config.password);
+            }
+            if (config.privateKey) {
+              await saveCredential(id, type, 'privatekey', config.privateKey);
+            }
+            if (config.passphrase) {
+              await saveCredential(id, type, 'passphrase', config.passphrase);
+            }
+          } else if (isRDPConfig(config)) {
+            if (config.password) {
+              await saveCredential(id, type, 'password', config.password);
+            }
+          } else if (isSFTPConfig(config)) {
+            if (config.password) {
+              await saveCredential(id, type, 'password', config.password);
+            }
+            if (config.privateKey) {
+              await saveCredential(id, type, 'privatekey', config.privateKey);
+            }
+            if (config.passphrase) {
+              await saveCredential(id, type, 'passphrase', config.passphrase);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to save credentials to keyring:', error);
+          // Continue anyway - credentials can be re-entered later
+        }
+
+        // Sanitize and store in localStorage
         const sanitized = sanitizeProfile(profile);
         set((state) => ({
           profiles: [...state.profiles, sanitized],
@@ -53,7 +94,20 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
         }));
       },
 
-      deleteProfile: (id: string) => {
+      deleteProfile: async (id: string) => {
+        const profile = get().profiles.find((p) => p.id === id);
+
+        if (profile) {
+          // Delete credentials from keyring
+          try {
+            await deleteAllCredentials(id, profile.type);
+          } catch (error) {
+            console.error('Failed to delete credentials from keyring:', error);
+            // Continue anyway to remove profile from localStorage
+          }
+        }
+
+        // Remove from localStorage
         set((state) => ({
           profiles: state.profiles.filter((profile) => profile.id !== id),
           recentConnections: state.recentConnections.filter((recentId) => recentId !== id),

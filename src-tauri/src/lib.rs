@@ -31,6 +31,9 @@ pub fn run() {
             commands::settings_commands::load_settings,
             commands::settings_commands::save_settings,
             commands::settings_commands::reset_settings,
+            commands::keyring_commands::save_credential,
+            commands::keyring_commands::get_credential,
+            commands::keyring_commands::delete_credential,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
