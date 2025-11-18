@@ -59,28 +59,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const handleThemeToggle = async () => {
     toggleTheme();
 
-    // Sync terminal theme with UI theme and save to backend
+    // Sync app theme and save to backend
     try {
       if (isDark) {
         // Switching to Light
         await updateAppTheme('light');
-        await updateTheme({
-          background: '#ffffff',
-          foreground: '#000000',
-          cursor: '#000000',
-          cursorAccent: '#ffffff',
-          selectionBackground: '#add6ff',
-        });
       } else {
         // Switching to Dark
         await updateAppTheme('dark');
-        await updateTheme({
-          background: '#1e1e1e',
-          foreground: '#cccccc',
-          cursor: '#ffffff',
-          cursorAccent: '#000000',
-          selectionBackground: '#264f78',
-        });
       }
     } catch (error) {
       console.error('Failed to save theme settings:', error);
