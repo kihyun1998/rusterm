@@ -88,3 +88,47 @@ export function isRDPConfig(config: ConnectionConfig): config is RDPConfig {
 export function isSFTPConfig(config: ConnectionConfig): config is SFTPConfig {
   return 'host' in config && 'username' in config && 'privateKey' in config;
 }
+
+// Stored connection config types (sensitive information excluded)
+export type StoredSSHConfig = Omit<SSHConfig, 'password' | 'privateKey' | 'passphrase'>;
+export type StoredRDPConfig = Omit<RDPConfig, 'password'>;
+export type StoredSFTPConfig = Omit<SFTPConfig, 'password' | 'privateKey' | 'passphrase'>;
+
+// Union type for stored connection configurations (no sensitive data)
+export type StoredConnectionConfig =
+  | LocalConfig // No sensitive information
+  | StoredSSHConfig
+  | TelnetConfig // No sensitive information
+  | StoredRDPConfig
+  | StoredSFTPConfig;
+
+// Stored connection profile (sensitive information excluded)
+export type StoredConnectionProfile = Omit<ConnectionProfile, 'config'> & {
+  config: StoredConnectionConfig;
+};
+
+// Utility function to sanitize connection profile by removing sensitive information
+export function sanitizeProfile(profile: ConnectionProfile): StoredConnectionProfile {
+  const { config, ...rest } = profile;
+
+  let sanitizedConfig: StoredConnectionConfig;
+
+  if (isSSHConfig(config)) {
+    const { password, privateKey, passphrase, ...sshRest } = config;
+    sanitizedConfig = sshRest as StoredSSHConfig;
+  } else if (isRDPConfig(config)) {
+    const { password, ...rdpRest } = config;
+    sanitizedConfig = rdpRest as StoredRDPConfig;
+  } else if (isSFTPConfig(config)) {
+    const { password, privateKey, passphrase, ...sftpRest } = config;
+    sanitizedConfig = sftpRest as StoredSFTPConfig;
+  } else {
+    // LocalConfig or TelnetConfig - no sensitive information
+    sanitizedConfig = config as StoredConnectionConfig;
+  }
+
+  return {
+    ...rest,
+    config: sanitizedConfig,
+  };
+}
