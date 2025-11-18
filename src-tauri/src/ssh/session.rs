@@ -1,11 +1,16 @@
 use super::types::{AuthMethod, SshConfig, SshError, SshExitEvent, SshOutputEvent};
 use ssh2::Session;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::sync::Arc;
 use std::thread;
 use tauri::AppHandle;
-use tokio::sync::Mutex;
+use tokio::sync::mpsc;
+
+/// SSH 채널 작업 명령
+enum SshCommand {
+    Write(String),
+    Resize(u16, u16),
+}
 
 /// SSH 세션
 pub struct SshSession {
@@ -13,7 +18,7 @@ pub struct SshSession {
     session_id: String,
     #[allow(dead_code)]
     config: SshConfig,
-    writer: Arc<Mutex<ssh2::Channel>>,
+    command_tx: mpsc::UnboundedSender<SshCommand>,
 }
 
 impl SshSession {
@@ -53,15 +58,16 @@ impl SshSession {
             .shell()
             .map_err(|e| SshError::SshError(format!("Failed to start shell: {}", e)))?;
 
-        let writer = Arc::new(Mutex::new(channel));
+        // mpsc 채널 생성 (쓰기 및 리사이즈 명령 전송용)
+        let (command_tx, command_rx) = mpsc::unbounded_channel();
 
-        // 백그라운드 읽기 스레드 시작
-        Self::start_read_thread(session_id.clone(), session, writer.clone(), app_handle);
+        // 백그라운드 I/O 스레드 시작 (읽기/쓰기 모두 처리)
+        Self::start_io_thread(session_id.clone(), channel, command_rx, app_handle);
 
         Ok(Self {
             session_id,
             config,
-            writer,
+            command_tx,
         })
     }
 
@@ -98,31 +104,46 @@ impl SshSession {
         Ok(())
     }
 
-    /// 백그라운드 스레드에서 SSH 출력 읽기
+    /// 백그라운드 스레드에서 SSH I/O 처리 (읽기/쓰기 통합)
     ///
-    /// TODO (Phase 3): 현재 구현은 불완전합니다.
-    /// - 읽기와 쓰기를 위해 동일한 채널을 공유해야 함
-    /// - 현재는 새로운 채널을 생성하고 있어 실제로 작동하지 않음
-    /// - Arc<Mutex<Channel>>을 사용하거나 채널 복제 방법 개선 필요
-    #[allow(unused_variables)]
-    fn start_read_thread(
+    /// 동일한 SSH 채널에서 읽기와 쓰기를 모두 처리합니다.
+    /// - 읽기: 지속적으로 SSH 출력을 읽어 Tauri 이벤트로 전송
+    /// - 쓰기: command_rx를 통해 받은 명령(Write, Resize) 처리
+    fn start_io_thread(
         session_id: String,
-        mut session: Session,
-        writer: Arc<Mutex<ssh2::Channel>>,
+        mut channel: ssh2::Channel,
+        mut command_rx: mpsc::UnboundedReceiver<SshCommand>,
         app_handle: AppHandle,
     ) {
         thread::spawn(move || {
-            // TODO: Phase 3에서 올바른 채널 공유 방식으로 수정
-            let mut channel = match session.channel_session() {
-                Ok(ch) => ch,
-                Err(e) => {
-                    eprintln!("Failed to create read channel: {}", e);
-                    return;
-                }
-            };
+            // 채널을 논블로킹 모드로 설정
+            channel.set_blocking(false);
 
             let mut buffer = [0u8; 4096];
+
             loop {
+                // 1. 쓰기/리사이즈 명령 처리 (non-blocking)
+                while let Ok(cmd) = command_rx.try_recv() {
+                    match cmd {
+                        SshCommand::Write(data) => {
+                            if let Err(e) = channel.write_all(data.as_bytes()) {
+                                eprintln!("SSH write error: {}", e);
+                            }
+                            if let Err(e) = channel.flush() {
+                                eprintln!("SSH flush error: {}", e);
+                            }
+                        }
+                        SshCommand::Resize(cols, rows) => {
+                            if let Err(e) =
+                                channel.request_pty_size(cols as u32, rows as u32, None, None)
+                            {
+                                eprintln!("SSH resize error: {}", e);
+                            }
+                        }
+                    }
+                }
+
+                // 2. 읽기 처리
                 match channel.read(&mut buffer) {
                     Ok(0) => {
                         // EOF - 연결 종료
@@ -145,6 +166,10 @@ impl SshSession {
                             },
                         );
                     }
+                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        // 데이터 없음, 잠시 대기
+                        thread::sleep(std::time::Duration::from_millis(10));
+                    }
                     Err(e) => {
                         eprintln!("SSH read error: {}", e);
                         let _ = app_handle.emit(
@@ -163,26 +188,17 @@ impl SshSession {
 
     /// SSH 세션에 데이터 쓰기
     pub async fn write(&self, data: &str) -> Result<(), SshError> {
-        use std::io::Write;
-
-        let mut channel = self.writer.lock().await;
-        channel
-            .write_all(data.as_bytes())
-            .map_err(|e| SshError::WriteFailed(format!("Write failed: {}", e)))?;
-        channel
-            .flush()
-            .map_err(|e| SshError::WriteFailed(format!("Flush failed: {}", e)))?;
-
+        self.command_tx
+            .send(SshCommand::Write(data.to_string()))
+            .map_err(|_| SshError::WriteFailed("Failed to send write command".to_string()))?;
         Ok(())
     }
 
     /// SSH PTY 크기 조정
     pub async fn resize(&self, cols: u16, rows: u16) -> Result<(), SshError> {
-        let channel = self.writer.lock().await;
-        channel
-            .request_pty_size(cols as u32, rows as u32, None, None)
-            .map_err(|e| SshError::ResizeFailed(format!("Resize failed: {}", e)))?;
-
+        self.command_tx
+            .send(SshCommand::Resize(cols, rows))
+            .map_err(|_| SshError::ResizeFailed("Failed to send resize command".to_string()))?;
         Ok(())
     }
 }
