@@ -52,6 +52,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const updateFontFamily = useSettingsStore((state) => state.updateFontFamily);
   const isDark = theme === 'dark';
 
+  // Find current theme ID by matching background color
+  const currentThemeId =
+    TERMINAL_THEMES.find((t) => t.theme.background === settings?.theme?.background)?.id ||
+    TERMINAL_THEMES[0].id;
+
   const handleThemeToggle = async () => {
     toggleTheme();
 
@@ -122,7 +127,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <DialogDescription>Customize your terminal appearance and behavior</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-6">
+        <div className="space-y-6 py-6 pr-1 max-h-[60vh] overflow-y-auto settings-scrollbar">
           {/* Theme Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -187,10 +192,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </p>
               </div>
             </div>
-            <Select
-              defaultValue={TERMINAL_THEMES[0].id}
-              onValueChange={handleTerminalThemeChange}
-            >
+            <Select value={currentThemeId} onValueChange={handleTerminalThemeChange}>
               <SelectTrigger id="terminal-theme">
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>

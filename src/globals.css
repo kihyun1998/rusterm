@@ -223,3 +223,27 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #444 transparent;
 }
+
+/* Settings Dialog Scrollbar Styles */
+.settings-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-scrollbar::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+.settings-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Firefox scrollbar */
+.settings-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #444 transparent;
+}
