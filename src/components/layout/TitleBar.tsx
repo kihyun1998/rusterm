@@ -1,17 +1,25 @@
 import { Button } from '@/components/ui/button';
 import { useWindowControls } from '@/hooks/use-window-controls';
 import { WindowControls } from './WindowControls';
+import type { TerminalTheme } from '@/types/settings';
 
 interface TitleBarProps {
   showDemoButton?: boolean;
   onDemoClick?: () => void;
+  isTerminalActive?: boolean;
+  terminalTheme?: TerminalTheme;
 }
 
 /**
  * TitleBar component
  * Custom title bar with drag region and window controls
  */
-export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
+export function TitleBar({
+  showDemoButton,
+  onDemoClick,
+  isTerminalActive,
+  terminalTheme,
+}: TitleBarProps) {
   const { toggleMaximize, platform } = useWindowControls();
 
   const handleDoubleClick = () => {
@@ -21,22 +29,45 @@ export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
     }
   };
 
+  // Helper function to add opacity to hex color
+  const addOpacity = (color: string, opacity: number) => {
+    if (color.startsWith('#')) {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    return color;
+  };
+
   return (
     <header
       data-tauri-drag-region
       onDoubleClick={handleDoubleClick}
-      className="
+      className={`
         h-8
         flex items-center justify-between
         px-2
-        bg-muted
-        border-b border-border
+        border-b
         select-none
-      "
+        ${isTerminalActive ? '' : 'bg-muted border-border'}
+      `}
+      style={
+        isTerminalActive && terminalTheme
+          ? {
+              backgroundColor: terminalTheme.background,
+              color: terminalTheme.foreground,
+              borderBottomColor: addOpacity(terminalTheme.foreground, 0.2),
+            }
+          : undefined
+      }
     >
       {/* Left section: App title */}
       <div data-tauri-drag-region className="flex items-center gap-2 flex-1 min-w-0">
-        <span data-tauri-drag-region className="text-sm font-medium text-foreground truncate">
+        <span
+          data-tauri-drag-region
+          className={`text-sm font-medium truncate ${isTerminalActive ? '' : 'text-foreground'}`}
+        >
           rusterm
         </span>
       </div>
@@ -51,7 +82,7 @@ export function TitleBar({ showDemoButton, onDemoClick }: TitleBarProps) {
       )}
 
       {/* Right section: Window controls */}
-      <WindowControls />
+      <WindowControls isTerminalActive={isTerminalActive} terminalForegroundColor={terminalTheme?.foreground} />
     </header>
   );
 }

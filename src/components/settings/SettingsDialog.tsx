@@ -47,15 +47,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { theme, toggleTheme } = useTheme();
   const settings = useSettingsStore((state) => state.settings);
   const updateAppTheme = useSettingsStore((state) => state.updateAppTheme);
-  const updateTheme = useSettingsStore((state) => state.updateTheme);
+  const updateTerminalThemeId = useSettingsStore((state) => state.updateTerminalThemeId);
   const updateFontSize = useSettingsStore((state) => state.updateFontSize);
   const updateFontFamily = useSettingsStore((state) => state.updateFontFamily);
   const isDark = theme === 'dark';
 
-  // Find current theme ID by matching background color
-  const currentThemeId =
-    TERMINAL_THEMES.find((t) => t.theme.background === settings?.theme?.background)?.id ||
-    TERMINAL_THEMES[0].id;
+  // Find current theme ID from stored terminalThemeId
+  const currentThemeId = settings?.terminalThemeId || TERMINAL_THEMES[0].id;
+  const currentTheme = getThemeById(currentThemeId)?.theme;
 
   const handleThemeToggle = async () => {
     toggleTheme();
@@ -105,11 +104,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   };
 
   const handleTerminalThemeChange = async (themeId: string) => {
-    const themePreset = getThemeById(themeId);
-    if (!themePreset) return;
-
     try {
-      await updateTheme(themePreset.theme);
+      await updateTerminalThemeId(themeId);
     } catch (error) {
       console.error('Failed to save terminal theme:', error);
     }
@@ -211,11 +207,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             {/* Terminal Preview */}
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Preview</Label>
-              <TerminalPreview
-                theme={settings.theme}
-                fontSize={settings.fontSize}
-                fontFamily={settings.fontFamily}
-              />
+              {currentTheme && (
+                <TerminalPreview
+                  theme={currentTheme}
+                  fontSize={settings.fontSize}
+                  fontFamily={settings.fontFamily}
+                />
+              )}
             </div>
           </div>
         </div>

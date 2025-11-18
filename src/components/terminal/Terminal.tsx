@@ -3,6 +3,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { useEffect, useRef, useState } from 'react';
 import { TerminalContextMenu } from '@/components/menu/TerminalContextMenu';
+import { getThemeById } from '@/constants/terminal-themes';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { usePty } from '@/hooks/use-pty';
 import { listenTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
@@ -69,11 +70,12 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     }
 
     // Create terminal instance with settings if available
-    const config = settings
+    const theme = settings?.terminalThemeId ? getThemeById(settings.terminalThemeId)?.theme : undefined;
+    const config = settings && theme
       ? getTerminalConfig({
           fontSize: settings.fontSize,
           fontFamily: settings.fontFamily,
-          theme: settings.theme,
+          theme,
         })
       : getTerminalConfig();
 
@@ -244,10 +246,11 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     }
 
     // Update theme
-    if (settings.theme && terminal.options.theme) {
+    const theme = settings.terminalThemeId ? getThemeById(settings.terminalThemeId)?.theme : undefined;
+    if (theme && terminal.options.theme) {
       terminal.options.theme = {
         ...terminal.options.theme,
-        ...settings.theme,
+        ...theme,
       };
     }
   }, [settings, isReady, isConnected, resizePty]);
@@ -336,12 +339,14 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     };
   }, [isReady, writeToPty, isConnected, resizePty, copyToClipboard]);
 
+  const currentTheme = settings?.terminalThemeId ? getThemeById(settings.terminalThemeId)?.theme : undefined;
+
   return (
     <div
       ref={wrapperRef}
       className="w-full h-full p-2"
       style={{
-        backgroundColor: settings?.theme?.background || '#1e1e1e',
+        backgroundColor: currentTheme?.background || '#1e1e1e',
       }}
     >
       <TerminalContextMenu terminalRef={xtermRef} onPaste={(text) => writeToPty(text)}>

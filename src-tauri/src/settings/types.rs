@@ -9,11 +9,16 @@ pub struct Settings {
     pub app_theme: String,
     pub font_size: u32,
     pub font_family: String,
-    pub theme: TerminalTheme,
+    #[serde(default = "default_terminal_theme_id")]
+    pub terminal_theme_id: String,
 }
 
 fn default_app_theme() -> String {
     "dark".to_string()
+}
+
+fn default_terminal_theme_id() -> String {
+    "retro".to_string()
 }
 
 /// Terminal color theme
@@ -70,36 +75,36 @@ impl Default for Settings {
             app_theme: "dark".to_string(),
             font_size: 14,
             font_family: "Cascadia Code, Consolas, Monaco, monospace".to_string(),
-            theme: TerminalTheme::default(),
+            terminal_theme_id: "retro".to_string(),
         }
     }
 }
 
 impl Default for TerminalTheme {
     fn default() -> Self {
+        // Default to Retro theme (classic green on black)
         Self {
-            background: "#1e1e1e".to_string(),
-            foreground: "#cccccc".to_string(),
-            cursor: "#ffffff".to_string(),
+            background: "#000000".to_string(),
+            foreground: "#13a10e".to_string(),
+            cursor: "#13a10e".to_string(),
             cursor_accent: Some("#000000".to_string()),
-            selection_background: Some("#264f78".to_string()),
-            // ANSI colors are optional and not saved by default
-            black: None,
-            red: None,
-            green: None,
-            yellow: None,
-            blue: None,
-            magenta: None,
-            cyan: None,
-            white: None,
-            bright_black: None,
-            bright_red: None,
-            bright_green: None,
-            bright_yellow: None,
-            bright_blue: None,
-            bright_magenta: None,
-            bright_cyan: None,
-            bright_white: None,
+            selection_background: Some("#ffffff".to_string()),
+            black: Some("#13a10e".to_string()),
+            red: Some("#13a10e".to_string()),
+            green: Some("#13a10e".to_string()),
+            yellow: Some("#13a10e".to_string()),
+            blue: Some("#13a10e".to_string()),
+            magenta: Some("#13a10e".to_string()),
+            cyan: Some("#13a10e".to_string()),
+            white: Some("#13a10e".to_string()),
+            bright_black: Some("#16ba10".to_string()),
+            bright_red: Some("#16ba10".to_string()),
+            bright_green: Some("#16ba10".to_string()),
+            bright_yellow: Some("#16ba10".to_string()),
+            bright_blue: Some("#16ba10".to_string()),
+            bright_magenta: Some("#16ba10".to_string()),
+            bright_cyan: Some("#16ba10".to_string()),
+            bright_white: Some("#16ba10".to_string()),
         }
     }
 }
