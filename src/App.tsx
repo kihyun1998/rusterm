@@ -1,14 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CommandPalette } from '@/components/command/CommandPalette';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { isDevelopment } from '@/config';
 import { useShortcuts } from '@/hooks/use-shortcuts';
+import { useTheme } from '@/hooks/use-theme';
 import ComponentDemo from '@/pages/ComponentDemo';
+import { useSettingsStore } from '@/stores';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const { setTheme } = useTheme();
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
+  const settings = useSettingsStore((state) => state.settings);
+
+  // Load settings on app start
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  // Apply app theme from settings
+  useEffect(() => {
+    if (settings?.appTheme) {
+      setTheme(settings.appTheme);
+    }
+  }, [settings?.appTheme, setTheme]);
 
   // Global keyboard shortcuts
   useShortcuts({
@@ -23,7 +40,11 @@ function App() {
   return (
     <>
       <div className="h-screen w-screen overflow-hidden bg-background">
-        <MainLayout showDemoButton={isDevelopment} onDemoClick={() => setShowDemo(true)} />
+        <MainLayout
+          showDemoButton={isDevelopment}
+          onDemoClick={() => setShowDemo(true)}
+          onShowSettings={() => setShowSettings(true)}
+        />
       </div>
 
       {/* Global Command Palette */}

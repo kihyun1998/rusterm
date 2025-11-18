@@ -7,6 +7,7 @@ import { useClipboard } from '@/hooks/use-clipboard';
 import { usePty } from '@/hooks/use-pty';
 import { listenTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 import { getTerminalConfig } from '@/lib/xterm-config';
+import { useSettingsStore } from '@/stores';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -28,6 +29,9 @@ export function Terminal({ id, className = '' }: TerminalProps) {
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isReady, setIsReady] = useState(false);
+
+  // Settings store
+  const settings = useSettingsStore((state) => state.settings);
 
   // Clipboard management
   const { copyToClipboard } = useClipboard();
@@ -64,8 +68,16 @@ export function Terminal({ id, className = '' }: TerminalProps) {
       return;
     }
 
-    // Create terminal instance
-    const xterm = new XTerm(getTerminalConfig());
+    // Create terminal instance with settings if available
+    const config = settings
+      ? getTerminalConfig({
+          fontSize: settings.fontSize,
+          fontFamily: settings.fontFamily,
+          theme: settings.theme,
+        })
+      : getTerminalConfig();
+
+    const xterm = new XTerm(config);
     xtermRef.current = xterm;
 
     // Add fit addon for responsive resizing
@@ -208,6 +220,37 @@ export function Terminal({ id, className = '' }: TerminalProps) {
       xtermRef.current.write(`\r\n\x1b[1;31m[Error: ${error}]\x1b[0m\r\n`);
     }
   }, [error]);
+
+  // Apply settings changes to terminal
+  useEffect(() => {
+    if (!isReady || !xtermRef.current || !fitAddonRef.current || !settings) {
+      return;
+    }
+
+    const terminal = xtermRef.current;
+    const fitAddon = fitAddonRef.current;
+
+    // Update fontSize
+    if (settings.fontSize && terminal.options.fontSize !== settings.fontSize) {
+      terminal.options.fontSize = settings.fontSize;
+      try {
+        fitAddon.fit();
+        if (isConnected) {
+          resizePty(terminal.cols, terminal.rows);
+        }
+      } catch (err) {
+        console.warn('Failed to apply fontSize change:', err);
+      }
+    }
+
+    // Update theme
+    if (settings.theme && terminal.options.theme) {
+      terminal.options.theme = {
+        ...terminal.options.theme,
+        ...settings.theme,
+      };
+    }
+  }, [settings, isReady, isConnected, resizePty]);
 
   // Listen to terminal events from CommandPalette and other components
   useEffect(() => {

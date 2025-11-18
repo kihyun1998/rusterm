@@ -48,7 +48,7 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
 
   // Settings store
   const settings = useSettingsStore((state) => state.settings);
-  const updateSettings = useSettingsStore((state) => state.updateSettings);
+  const updateFontSize = useSettingsStore((state) => state.updateFontSize);
 
   // Theme management
   const { toggleTheme } = useTheme();
@@ -145,20 +145,22 @@ export function CommandPalette({ onShowDemo, onShowSettings }: CommandPalettePro
   };
 
   const handleIncreaseFontSize = () => {
+    if (!settings) return;
     const newSize = Math.min(settings.fontSize + 2, 30); // Max 30
-    updateSettings({ fontSize: newSize });
+    updateFontSize(newSize);
     emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
   };
 
   const handleDecreaseFontSize = () => {
+    if (!settings) return;
     const newSize = Math.max(settings.fontSize - 2, 8); // Min 8
-    updateSettings({ fontSize: newSize });
+    updateFontSize(newSize);
     emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
   };
 
   const handleResetFontSize = () => {
     const defaultSize = 14;
-    updateSettings({ fontSize: defaultSize });
+    updateFontSize(defaultSize);
     emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: defaultSize });
   };
 

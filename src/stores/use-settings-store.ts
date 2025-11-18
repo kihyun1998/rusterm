@@ -1,111 +1,114 @@
+import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-export interface TerminalTheme {
-  background: string;
-  foreground: string;
-  cursor: string;
-  cursorAccent?: string;
-  selectionBackground?: string;
-  black?: string;
-  red?: string;
-  green?: string;
-  yellow?: string;
-  blue?: string;
-  magenta?: string;
-  cyan?: string;
-  white?: string;
-  brightBlack?: string;
-  brightRed?: string;
-  brightGreen?: string;
-  brightYellow?: string;
-  brightBlue?: string;
-  brightMagenta?: string;
-  brightCyan?: string;
-  brightWhite?: string;
-}
-
-export interface TerminalSettings {
-  fontSize: number;
-  fontFamily: string;
-  lineHeight: number;
-  cursorStyle: 'block' | 'underline' | 'bar';
-  cursorBlink: boolean;
-  scrollback: number;
-  theme: TerminalTheme;
-  shell: string;
-  startupDirectory?: string;
-}
+import type { Settings, TerminalTheme } from '@/types/settings';
 
 interface SettingsState {
-  settings: TerminalSettings;
+  settings: Settings | null;
+  isLoaded: boolean;
+  isLoading: boolean;
 
   // Actions
-  updateSettings: (updates: Partial<TerminalSettings>) => void;
-  updateTheme: (theme: Partial<TerminalTheme>) => void;
-  resetSettings: () => void;
+  loadSettings: () => Promise<void>;
+  saveSettings: (settings: Settings) => Promise<void>;
+  updateSettings: (updates: Partial<Omit<Settings, 'version'>>) => Promise<void>;
+  updateAppTheme: (appTheme: 'dark' | 'light') => Promise<void>;
+  updateTheme: (theme: Partial<TerminalTheme>) => Promise<void>;
+  updateFontSize: (fontSize: number) => Promise<void>;
+  updateFontFamily: (fontFamily: string) => Promise<void>;
+  resetSettings: () => Promise<void>;
 }
 
-const defaultTheme: TerminalTheme = {
-  background: '#1e1e1e',
-  foreground: '#cccccc',
-  cursor: '#ffffff',
-  cursorAccent: '#000000',
-  selectionBackground: '#264f78',
-  black: '#000000',
-  red: '#cd3131',
-  green: '#0dbc79',
-  yellow: '#e5e510',
-  blue: '#2472c8',
-  magenta: '#bc3fbc',
-  cyan: '#11a8cd',
-  white: '#e5e5e5',
-  brightBlack: '#666666',
-  brightRed: '#f14c4c',
-  brightGreen: '#23d18b',
-  brightYellow: '#f5f543',
-  brightBlue: '#3b8eea',
-  brightMagenta: '#d670d6',
-  brightCyan: '#29b8db',
-  brightWhite: '#ffffff',
-};
+export const useSettingsStore = create<SettingsState>((set, get) => ({
+  settings: null,
+  isLoaded: false,
+  isLoading: false,
 
-const defaultSettings: TerminalSettings = {
-  fontSize: 14,
-  fontFamily: 'Consolas, "Courier New", monospace',
-  lineHeight: 1.2,
-  cursorStyle: 'block',
-  cursorBlink: true,
-  scrollback: 1000,
-  theme: defaultTheme,
-  shell: '', // Empty string to use system default shell
-};
-
-export const useSettingsStore = create<SettingsState>()(
-  persist(
-    (set) => ({
-      settings: defaultSettings,
-
-      updateSettings: (updates) =>
-        set((state) => ({
-          settings: { ...state.settings, ...updates },
-        })),
-
-      updateTheme: (theme) =>
-        set((state) => ({
-          settings: {
-            ...state.settings,
-            theme: { ...state.settings.theme, ...theme },
-          },
-        })),
-
-      resetSettings: () =>
-        set({
-          settings: defaultSettings,
-        }),
-    }),
-    {
-      name: 'rusterm-settings', // localStorage key
+  loadSettings: async () => {
+    set({ isLoading: true });
+    try {
+      const settings = await invoke<Settings>('load_settings');
+      set({ settings, isLoaded: true, isLoading: false });
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      set({ isLoading: false });
     }
-  )
-);
+  },
+
+  saveSettings: async (settings: Settings) => {
+    try {
+      await invoke('save_settings', { settings });
+      set({ settings });
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      throw error;
+    }
+  },
+
+  updateSettings: async (updates: Partial<Omit<Settings, 'version'>>) => {
+    const { settings, saveSettings } = get();
+    if (!settings) return;
+
+    const newSettings: Settings = {
+      ...settings,
+      ...updates,
+    };
+    await saveSettings(newSettings);
+  },
+
+  updateAppTheme: async (appTheme: 'dark' | 'light') => {
+    const { settings, saveSettings } = get();
+    if (!settings) return;
+
+    const newSettings: Settings = {
+      ...settings,
+      appTheme,
+    };
+    await saveSettings(newSettings);
+  },
+
+  updateTheme: async (theme: Partial<TerminalTheme>) => {
+    const { settings, saveSettings } = get();
+    if (!settings) return;
+
+    const newSettings: Settings = {
+      ...settings,
+      theme: { ...settings.theme, ...theme },
+    };
+    await saveSettings(newSettings);
+  },
+
+  updateFontSize: async (fontSize: number) => {
+    const { settings, saveSettings } = get();
+    if (!settings) return;
+
+    const newSettings: Settings = {
+      ...settings,
+      fontSize,
+    };
+    await saveSettings(newSettings);
+  },
+
+  updateFontFamily: async (fontFamily: string) => {
+    const { settings, saveSettings } = get();
+    if (!settings) return;
+
+    const newSettings: Settings = {
+      ...settings,
+      fontFamily,
+    };
+    await saveSettings(newSettings);
+  },
+
+  resetSettings: async () => {
+    try {
+      const defaultSettings = await invoke<Settings>('reset_settings');
+      set({ settings: defaultSettings });
+    } catch (error) {
+      console.error('Failed to reset settings:', error);
+      throw error;
+    }
+  },
+}));
+
+// Export types for convenience
+export type { Settings, TerminalTheme };

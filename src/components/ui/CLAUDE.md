@@ -36,15 +36,7 @@
 **Props:**
 - `asChild`: Radix Slot API 사용 (다른 컴포넌트로 렌더링)
 
-**사용 예시:**
-```tsx
-import { Button } from '@/components/ui/button';
 
-<Button variant="default" size="default">클릭</Button>
-<Button variant="destructive">삭제</Button>
-<Button variant="outline" size="sm">작은 버튼</Button>
-<Button variant="ghost" size="icon"><Icon /></Button>
-```
 
 #### Input (`input.tsx`)
 텍스트 입력 필드 컴포넌트입니다.
@@ -55,25 +47,10 @@ import { Button } from '@/components/ui/button';
 - 파일 입력 스타일링 지원
 - 다크모드 지원
 
-**사용 예시:**
-```tsx
-import { Input } from '@/components/ui/input';
-
-<Input type="text" placeholder="입력하세요" />
-<Input type="password" />
-<Input type="file" />
-```
 
 #### Label (`label.tsx`)
 폼 라벨 컴포넌트입니다 (Radix UI Label 기반).
 
-**사용 예시:**
-```tsx
-import { Label } from '@/components/ui/label';
-
-<Label htmlFor="email">이메일</Label>
-<Input id="email" type="email" />
-```
 
 #### Badge (`badge.tsx`)
 작은 배지/태그 컴포넌트입니다.
@@ -87,14 +64,6 @@ import { Label } from '@/components/ui/label';
 **Props:**
 - `asChild`: Slot API 사용
 
-**사용 예시:**
-```tsx
-import { Badge } from '@/components/ui/badge';
-
-<Badge>New</Badge>
-<Badge variant="destructive">Error</Badge>
-<Badge variant="outline">Draft</Badge>
-```
 
 #### Skeleton (`skeleton.tsx`)
 로딩 상태를 표시하는 스켈레톤 컴포넌트입니다.
@@ -103,13 +72,6 @@ import { Badge } from '@/components/ui/badge';
 - `animate-pulse` 애니메이션
 - 커스텀 크기/모양 가능
 
-**사용 예시:**
-```tsx
-import { Skeleton } from '@/components/ui/skeleton';
-
-<Skeleton className="h-12 w-12 rounded-full" />
-<Skeleton className="h-4 w-[250px]" />
-```
 
 ### 레이아웃 컴포넌트
 
@@ -125,26 +87,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 - `CardContent`: 본문 영역
 - `CardFooter`: 푸터 영역
 
-**사용 예시:**
-```tsx
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-
-<Card>
-  <CardHeader>
-    <CardTitle>제목</CardTitle>
-    <CardDescription>설명</CardDescription>
-  </CardHeader>
-  <CardContent>내용</CardContent>
-  <CardFooter>푸터</CardFooter>
-</Card>
-```
 
 #### Separator (`separator.tsx`)
 구분선 컴포넌트입니다 (Radix UI Separator 기반).
@@ -152,14 +94,6 @@ import {
 **Orientation:**
 - `horizontal` (기본값)
 - `vertical`
-
-**사용 예시:**
-```tsx
-import { Separator } from '@/components/ui/separator';
-
-<Separator />
-<Separator orientation="vertical" />
-```
 
 #### Tabs (`tabs.tsx`)
 탭 컴포넌트입니다 (Radix UI Tabs 기반).
@@ -170,55 +104,20 @@ import { Separator } from '@/components/ui/separator';
 - `TabsTrigger`: 탭 버튼
 - `TabsContent`: 탭 내용
 
-**사용 예시:**
-```tsx
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-
-<Tabs defaultValue="tab1">
-  <TabsList>
-    <TabsTrigger value="tab1">탭 1</TabsTrigger>
-    <TabsTrigger value="tab2">탭 2</TabsTrigger>
-  </TabsList>
-  <TabsContent value="tab1">탭 1 내용</TabsContent>
-  <TabsContent value="tab2">탭 2 내용</TabsContent>
-</Tabs>
-```
 
 #### ScrollArea (`scroll-area.tsx`)
 커스텀 스크롤바 영역입니다 (Radix UI ScrollArea 기반).
 
-**사용 예시:**
-```tsx
-import { ScrollArea } from '@/components/ui/scroll-area';
-
-<ScrollArea className="h-[200px] w-[350px]">
-  {/* 스크롤 가능한 내용 */}
-</ScrollArea>
-```
 
 ### 폼 컴포넌트
 
 #### Checkbox (`checkbox.tsx`)
 체크박스 컴포넌트입니다 (Radix UI Checkbox 기반).
 
-**사용 예시:**
-```tsx
-import { Checkbox } from '@/components/ui/checkbox';
-
-<Checkbox id="terms" />
-<Label htmlFor="terms">약관에 동의합니다</Label>
-```
 
 #### Switch (`switch.tsx`)
 토글 스위치 컴포넌트입니다 (Radix UI Switch 기반).
 
-**사용 예시:**
-```tsx
-import { Switch } from '@/components/ui/switch';
-
-<Switch id="notifications" />
-<Label htmlFor="notifications">알림 활성화</Label>
-```
 
 #### Select (`select.tsx`)
 셀렉트 드롭다운 컴포넌트입니다 (Radix UI Select 기반).
@@ -233,26 +132,6 @@ import { Switch } from '@/components/ui/switch';
 - `SelectLabel`: 그룹 라벨
 - `SelectSeparator`: 구분선
 
-**사용 예시:**
-```tsx
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-
-<Select>
-  <SelectTrigger>
-    <SelectValue placeholder="선택하세요" />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectItem value="option1">옵션 1</SelectItem>
-    <SelectItem value="option2">옵션 2</SelectItem>
-  </SelectContent>
-</Select>
-```
 
 ### 대화상자 및 오버레이
 
@@ -269,30 +148,6 @@ import {
 - `DialogFooter`: 푸터
 - `DialogClose`: 닫기 버튼
 
-**사용 예시:**
-```tsx
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-
-<Dialog>
-  <DialogTrigger asChild>
-    <Button>열기</Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>제목</DialogTitle>
-      <DialogDescription>설명</DialogDescription>
-    </DialogHeader>
-    {/* 내용 */}
-  </DialogContent>
-</Dialog>
-```
 
 #### AlertDialog (`alert-dialog.tsx`)
 확인/취소 다이얼로그 컴포넌트입니다 (Radix UI AlertDialog 기반).
@@ -308,38 +163,6 @@ import {
 - `AlertDialogAction`: 확인 버튼
 - `AlertDialogCancel`: 취소 버튼
 
-**사용 예시:**
-```tsx
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '@/components/ui/alert-dialog';
-
-<AlertDialog>
-  <AlertDialogTrigger asChild>
-    <Button variant="destructive">삭제</Button>
-  </AlertDialogTrigger>
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
-      <AlertDialogDescription>
-        이 작업은 되돌릴 수 없습니다.
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel>취소</AlertDialogCancel>
-      <AlertDialogAction>삭제</AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
-```
 
 ### 메뉴 컴포넌트
 
@@ -359,53 +182,12 @@ import {
 - `DropdownMenuGroup`: 항목 그룹
 - `DropdownMenuSub`: 서브메뉴
 
-**사용 예시:**
-```tsx
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-
-<DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button>메뉴</Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent>
-    <DropdownMenuItem>항목 1</DropdownMenuItem>
-    <DropdownMenuItem>항목 2</DropdownMenuItem>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem>항목 3</DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
-```
 
 #### ContextMenu (`context-menu.tsx`)
 우클릭 컨텍스트 메뉴 컴포넌트입니다 (Radix UI ContextMenu 기반).
 
 **컴포넌트 구조는 DropdownMenu와 유사하며, 우클릭으로 트리거됩니다.**
 
-**사용 예시:**
-```tsx
-import {
-  ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-} from '@/components/ui/context-menu';
-
-<ContextMenu>
-  <ContextMenuTrigger>
-    <div>우클릭하세요</div>
-  </ContextMenuTrigger>
-  <ContextMenuContent>
-    <ContextMenuItem>복사</ContextMenuItem>
-    <ContextMenuItem>붙여넣기</ContextMenuItem>
-  </ContextMenuContent>
-</ContextMenu>
-```
 
 #### Command (`command.tsx`)
 커맨드 팔레트/검색 컴포넌트입니다 (cmdk 기반).
@@ -421,48 +203,12 @@ import {
 - `CommandShortcut`: 단축키 표시
 - `CommandDialog`: 다이얼로그 형태
 
-**사용 예시:**
-```tsx
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-} from '@/components/ui/command';
-
-<Command>
-  <CommandInput placeholder="검색..." />
-  <CommandList>
-    <CommandEmpty>결과 없음</CommandEmpty>
-    <CommandGroup heading="제안">
-      <CommandItem>항목 1</CommandItem>
-      <CommandItem>항목 2</CommandItem>
-    </CommandGroup>
-  </CommandList>
-</Command>
-```
 
 ### 알림 컴포넌트
 
 #### Sonner (`sonner.tsx`)
 토스트 알림 컴포넌트입니다 (sonner 기반).
 
-**사용 방법:**
-```tsx
-// App.tsx 또는 root에 추가
-import { Toaster } from '@/components/ui/sonner';
-
-<Toaster />
-
-// 다른 컴포넌트에서 사용
-import { toast } from 'sonner';
-
-toast.success('성공했습니다!');
-toast.error('에러가 발생했습니다.');
-toast('일반 메시지');
-```
 
 ## 공통 패턴
 

@@ -7,13 +7,14 @@ import { TitleBar } from './TitleBar';
 interface MainLayoutProps {
   showDemoButton?: boolean;
   onDemoClick?: () => void;
+  onShowSettings?: () => void;
 }
 
 /**
  * MainLayout component
  * Manages the overall application layout with title bar, tab bar and terminal area
  */
-export function MainLayout({ showDemoButton, onDemoClick }: MainLayoutProps) {
+export function MainLayout({ showDemoButton, onDemoClick, onShowSettings }: MainLayoutProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
 
@@ -46,7 +47,7 @@ export function MainLayout({ showDemoButton, onDemoClick }: MainLayoutProps) {
                 zIndex: tab.id === activeTabId ? 1 : 0,
               }}
             >
-              {tab.type === 'home' ? <Home /> : <Terminal id={tab.id} />}
+              {tab.type === 'home' ? <Home onShowSettings={onShowSettings} /> : <Terminal id={tab.id} />}
             </div>
           ))
         )}

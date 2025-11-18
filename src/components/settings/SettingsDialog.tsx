@@ -11,6 +11,14 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/stores';
 
@@ -19,49 +27,90 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const FONT_FAMILIES = [
+  { value: 'Cascadia Code, Consolas, Monaco, monospace', label: 'Cascadia Code' },
+  { value: 'Consolas, "Courier New", monospace', label: 'Consolas' },
+  { value: 'Monaco, "Courier New", monospace', label: 'Monaco' },
+  { value: '"Courier New", monospace', label: 'Courier New' },
+  { value: 'Menlo, Monaco, monospace', label: 'Menlo' },
+  { value: '"Fira Code", monospace', label: 'Fira Code' },
+  { value: '"JetBrains Mono", monospace', label: 'JetBrains Mono' },
+];
+
 /**
  * Settings Dialog Component
- * Simple settings dialog with theme toggle
+ * Manages application settings with persistent storage via Rust backend
  */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { theme, toggleTheme } = useTheme();
-  const updateTerminalTheme = useSettingsStore((state) => state.updateTheme);
+  const settings = useSettingsStore((state) => state.settings);
+  const updateAppTheme = useSettingsStore((state) => state.updateAppTheme);
+  const updateTheme = useSettingsStore((state) => state.updateTheme);
+  const updateFontSize = useSettingsStore((state) => state.updateFontSize);
+  const updateFontFamily = useSettingsStore((state) => state.updateFontFamily);
   const isDark = theme === 'dark';
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = async () => {
     toggleTheme();
 
-    // Sync terminal theme with UI theme
-    if (isDark) {
-      // Switching to Light
-      updateTerminalTheme({
-        background: '#ffffff',
-        foreground: '#000000',
-        cursor: '#000000',
-        cursorAccent: '#ffffff',
-        selectionBackground: '#add6ff',
-      });
-    } else {
-      // Switching to Dark
-      updateTerminalTheme({
-        background: '#1e1e1e',
-        foreground: '#cccccc',
-        cursor: '#ffffff',
-        cursorAccent: '#000000',
-        selectionBackground: '#264f78',
-      });
+    // Sync terminal theme with UI theme and save to backend
+    try {
+      if (isDark) {
+        // Switching to Light
+        await updateAppTheme('light');
+        await updateTheme({
+          background: '#ffffff',
+          foreground: '#000000',
+          cursor: '#000000',
+          cursorAccent: '#ffffff',
+          selectionBackground: '#add6ff',
+        });
+      } else {
+        // Switching to Dark
+        await updateAppTheme('dark');
+        await updateTheme({
+          background: '#1e1e1e',
+          foreground: '#cccccc',
+          cursor: '#ffffff',
+          cursorAccent: '#000000',
+          selectionBackground: '#264f78',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to save theme settings:', error);
     }
   };
+
+  const handleFontSizeChange = async (value: number[]) => {
+    try {
+      await updateFontSize(value[0]);
+    } catch (error) {
+      console.error('Failed to save font size:', error);
+    }
+  };
+
+  const handleFontFamilyChange = async (value: string) => {
+    try {
+      await updateFontFamily(value);
+    } catch (error) {
+      console.error('Failed to save font family:', error);
+    }
+  };
+
+  if (!settings) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>Customize your terminal appearance</DialogDescription>
+          <DialogDescription>Customize your terminal appearance and behavior</DialogDescription>
         </DialogHeader>
 
-        <div className="py-6">
+        <div className="space-y-6 py-6">
+          {/* Theme Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isDark ? (
@@ -75,6 +124,40 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </div>
             </div>
             <Switch id="theme-toggle" checked={isDark} onCheckedChange={handleThemeToggle} />
+          </div>
+
+          {/* Font Size Slider */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="font-size">Font Size</Label>
+              <span className="text-sm text-muted-foreground">{settings.fontSize}px</span>
+            </div>
+            <Slider
+              id="font-size"
+              min={8}
+              max={30}
+              step={1}
+              value={[settings.fontSize]}
+              onValueChange={handleFontSizeChange}
+              className="w-full"
+            />
+          </div>
+
+          {/* Font Family Select */}
+          <div className="space-y-3">
+            <Label htmlFor="font-family">Font Family</Label>
+            <Select value={settings.fontFamily} onValueChange={handleFontFamilyChange}>
+              <SelectTrigger id="font-family">
+                <SelectValue placeholder="Select font" />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_FAMILIES.map((font) => (
+                  <SelectItem key={font.value} value={font.value}>
+                    {font.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
