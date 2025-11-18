@@ -173,8 +173,8 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 6: Frontend 타입 정의
 
 ### 6.1 SSH 타입 정의 (TypeScript)
-- [ ] `src/types/ssh.ts` 파일 생성
-  - [ ] `SshConfig` 인터페이스
+- [x] `src/types/ssh.ts` 파일 생성 (178줄, 4.6KB)
+  - [x] `SshConfig` 인터페이스 (Backend 일치)
     ```typescript
     export interface SshConfig {
       host: string;
@@ -183,18 +183,22 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
       authMethod: AuthMethod;
     }
     ```
-  - [ ] `AuthMethod` 타입
+  - [x] `AuthMethod` 타입 (Tagged union, Backend 일치)
     ```typescript
     export type AuthMethod =
       | { type: 'password'; password: string }
       | { type: 'privateKey'; path: string; passphrase?: string };
     ```
-  - [ ] `SshConnectionState` enum (연결 중, 연결됨, 실패, 종료)
+  - [x] `SshConnectionState` 타입 정의
+  - [x] `SshSessionMetadata` 인터페이스 (Frontend 상태 관리용)
+  - [x] `SshOutputEvent`, `SshExitEvent` 인터페이스 (Backend 이벤트)
+  - [x] Type guards: `isPasswordAuth()`, `isPrivateKeyAuth()`
+  - [x] 변환 유틸리티: `toBackendSshConfig()`, `toUiSshConfig()`
 
 ### 6.2 Connection 타입 확장
-- [ ] `src/types/connection.ts` 업데이트
-  - [ ] `SSHConfig` 추가
-  - [ ] `ConnectionConfig` 유니온 타입에 포함
+- [x] `src/types/connection.ts` - 변경 없음 (이미 SSHConfig 존재)
+  - [x] `SSHConfig` - UI/Profile 저장용 (Flat structure)
+  - [x] `ConnectionConfig` 유니온 타입에 포함됨
 
 ---
 
