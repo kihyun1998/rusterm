@@ -23,7 +23,6 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import type { SSHConfig, ConnectionProfile } from '@/types/connection';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Props for SSHConnectionDialog component
@@ -209,7 +208,7 @@ export function SSHConnectionDialog({
       // 2. Save profile (if requested)
       if (formState.saveAsProfile) {
         const profile: ConnectionProfile = {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           name: formState.profileName,
           type: 'ssh',
           config: uiConfig,
