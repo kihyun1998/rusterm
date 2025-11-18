@@ -52,6 +52,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const updateFontFamily = useSettingsStore((state) => state.updateFontFamily);
   const isDark = theme === 'dark';
 
+  // Find current theme ID by matching background color
+  const currentThemeId =
+    TERMINAL_THEMES.find((t) => t.theme.background === settings?.theme?.background)?.id ||
+    TERMINAL_THEMES[0].id;
+
   const handleThemeToggle = async () => {
     toggleTheme();
 
@@ -187,10 +192,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </p>
               </div>
             </div>
-            <Select
-              defaultValue={TERMINAL_THEMES[0].id}
-              onValueChange={handleTerminalThemeChange}
-            >
+            <Select value={currentThemeId} onValueChange={handleTerminalThemeChange}>
               <SelectTrigger id="terminal-theme">
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>
