@@ -10,17 +10,17 @@
 ## Phase 1: 기본 구조 설계 및 타입 정의
 
 ### 1.1 타입 정의
-- [ ] `src/types/connection.ts` 파일 생성
-  - [ ] `ConnectionType` 타입 정의 (`'local' | 'ssh' | 'telnet' | 'rdp' | 'sftp'`)
-  - [ ] `ConnectionConfig` 유니온 타입 정의
-  - [ ] `ConnectionProfile` 타입 정의 (id, name, icon, type, config, favorite, lastUsed)
-  - [ ] 각 연결 타입별 Config 인터페이스 정의 (LocalConfig, SSHConfig, etc.)
+- [x] `src/types/connection.ts` 파일 생성
+  - [x] `ConnectionType` 타입 정의 (`'local' | 'ssh' | 'telnet' | 'rdp' | 'sftp'`)
+  - [x] `ConnectionConfig` 유니온 타입 정의
+  - [x] `ConnectionProfile` 타입 정의 (id, name, icon, type, config, favorite, lastUsed)
+  - [x] 각 연결 타입별 Config 인터페이스 정의 (LocalConfig, SSHConfig, etc.)
 
 ### 1.2 탭 스토어 확장
-- [ ] `src/stores/use-tab-store.ts` 수정
-  - [ ] Tab 타입에 `connectionType` 필드 추가
-  - [ ] Tab 타입에 `connectionConfig` 필드 추가 (optional)
-  - [ ] 기존 PTY 관련 필드와 호환성 유지
+- [x] `src/stores/use-tab-store.ts` 수정
+  - [x] Tab 타입에 `connectionType` 필드 추가
+  - [x] Tab 타입에 `connectionConfig` 필드 추가 (optional)
+  - [x] 기존 PTY 관련 필드와 호환성 유지
 
 ---
 
