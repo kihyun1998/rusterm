@@ -264,20 +264,33 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 9: Terminal 컴포넌트 통합
 
 ### 9.1 Terminal.tsx 수정
-- [ ] `src/components/terminal/Terminal.tsx` 수정
-  - [ ] connectionType prop 추가
-  - [ ] connectionType에 따라 PTY 또는 SSH 훅 사용
+- [x] `src/components/terminal/Terminal.tsx` 수정 (+150줄, 총 517줄)
+  - [x] connectionType, connectionConfig props 추가
+  - [x] Import 추가 (useSsh, isSSHConfig, toBackendSshConfig)
+  - [x] connectionType에 따라 PTY/SSH 훅 조건부 사용
     ```typescript
-    const isPty = connectionType === 'local';
-    const sshHook = isPty ? null : useSSH(tabId, config);
+    const isLocalConnection = connectionType === 'local' || !connectionType;
+    const isSshConnection = connectionType === 'ssh';
+    const ptyHook = usePty({ ... });
+    const sshHook = useSsh({ ... });
     ```
-  - [ ] 입력 처리 분기 (PTY vs SSH)
-  - [ ] 크기 조정 분기
+  - [x] writeInputRef로 입력 처리 분기 (PTY: writeToPty, SSH: sendInput)
+  - [x] 세션 생성 분기 (PTY: createPty, SSH: connect with toBackendSshConfig)
+  - [x] 크기 조정 분기 3곳 (resizePty vs resize)
+  - [x] 이벤트 핸들러 분기 (paste, font size)
+  - [x] useEffect 의존성 배열 수정 (isLocalConnection, isSshConnection, hooks)
 
 ### 9.2 조건부 렌더링
-- [ ] SSH 연결 중 로딩 표시
-- [ ] 연결 실패 시 에러 메시지
-- [ ] 재연결 버튼 (선택적)
+- [x] SSH 연결 중 로딩 표시 (connecting state: spinner + connection info)
+- [x] 연결 실패 시 에러 메시지 (failed state: error + retry button)
+- [x] 런타임 에러 표시 (error state: error message)
+- [x] 재연결 버튼 구현 (Retry Connection button)
+- [x] Overlay UI (absolute positioning, z-10)
+
+### 9.3 MainLayout.tsx 수정
+- [x] `src/components/layout/MainLayout.tsx` 수정 (+3줄)
+  - [x] Terminal 컴포넌트에 connectionType, connectionConfig props 전달
+  - [x] Tab 인터페이스의 기존 필드 활용
 
 ---
 
