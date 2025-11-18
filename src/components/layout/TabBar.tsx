@@ -1,4 +1,4 @@
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Terminal as TerminalIcon, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTabStore } from '@/stores';
 import type { TerminalTheme } from '@/types/settings';
@@ -143,9 +143,19 @@ export function TabBar({
               <button
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 text-sm truncate select-none text-left"
+                className="flex items-center gap-2 flex-1 text-sm truncate select-none text-left"
               >
-                {tab.title}
+                {/* Connection type icon */}
+                {tab.type === 'terminal' && (
+                  <>
+                    {tab.connectionType === 'ssh' ? (
+                      <Server className="w-3 h-3 flex-shrink-0" />
+                    ) : (
+                      <TerminalIcon className="w-3 h-3 flex-shrink-0" />
+                    )}
+                  </>
+                )}
+                <span className="truncate">{tab.title}</span>
               </button>
 
               {/* Close button (only for closable tabs) */}

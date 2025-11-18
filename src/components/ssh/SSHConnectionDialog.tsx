@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { Server } from 'lucide-react';
 import {
   Dialog,
@@ -23,10 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import type { SSHConfig, ConnectionProfile } from '@/types/connection';
-import type { SshConfig, CreateSshResponse } from '@/types/ssh';
-import { toBackendSshConfig } from '@/types/ssh';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Props for SSHConnectionDialog component
@@ -34,7 +30,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface SSHConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnect?: (sessionId: string, config: SshConfig) => void;
+  onConnect?: (config: SSHConfig) => void;
   initialConfig?: Partial<SSHConfig>;
 }
 
@@ -199,7 +195,7 @@ export function SSHConnectionDialog({
     setIsConnecting(true);
 
     try {
-      // 1. Convert UI config to Backend config
+      // 1. Create UI config
       const uiConfig: SSHConfig = {
         host: formState.host,
         port: formState.port,
@@ -209,19 +205,10 @@ export function SSHConnectionDialog({
         passphrase: formState.passphrase || undefined,
       };
 
-      const backendConfig = toBackendSshConfig(uiConfig);
-
-      // 2. Call backend
-      const response = await invoke<CreateSshResponse>('create_ssh_session', {
-        config: backendConfig,
-        cols: 80, // Default, will be adjusted by Terminal
-        rows: 24,
-      });
-
-      // 3. Save profile (if requested)
+      // 2. Save profile (if requested)
       if (formState.saveAsProfile) {
         const profile: ConnectionProfile = {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           name: formState.profileName,
           type: 'ssh',
           config: uiConfig,
@@ -236,14 +223,14 @@ export function SSHConnectionDialog({
         });
       }
 
-      // 4. Notify parent
-      onConnect?.(response.session_id, backendConfig);
+      // 3. Notify parent with config (Terminal will create the session)
+      onConnect?.(uiConfig);
 
-      // 5. Close dialog
+      // 4. Close dialog
       onOpenChange(false);
 
-      toast.success('Connected', {
-        description: `Connected to ${formState.username}@${formState.host}`,
+      toast.success('Connecting...', {
+        description: `Connecting to ${formState.username}@${formState.host}`,
       });
     } catch (error) {
       console.error('SSH connection error:', error);
