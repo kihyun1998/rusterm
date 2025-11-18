@@ -12,23 +12,23 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 1: Backend 기본 구조 설계
 
 ### 1.1 Rust 의존성 추가
-- [ ] `src-tauri/Cargo.toml` 수정
-  - [ ] `ssh2 = "0.9"` 크레이트 추가 (또는 `russh`)
-  - [ ] 기타 필요한 의존성 확인 (async-std, futures, etc.)
+- [x] `src-tauri/Cargo.toml` 수정
+  - [x] `ssh2 = "0.9"` 크레이트 추가 (또는 `russh`)
+  - [x] 기타 필요한 의존성 확인 (async-std, futures, etc.)
 
 ### 1.2 SSH 모듈 구조 생성
-- [ ] `src-tauri/src/ssh/` 디렉토리 생성
-- [ ] `src-tauri/src/ssh/mod.rs` 파일 생성
-  - [ ] 모듈 export 설정
-- [ ] `src-tauri/src/lib.rs` 또는 `main.rs`에 ssh 모듈 추가
+- [x] `src-tauri/src/ssh/` 디렉토리 생성
+- [x] `src-tauri/src/ssh/mod.rs` 파일 생성
+  - [x] 모듈 export 설정
+- [x] `src-tauri/src/lib.rs` 또는 `main.rs`에 ssh 모듈 추가
 
 ---
 
 ## Phase 2: SSH 타입 정의 (Rust)
 
 ### 2.1 SSH 타입 정의
-- [ ] `src-tauri/src/ssh/types.rs` 파일 생성
-  - [ ] `SshConfig` 구조체 정의
+- [x] `src-tauri/src/ssh/types.rs` 파일 생성
+  - [x] `SshConfig` 구조체 정의
     ```rust
     pub struct SshConfig {
         pub host: String,
@@ -37,27 +37,27 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
         pub auth_method: AuthMethod,
     }
     ```
-  - [ ] `AuthMethod` enum 정의
+  - [x] `AuthMethod` enum 정의
     ```rust
     pub enum AuthMethod {
         Password(String),
         PrivateKey { path: String, passphrase: Option<String> },
     }
     ```
-  - [ ] `SshSessionInfo` 구조체 (세션 메타데이터)
-  - [ ] Serde derive 추가 (직렬화/역직렬화)
+  - [x] `SshSessionInfo` 구조체 (세션 메타데이터) - CreateSshResponse로 구현
+  - [x] Serde derive 추가 (직렬화/역직렬화)
 
 ### 2.2 에러 타입 정의
-- [ ] `SshError` enum 정의 (thiserror 사용)
-  - [ ] 연결 실패, 인증 실패, I/O 에러 등
+- [x] `SshError` enum 정의 (thiserror 사용)
+  - [x] 연결 실패, 인증 실패, I/O 에러 등
 
 ---
 
 ## Phase 3: SSH Session 구현
 
 ### 3.1 SSH Session 구조체
-- [ ] `src-tauri/src/ssh/session.rs` 파일 생성
-  - [ ] `SshSession` 구조체 정의
+- [x] `src-tauri/src/ssh/session.rs` 파일 생성
+  - [x] `SshSession` 구조체 정의
     ```rust
     pub struct SshSession {
         session: ssh2::Session,
@@ -66,55 +66,57 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
         id: String,
     }
     ```
-  - [ ] `new()` 메서드: SSH 연결 및 인증
-    - [ ] TCP 연결 생성
-    - [ ] SSH 핸드셰이크
-    - [ ] 인증 (password 또는 private key)
-    - [ ] 채널 생성 및 PTY 요청
-    - [ ] 셸 시작
+  - [x] `new()` 메서드: SSH 연결 및 인증
+    - [x] TCP 연결 생성
+    - [x] SSH 핸드셰이크
+    - [x] 인증 (password 또는 private key)
+    - [x] 채널 생성 및 PTY 요청
+    - [x] 셸 시작
 
 ### 3.2 SSH Session I/O 처리
-- [ ] `read()` 메서드: 채널에서 데이터 읽기
-- [ ] `write()` 메서드: 채널로 데이터 쓰기
-- [ ] `resize()` 메서드: PTY 크기 조정
-- [ ] `close()` 메서드: 연결 종료 및 리소스 정리
+- [x] `read()` 메서드: 채널에서 데이터 읽기 - start_io_thread에서 통합 처리
+- [x] `write()` 메서드: 채널로 데이터 쓰기 - mpsc 채널을 통한 명령 전송
+- [x] `resize()` 메서드: PTY 크기 조정 - mpsc 채널을 통한 명령 전송
+- [x] `close()` 메서드: 연결 종료 및 리소스 정리 - Drop으로 자동 처리
 
 ### 3.3 비동기 I/O 처리
-- [ ] 백그라운드 스레드에서 SSH 출력 읽기
-- [ ] Tauri event로 프론트엔드에 데이터 전송
-  - [ ] `ssh://output/{session_id}` 이벤트
+- [x] 백그라운드 스레드에서 SSH 출력 읽기 - mpsc 채널로 개선 완료
+- [x] Tauri event로 프론트엔드에 데이터 전송
+  - [x] `ssh://output/{session_id}` 이벤트
+- [x] SshCommand enum으로 Write/Resize 명령 처리
+- [x] start_io_thread에서 동일 채널로 읽기/쓰기 통합 처리
 
 ---
 
 ## Phase 4: SSH Manager 구현
 
 ### 4.1 SSH Manager 구조체
-- [ ] `src-tauri/src/ssh/manager.rs` 파일 생성
-  - [ ] `SshManager` 구조체 정의
+- [x] `src-tauri/src/ssh/manager.rs` 파일 생성
+  - [x] `SshManager` 구조체 정의
     ```rust
     pub struct SshManager {
         sessions: Arc<Mutex<HashMap<String, SshSession>>>,
     }
     ```
-  - [ ] `create_session()`: 새 SSH 세션 생성
-  - [ ] `get_session()`: 세션 ID로 조회
-  - [ ] `remove_session()`: 세션 제거
+  - [x] `create_session()`: 새 SSH 세션 생성
+  - [ ] `get_session()`: 세션 ID로 조회 - write_to_session 등에서 내부적으로 사용 중
+  - [x] `remove_session()`: 세션 제거 - close_session으로 구현
   - [ ] `list_sessions()`: 모든 세션 목록
 
 ### 4.2 전역 SSH Manager
-- [ ] Tauri State로 SshManager 등록
-- [ ] 앱 시작 시 초기화
+- [x] Tauri State로 SshManager 등록
+- [x] 앱 시작 시 초기화
 
 ---
 
 ## Phase 5: Tauri Commands 구현
 
 ### 5.1 SSH 커맨드 파일 생성
-- [ ] `src-tauri/src/commands/ssh_commands.rs` 파일 생성
-- [ ] `src-tauri/src/commands/mod.rs`에 ssh_commands 추가
+- [x] `src-tauri/src/commands/ssh_commands.rs` 파일 생성
+- [x] `src-tauri/src/commands/mod.rs`에 ssh_commands 추가
 
 ### 5.2 커맨드 함수 구현
-- [ ] `create_ssh_session` 커맨드
+- [x] `create_ssh_session` 커맨드
   ```rust
   #[tauri::command]
   async fn create_ssh_session(
@@ -122,20 +124,20 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
       config: SshConfig,
   ) -> Result<String, String>
   ```
-  - [ ] SSH 세션 생성
-  - [ ] 세션 ID 반환
+  - [x] SSH 세션 생성
+  - [x] 세션 ID 반환
 
-- [ ] `send_ssh_input` 커맨드
+- [x] `write_to_ssh` 커맨드 (send_ssh_input 대신)
   ```rust
   #[tauri::command]
-  async fn send_ssh_input(
+  async fn write_to_ssh(
       manager: State<'_, SshManager>,
       session_id: String,
       data: String,
   ) -> Result<(), String>
   ```
 
-- [ ] `resize_ssh_session` 커맨드
+- [x] `resize_ssh_session` 커맨드
   ```rust
   #[tauri::command]
   async fn resize_ssh_session(
@@ -146,7 +148,7 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
   ) -> Result<(), String>
   ```
 
-- [ ] `close_ssh_session` 커맨드
+- [x] `close_ssh_session` 커맨드
   ```rust
   #[tauri::command]
   async fn close_ssh_session(
@@ -156,11 +158,11 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
   ```
 
 ### 5.3 커맨드 등록
-- [ ] `src-tauri/src/main.rs`에서 커맨드 등록
+- [x] `src-tauri/src/lib.rs`에서 커맨드 등록
   ```rust
   .invoke_handler(tauri::generate_handler![
       create_ssh_session,
-      send_ssh_input,
+      write_to_ssh,
       resize_ssh_session,
       close_ssh_session,
   ])
@@ -171,8 +173,8 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 6: Frontend 타입 정의
 
 ### 6.1 SSH 타입 정의 (TypeScript)
-- [ ] `src/types/ssh.ts` 파일 생성
-  - [ ] `SshConfig` 인터페이스
+- [x] `src/types/ssh.ts` 파일 생성 (178줄, 4.6KB)
+  - [x] `SshConfig` 인터페이스 (Backend 일치)
     ```typescript
     export interface SshConfig {
       host: string;
@@ -181,91 +183,114 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
       authMethod: AuthMethod;
     }
     ```
-  - [ ] `AuthMethod` 타입
+  - [x] `AuthMethod` 타입 (Tagged union, Backend 일치)
     ```typescript
     export type AuthMethod =
       | { type: 'password'; password: string }
       | { type: 'privateKey'; path: string; passphrase?: string };
     ```
-  - [ ] `SshConnectionState` enum (연결 중, 연결됨, 실패, 종료)
+  - [x] `SshConnectionState` 타입 정의
+  - [x] `SshSessionMetadata` 인터페이스 (Frontend 상태 관리용)
+  - [x] `SshOutputEvent`, `SshExitEvent` 인터페이스 (Backend 이벤트)
+  - [x] Type guards: `isPasswordAuth()`, `isPrivateKeyAuth()`
+  - [x] 변환 유틸리티: `toBackendSshConfig()`, `toUiSshConfig()`
 
 ### 6.2 Connection 타입 확장
-- [ ] `src/types/connection.ts` 업데이트
-  - [ ] `SSHConfig` 추가
-  - [ ] `ConnectionConfig` 유니온 타입에 포함
+- [x] `src/types/connection.ts` - 변경 없음 (이미 SSHConfig 존재)
+  - [x] `SSHConfig` - UI/Profile 저장용 (Flat structure)
+  - [x] `ConnectionConfig` 유니온 타입에 포함됨
 
 ---
 
 ## Phase 7: SSH Connection Dialog 구현
 
 ### 7.1 SSH 연결 다이얼로그 컴포넌트
-- [ ] `src/components/ssh/` 디렉토리 생성
-- [ ] `src/components/ssh/SSHConnectionDialog.tsx` 파일 생성
-  - [ ] Dialog UI (Shadcn dialog 사용)
-  - [ ] 입력 필드:
-    - [ ] Host (input)
-    - [ ] Port (input, default: 22)
-    - [ ] Username (input)
-    - [ ] Authentication Method (select: Password / Private Key)
-    - [ ] Password (password input, 조건부 표시)
-    - [ ] Private Key Path (file input, 조건부 표시)
-    - [ ] Private Key Passphrase (password input, optional)
-  - [ ] 연결 버튼
-  - [ ] 취소 버튼
+- [x] `src/components/ssh/` 디렉토리 생성
+- [x] `src/components/ssh/SSHConnectionDialog.tsx` 파일 생성 (455줄, 14KB)
+  - [x] Dialog UI (Shadcn dialog 사용)
+  - [x] 입력 필드:
+    - [x] Host (input) - 필수 필드
+    - [x] Port (input, default: 22) - 숫자 타입, 1-65535 범위
+    - [x] Username (input) - 필수 필드
+    - [x] Authentication Method (select: Password / Private Key)
+    - [x] Password (password input, 조건부 표시) - authMethod === 'password'
+    - [x] Private Key Path (input, 조건부 표시) - authMethod === 'privateKey'
+    - [x] Private Key Passphrase (password input, optional) - authMethod === 'privateKey'
+  - [x] 연결 버튼 - Loading 상태 표시 ("Connecting...")
+  - [x] 취소 버튼
 
 ### 7.2 폼 유효성 검사
-- [ ] 필수 필드 검증
-- [ ] Port 범위 검증 (1-65535)
-- [ ] 파일 경로 유효성 검사
+- [x] 필수 필드 검증 (host, username, password/privateKeyPath)
+- [x] Port 범위 검증 (1-65535)
+- [x] Auth method별 필수 필드 검증
+- [x] Profile name 검증 (saveAsProfile === true)
+- [x] 에러 메시지 표시 (각 필드 하단 빨간색 텍스트)
 
 ### 7.3 프로필 저장 옵션
-- [ ] "Save as profile" 체크박스
-- [ ] Profile name 입력 필드 (조건부 표시)
-- [ ] 저장 시 ConnectionProfileStore에 추가
+- [x] "Save as profile" 체크박스
+- [x] Profile name 입력 필드 (조건부 표시)
+- [x] 저장 시 ConnectionProfileStore.addProfile() 호출
+- [x] Keyring에 민감 정보 자동 저장 (password, privateKey, passphrase)
+- [x] Toast 알림 (연결 성공, 프로필 저장, 에러)
 
 ---
 
 ## Phase 8: SSH Hook 구현
 
 ### 8.1 use-ssh 훅 생성
-- [ ] `src/hooks/use-ssh.ts` 파일 생성
-  - [ ] `useSSH()` 훅 구현
+- [x] `src/hooks/use-ssh.ts` 파일 생성 (210줄, 6.5KB)
+  - [x] `useSsh()` 훅 구현
     ```typescript
-    export function useSSH(tabId: string, config: SshConfig) {
+    export function useSsh(options: UseSshOptions): UseSshReturn {
       const [sessionId, setSessionId] = useState<string | null>(null);
-      const [status, setStatus] = useState<SshConnectionState>('connecting');
+      const [status, setStatus] = useState<SshConnectionState>('disconnected');
       // ...
     }
     ```
-  - [ ] `connect()` 함수: SSH 세션 생성
-  - [ ] `sendInput()` 함수: 입력 전송
-  - [ ] `resize()` 함수: 크기 조정
-  - [ ] `disconnect()` 함수: 연결 종료
+  - [x] `connect()` 함수: SSH 세션 생성 및 이벤트 리스너 등록
+  - [x] `sendInput()` 함수: 사용자 입력 전송 (`write_to_ssh` 호출)
+  - [x] `resize()` 함수: 터미널 크기 조정 (`resize_ssh_session` 호출)
+  - [x] `disconnect()` 함수: 연결 종료 및 cleanup (`close_ssh_session` 호출)
 
 ### 8.2 SSH 이벤트 리스너
-- [ ] `ssh://output/{session_id}` 이벤트 구독
-- [ ] xterm에 출력 데이터 쓰기
-- [ ] 연결 상태 변경 처리
+- [x] `ssh://output/{session_id}` 이벤트 구독 (connect() 함수 내)
+- [x] `ssh://exit/{session_id}` 이벤트 구독 (connect() 함수 내)
+- [x] onOutput 콜백을 통해 xterm에 출력 데이터 전달
+- [x] onStateChange 콜백을 통해 연결 상태 변경 처리
+- [x] Cleanup 로직 (unmount 시 이벤트 리스너 해제)
 
 ---
 
 ## Phase 9: Terminal 컴포넌트 통합
 
 ### 9.1 Terminal.tsx 수정
-- [ ] `src/components/terminal/Terminal.tsx` 수정
-  - [ ] connectionType prop 추가
-  - [ ] connectionType에 따라 PTY 또는 SSH 훅 사용
+- [x] `src/components/terminal/Terminal.tsx` 수정 (+150줄, 총 517줄)
+  - [x] connectionType, connectionConfig props 추가
+  - [x] Import 추가 (useSsh, isSSHConfig, toBackendSshConfig)
+  - [x] connectionType에 따라 PTY/SSH 훅 조건부 사용
     ```typescript
-    const isPty = connectionType === 'local';
-    const sshHook = isPty ? null : useSSH(tabId, config);
+    const isLocalConnection = connectionType === 'local' || !connectionType;
+    const isSshConnection = connectionType === 'ssh';
+    const ptyHook = usePty({ ... });
+    const sshHook = useSsh({ ... });
     ```
-  - [ ] 입력 처리 분기 (PTY vs SSH)
-  - [ ] 크기 조정 분기
+  - [x] writeInputRef로 입력 처리 분기 (PTY: writeToPty, SSH: sendInput)
+  - [x] 세션 생성 분기 (PTY: createPty, SSH: connect with toBackendSshConfig)
+  - [x] 크기 조정 분기 3곳 (resizePty vs resize)
+  - [x] 이벤트 핸들러 분기 (paste, font size)
+  - [x] useEffect 의존성 배열 수정 (isLocalConnection, isSshConnection, hooks)
 
 ### 9.2 조건부 렌더링
-- [ ] SSH 연결 중 로딩 표시
-- [ ] 연결 실패 시 에러 메시지
-- [ ] 재연결 버튼 (선택적)
+- [x] SSH 연결 중 로딩 표시 (connecting state: spinner + connection info)
+- [x] 연결 실패 시 에러 메시지 (failed state: error + retry button)
+- [x] 런타임 에러 표시 (error state: error message)
+- [x] 재연결 버튼 구현 (Retry Connection button)
+- [x] Overlay UI (absolute positioning, z-10)
+
+### 9.3 MainLayout.tsx 수정
+- [x] `src/components/layout/MainLayout.tsx` 수정 (+3줄)
+  - [x] Terminal 컴포넌트에 connectionType, connectionConfig props 전달
+  - [x] Tab 인터페이스의 기존 필드 활용
 
 ---
 

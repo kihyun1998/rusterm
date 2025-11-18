@@ -74,7 +74,11 @@ export function MainLayout({
               {tab.type === 'home' ? (
                 <Home onShowSettings={onShowSettings} />
               ) : (
-                <Terminal id={tab.id} />
+                <Terminal
+                  id={tab.id}
+                  connectionType={tab.connectionType}
+                  connectionConfig={tab.connectionConfig}
+                />
               )}
             </div>
           ))
