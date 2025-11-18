@@ -59,7 +59,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const handleThemeToggle = async () => {
     toggleTheme();
 
-    // Sync app theme with UI theme and save to backend
+    // Sync app theme and save to backend
     try {
       if (isDark) {
         // Switching to Light
