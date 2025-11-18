@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import type { Settings, TerminalSettings, TerminalTheme } from '@/types/settings';
+import type { Settings, TerminalTheme } from '@/types/settings';
 
 interface SettingsState {
   settings: Settings | null;
@@ -10,8 +10,10 @@ interface SettingsState {
   // Actions
   loadSettings: () => Promise<void>;
   saveSettings: (settings: Settings) => Promise<void>;
-  updateTerminalSettings: (updates: Partial<TerminalSettings>) => Promise<void>;
+  updateSettings: (updates: Partial<Omit<Settings, 'version'>>) => Promise<void>;
   updateTheme: (theme: Partial<TerminalTheme>) => Promise<void>;
+  updateFontSize: (fontSize: number) => Promise<void>;
+  updateFontFamily: (fontFamily: string) => Promise<void>;
   resetSettings: () => Promise<void>;
 }
 
@@ -41,13 +43,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
-  updateTerminalSettings: async (updates: Partial<TerminalSettings>) => {
+  updateSettings: async (updates: Partial<Omit<Settings, 'version'>>) => {
     const { settings, saveSettings } = get();
     if (!settings) return;
 
     const newSettings: Settings = {
       ...settings,
-      terminal: { ...settings.terminal, ...updates },
+      ...updates,
     };
     await saveSettings(newSettings);
   },
@@ -58,10 +60,29 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
     const newSettings: Settings = {
       ...settings,
-      terminal: {
-        ...settings.terminal,
-        theme: { ...settings.terminal.theme, ...theme },
-      },
+      theme: { ...settings.theme, ...theme },
+    };
+    await saveSettings(newSettings);
+  },
+
+  updateFontSize: async (fontSize: number) => {
+    const { settings, saveSettings } = get();
+    if (!settings) return;
+
+    const newSettings: Settings = {
+      ...settings,
+      fontSize,
+    };
+    await saveSettings(newSettings);
+  },
+
+  updateFontFamily: async (fontFamily: string) => {
+    const { settings, saveSettings } = get();
+    if (!settings) return;
+
+    const newSettings: Settings = {
+      ...settings,
+      fontFamily,
     };
     await saveSettings(newSettings);
   },
@@ -78,4 +99,4 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 }));
 
 // Export types for convenience
-export type { Settings, TerminalSettings, TerminalTheme };
+export type { Settings, TerminalTheme };

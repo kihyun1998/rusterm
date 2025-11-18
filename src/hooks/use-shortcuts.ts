@@ -38,7 +38,7 @@ export function useShortcuts(options: UseShortcutsOptions) {
 
   // Settings store
   const settings = useSettingsStore((state) => state.settings);
-  const updateTerminalSettings = useSettingsStore((state) => state.updateTerminalSettings);
+  const updateFontSize = useSettingsStore((state) => state.updateFontSize);
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -169,8 +169,8 @@ export function useShortcuts(options: UseShortcutsOptions) {
       if ((e.key === '+' || e.key === '=') && modifier && !e.shiftKey) {
         e.preventDefault();
         if (!settings) return;
-        const newSize = Math.min(settings.terminal.fontSize + 2, 30); // Max 30
-        updateTerminalSettings({ fontSize: newSize });
+        const newSize = Math.min(settings.fontSize + 2, 30); // Max 30
+        updateFontSize(newSize);
         emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
         return;
       }
@@ -179,8 +179,8 @@ export function useShortcuts(options: UseShortcutsOptions) {
       if (e.key === '-' && modifier && !e.shiftKey) {
         e.preventDefault();
         if (!settings) return;
-        const newSize = Math.max(settings.terminal.fontSize - 2, 8); // Min 8
-        updateTerminalSettings({ fontSize: newSize });
+        const newSize = Math.max(settings.fontSize - 2, 8); // Min 8
+        updateFontSize(newSize);
         emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: newSize });
         return;
       }
@@ -189,7 +189,7 @@ export function useShortcuts(options: UseShortcutsOptions) {
       if (e.key === '0' && modifier) {
         e.preventDefault();
         const defaultSize = 14;
-        updateTerminalSettings({ fontSize: defaultSize });
+        updateFontSize(defaultSize);
         emitTerminalEvent(TERMINAL_EVENTS.UPDATE_FONT_SIZE, { fontSize: defaultSize });
         return;
       }
@@ -209,7 +209,7 @@ export function useShortcuts(options: UseShortcutsOptions) {
     closeTab,
     setActiveTab,
     settings,
-    updateTerminalSettings,
+    updateFontSize,
     onOpenSettings,
   ]);
 }

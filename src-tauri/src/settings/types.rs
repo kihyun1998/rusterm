@@ -5,34 +5,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub version: String,
-    pub terminal: TerminalSettings,
-    pub window: WindowSettings,
-    pub general: GeneralSettings,
-}
-
-/// Terminal-specific settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TerminalSettings {
     pub font_size: u32,
     pub font_family: String,
-    pub line_height: f32,
-    pub cursor_style: CursorStyle,
-    pub cursor_blink: bool,
-    pub scrollback: u32,
-    pub shell: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub startup_directory: Option<String>,
     pub theme: TerminalTheme,
-}
-
-/// Cursor style options
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum CursorStyle {
-    Block,
-    Underline,
-    Bar,
 }
 
 /// Terminal color theme
@@ -81,48 +56,13 @@ pub struct TerminalTheme {
     pub bright_white: Option<String>,
 }
 
-/// Window settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WindowSettings {
-    pub width: u32,
-    pub height: u32,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub x: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub y: Option<i32>,
-}
-
-/// General application settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GeneralSettings {
-    pub confirm_before_quit: bool,
-    pub auto_save: bool,
-}
-
 // Default implementations
 impl Default for Settings {
     fn default() -> Self {
         Self {
             version: "1.0.0".to_string(),
-            terminal: TerminalSettings::default(),
-            window: WindowSettings::default(),
-            general: GeneralSettings::default(),
-        }
-    }
-}
-
-impl Default for TerminalSettings {
-    fn default() -> Self {
-        Self {
             font_size: 14,
-            font_family: "Consolas, \"Courier New\", monospace".to_string(),
-            line_height: 1.2,
-            cursor_style: CursorStyle::Block,
-            cursor_blink: true,
-            scrollback: 1000,
-            shell: String::new(),
-            startup_directory: None,
+            font_family: "Cascadia Code, Consolas, Monaco, monospace".to_string(),
             theme: TerminalTheme::default(),
         }
     }
@@ -152,26 +92,6 @@ impl Default for TerminalTheme {
             bright_magenta: Some("#d670d6".to_string()),
             bright_cyan: Some("#29b8db".to_string()),
             bright_white: Some("#ffffff".to_string()),
-        }
-    }
-}
-
-impl Default for WindowSettings {
-    fn default() -> Self {
-        Self {
-            width: 1200,
-            height: 800,
-            x: None,
-            y: None,
-        }
-    }
-}
-
-impl Default for GeneralSettings {
-    fn default() -> Self {
-        Self {
-            confirm_before_quit: true,
-            auto_save: true,
         }
     }
 }

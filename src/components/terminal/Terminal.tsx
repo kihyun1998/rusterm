@@ -71,13 +71,9 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     // Create terminal instance with settings if available
     const config = settings
       ? getTerminalConfig({
-          fontSize: settings.terminal.fontSize,
-          fontFamily: settings.terminal.fontFamily,
-          lineHeight: settings.terminal.lineHeight,
-          cursorStyle: settings.terminal.cursorStyle,
-          cursorBlink: settings.terminal.cursorBlink,
-          scrollback: settings.terminal.scrollback,
-          theme: settings.terminal.theme,
+          fontSize: settings.fontSize,
+          fontFamily: settings.fontFamily,
+          theme: settings.theme,
         })
       : getTerminalConfig();
 
@@ -235,8 +231,8 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     const fitAddon = fitAddonRef.current;
 
     // Update fontSize
-    if (settings.terminal.fontSize && terminal.options.fontSize !== settings.terminal.fontSize) {
-      terminal.options.fontSize = settings.terminal.fontSize;
+    if (settings.fontSize && terminal.options.fontSize !== settings.fontSize) {
+      terminal.options.fontSize = settings.fontSize;
       try {
         fitAddon.fit();
         if (isConnected) {
@@ -248,10 +244,10 @@ export function Terminal({ id, className = '' }: TerminalProps) {
     }
 
     // Update theme
-    if (settings.terminal.theme && terminal.options.theme) {
+    if (settings.theme && terminal.options.theme) {
       terminal.options.theme = {
         ...terminal.options.theme,
-        ...settings.terminal.theme,
+        ...settings.theme,
       };
     }
   }, [settings, isReady, isConnected, resizePty]);
