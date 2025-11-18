@@ -88,7 +88,23 @@ export function Terminal({
       }
     },
     onStateChange: (state) => {
-      console.log('SSH state:', state);
+      if (!xtermRef.current) return;
+
+      const terminal = xtermRef.current;
+
+      if (state === 'connecting') {
+        if (connectionConfig && isSSHConfig(connectionConfig)) {
+          terminal.write(`\x1b[1;36mConnecting to ${connectionConfig.username}@${connectionConfig.host}:${connectionConfig.port}...\x1b[0m\r\n`);
+        }
+      } else if (state === 'connected') {
+        terminal.write(`\x1b[1;32mConnected successfully!\x1b[0m\r\n`);
+      } else if (state === 'failed') {
+        const errorMsg = sshHook.error || 'Authentication failed or connection refused';
+        terminal.write(`\r\n\x1b[1;31m[Connection Failed: ${errorMsg}]\x1b[0m\r\n`);
+      } else if (state === 'error') {
+        const errorMsg = sshHook.error || 'An error occurred during SSH session';
+        terminal.write(`\r\n\x1b[1;31m[Error: ${errorMsg}]\x1b[0m\r\n`);
+      }
     },
   });
 
@@ -293,12 +309,12 @@ export function Terminal({
     };
   }, [isReady, isConnected, isLocalConnection, isSshConnection, ptyHook, sshHook]);
 
-  // Display error if any
+  // Display error for local PTY connections (SSH errors handled in onStateChange)
   useEffect(() => {
-    if (error && xtermRef.current) {
+    if (isLocalConnection && error && xtermRef.current) {
       xtermRef.current.write(`\r\n\x1b[1;31m[Error: ${error}]\x1b[0m\r\n`);
     }
-  }, [error]);
+  }, [error, isLocalConnection]);
 
   // Apply settings changes to terminal
   useEffect(() => {
@@ -446,62 +462,6 @@ export function Terminal({
         backgroundColor: currentTheme?.background || '#1e1e1e',
       }}
     >
-      {/* SSH connection status overlay */}
-      {isSshConnection && sshHook.status !== 'connected' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-          <div className="bg-background p-6 rounded-lg shadow-lg text-center max-w-md">
-            {/* Connecting state */}
-            {sshHook.status === 'connecting' && (
-              <>
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Connecting to SSH server...</h3>
-                <p className="text-sm text-muted-foreground">
-                  {connectionConfig && isSSHConfig(connectionConfig)
-                    ? `${connectionConfig.username}@${connectionConfig.host}:${connectionConfig.port}`
-                    : 'Establishing connection'}
-                </p>
-              </>
-            )}
-
-            {/* Failed state */}
-            {sshHook.status === 'failed' && (
-              <>
-                <div className="text-destructive text-4xl mb-4">✕</div>
-                <h3 className="text-lg font-semibold mb-2">Connection Failed</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {sshHook.error || 'Unable to establish SSH connection'}
-                </p>
-                <button
-                  onClick={() => {
-                    if (connectionConfig && isSSHConfig(connectionConfig)) {
-                      const backendConfig = toBackendSshConfig(connectionConfig);
-                      const terminal = xtermRef.current;
-                      if (terminal) {
-                        sshHook.connect(backendConfig, terminal.cols, terminal.rows);
-                      }
-                    }
-                  }}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-                >
-                  Retry Connection
-                </button>
-              </>
-            )}
-
-            {/* Error state */}
-            {sshHook.status === 'error' && (
-              <>
-                <div className="text-destructive text-4xl mb-4">⚠</div>
-                <h3 className="text-lg font-semibold mb-2">Connection Error</h3>
-                <p className="text-sm text-muted-foreground">
-                  {sshHook.error || 'An error occurred during SSH session'}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Terminal */}
       <TerminalContextMenu
         terminalRef={xtermRef}
