@@ -12,23 +12,23 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 1: Backend 기본 구조 설계
 
 ### 1.1 Rust 의존성 추가
-- [ ] `src-tauri/Cargo.toml` 수정
-  - [ ] `ssh2 = "0.9"` 크레이트 추가 (또는 `russh`)
-  - [ ] 기타 필요한 의존성 확인 (async-std, futures, etc.)
+- [x] `src-tauri/Cargo.toml` 수정
+  - [x] `ssh2 = "0.9"` 크레이트 추가 (또는 `russh`)
+  - [x] 기타 필요한 의존성 확인 (async-std, futures, etc.)
 
 ### 1.2 SSH 모듈 구조 생성
-- [ ] `src-tauri/src/ssh/` 디렉토리 생성
-- [ ] `src-tauri/src/ssh/mod.rs` 파일 생성
-  - [ ] 모듈 export 설정
-- [ ] `src-tauri/src/lib.rs` 또는 `main.rs`에 ssh 모듈 추가
+- [x] `src-tauri/src/ssh/` 디렉토리 생성
+- [x] `src-tauri/src/ssh/mod.rs` 파일 생성
+  - [x] 모듈 export 설정
+- [x] `src-tauri/src/lib.rs` 또는 `main.rs`에 ssh 모듈 추가
 
 ---
 
 ## Phase 2: SSH 타입 정의 (Rust)
 
 ### 2.1 SSH 타입 정의
-- [ ] `src-tauri/src/ssh/types.rs` 파일 생성
-  - [ ] `SshConfig` 구조체 정의
+- [x] `src-tauri/src/ssh/types.rs` 파일 생성
+  - [x] `SshConfig` 구조체 정의
     ```rust
     pub struct SshConfig {
         pub host: String,
@@ -37,27 +37,27 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
         pub auth_method: AuthMethod,
     }
     ```
-  - [ ] `AuthMethod` enum 정의
+  - [x] `AuthMethod` enum 정의
     ```rust
     pub enum AuthMethod {
         Password(String),
         PrivateKey { path: String, passphrase: Option<String> },
     }
     ```
-  - [ ] `SshSessionInfo` 구조체 (세션 메타데이터)
-  - [ ] Serde derive 추가 (직렬화/역직렬화)
+  - [x] `SshSessionInfo` 구조체 (세션 메타데이터) - CreateSshResponse로 구현
+  - [x] Serde derive 추가 (직렬화/역직렬화)
 
 ### 2.2 에러 타입 정의
-- [ ] `SshError` enum 정의 (thiserror 사용)
-  - [ ] 연결 실패, 인증 실패, I/O 에러 등
+- [x] `SshError` enum 정의 (thiserror 사용)
+  - [x] 연결 실패, 인증 실패, I/O 에러 등
 
 ---
 
 ## Phase 3: SSH Session 구현
 
 ### 3.1 SSH Session 구조체
-- [ ] `src-tauri/src/ssh/session.rs` 파일 생성
-  - [ ] `SshSession` 구조체 정의
+- [x] `src-tauri/src/ssh/session.rs` 파일 생성
+  - [x] `SshSession` 구조체 정의
     ```rust
     pub struct SshSession {
         session: ssh2::Session,
@@ -66,44 +66,44 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
         id: String,
     }
     ```
-  - [ ] `new()` 메서드: SSH 연결 및 인증
-    - [ ] TCP 연결 생성
-    - [ ] SSH 핸드셰이크
-    - [ ] 인증 (password 또는 private key)
-    - [ ] 채널 생성 및 PTY 요청
-    - [ ] 셸 시작
+  - [x] `new()` 메서드: SSH 연결 및 인증
+    - [x] TCP 연결 생성
+    - [x] SSH 핸드셰이크
+    - [x] 인증 (password 또는 private key)
+    - [x] 채널 생성 및 PTY 요청
+    - [x] 셸 시작
 
 ### 3.2 SSH Session I/O 처리
-- [ ] `read()` 메서드: 채널에서 데이터 읽기
-- [ ] `write()` 메서드: 채널로 데이터 쓰기
-- [ ] `resize()` 메서드: PTY 크기 조정
-- [ ] `close()` 메서드: 연결 종료 및 리소스 정리
+- [ ] `read()` 메서드: 채널에서 데이터 읽기 - 백그라운드 스레드에서 처리 중
+- [x] `write()` 메서드: 채널로 데이터 쓰기
+- [x] `resize()` 메서드: PTY 크기 조정
+- [ ] `close()` 메서드: 연결 종료 및 리소스 정리 - Drop으로 자동 처리 중
 
 ### 3.3 비동기 I/O 처리
-- [ ] 백그라운드 스레드에서 SSH 출력 읽기
-- [ ] Tauri event로 프론트엔드에 데이터 전송
-  - [ ] `ssh://output/{session_id}` 이벤트
+- [x] 백그라운드 스레드에서 SSH 출력 읽기 (TODO: 채널 공유 방식 개선 필요)
+- [x] Tauri event로 프론트엔드에 데이터 전송
+  - [x] `ssh://output/{session_id}` 이벤트
 
 ---
 
 ## Phase 4: SSH Manager 구현
 
 ### 4.1 SSH Manager 구조체
-- [ ] `src-tauri/src/ssh/manager.rs` 파일 생성
-  - [ ] `SshManager` 구조체 정의
+- [x] `src-tauri/src/ssh/manager.rs` 파일 생성
+  - [x] `SshManager` 구조체 정의
     ```rust
     pub struct SshManager {
         sessions: Arc<Mutex<HashMap<String, SshSession>>>,
     }
     ```
-  - [ ] `create_session()`: 새 SSH 세션 생성
-  - [ ] `get_session()`: 세션 ID로 조회
-  - [ ] `remove_session()`: 세션 제거
+  - [x] `create_session()`: 새 SSH 세션 생성
+  - [ ] `get_session()`: 세션 ID로 조회 - write_to_session 등에서 내부적으로 사용 중
+  - [x] `remove_session()`: 세션 제거 - close_session으로 구현
   - [ ] `list_sessions()`: 모든 세션 목록
 
 ### 4.2 전역 SSH Manager
-- [ ] Tauri State로 SshManager 등록
-- [ ] 앱 시작 시 초기화
+- [x] Tauri State로 SshManager 등록
+- [x] 앱 시작 시 초기화
 
 ---
 
