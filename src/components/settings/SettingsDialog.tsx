@@ -44,6 +44,7 @@ const FONT_FAMILIES = [
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { theme, toggleTheme } = useTheme();
   const settings = useSettingsStore((state) => state.settings);
+  const updateAppTheme = useSettingsStore((state) => state.updateAppTheme);
   const updateTheme = useSettingsStore((state) => state.updateTheme);
   const updateFontSize = useSettingsStore((state) => state.updateFontSize);
   const updateFontFamily = useSettingsStore((state) => state.updateFontFamily);
@@ -56,6 +57,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     try {
       if (isDark) {
         // Switching to Light
+        await updateAppTheme('light');
         await updateTheme({
           background: '#ffffff',
           foreground: '#000000',
@@ -65,6 +67,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         });
       } else {
         // Switching to Dark
+        await updateAppTheme('dark');
         await updateTheme({
           background: '#1e1e1e',
           foreground: '#cccccc',

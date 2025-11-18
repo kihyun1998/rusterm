@@ -7,6 +7,7 @@
 
 export interface Settings {
   version: string;
+  appTheme: 'dark' | 'light';
   fontSize: number;
   fontFamily: string;
   theme: TerminalTheme;
@@ -42,6 +43,7 @@ export interface TerminalTheme {
  */
 export const defaultSettings: Settings = {
   version: '1.0.0',
+  appTheme: 'dark',
   fontSize: 14,
   fontFamily: 'Cascadia Code, Consolas, Monaco, monospace',
   theme: {

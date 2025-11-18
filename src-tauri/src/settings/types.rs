@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub version: String,
+    pub app_theme: String,
     pub font_size: u32,
     pub font_family: String,
     pub theme: TerminalTheme,
@@ -61,6 +62,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             version: "1.0.0".to_string(),
+            app_theme: "dark".to_string(),
             font_size: 14,
             font_family: "Cascadia Code, Consolas, Monaco, monospace".to_string(),
             theme: TerminalTheme::default(),
