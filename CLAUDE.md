@@ -25,6 +25,25 @@ rusterm/
 ├── src/                          # React 프론트엔드
 │   ├── components/
 │   │   ├── ui/                   # Shadcn/ui 컴포넌트 (📄 [상세 문서](src/components/ui/CLAUDE.md))
+│   │   │   ├── alert-dialog.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── checkbox.tsx
+│   │   │   ├── command.tsx
+│   │   │   ├── context-menu.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── scroll-area.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── slider.tsx
+│   │   │   ├── sonner.tsx
+│   │   │   ├── switch.tsx
+│   │   │   └── tabs.tsx
 │   │   ├── layout/               # 레이아웃 컴포넌트
 │   │   │   ├── MainLayout.tsx
 │   │   │   ├── TitleBar.tsx
@@ -33,17 +52,40 @@ rusterm/
 │   │   ├── terminal/             # 터미널 컴포넌트
 │   │   │   └── Terminal.tsx
 │   │   ├── settings/             # 설정 UI
-│   │   │   └── SettingsDialog.tsx
+│   │   │   ├── SettingsDialog.tsx
+│   │   │   └── TerminalPreview.tsx
 │   │   ├── command/              # 커맨드 팔레트
 │   │   │   └── CommandPalette.tsx
-│   │   └── menu/                 # 컨텍스트 메뉴
-│   │       └── TerminalContextMenu.tsx
+│   │   ├── menu/                 # 컨텍스트 메뉴
+│   │   │   └── TerminalContextMenu.tsx
+│   │   └── home/                 # 홈 화면
+│   │       └── Home.tsx
 │   ├── hooks/                    # React 훅
-│   │   └── use-theme.tsx
+│   │   ├── use-theme.tsx
+│   │   ├── use-clipboard.ts
+│   │   ├── use-pty.ts
+│   │   ├── use-shortcuts.ts
+│   │   └── use-window-controls.ts
 │   ├── stores/                   # Zustand 스토어
+│   │   ├── index.ts
+│   │   ├── use-settings-store.ts
+│   │   └── use-tab-store.ts
 │   ├── types/                    # TypeScript 타입 정의
+│   │   ├── pty.ts
+│   │   ├── settings.ts
+│   │   ├── terminal.ts
+│   │   └── window.ts
 │   ├── pages/                    # 페이지 컴포넌트
+│   │   └── ComponentDemo.tsx
 │   ├── lib/                      # 유틸리티
+│   │   ├── utils.ts
+│   │   ├── terminal-events.ts
+│   │   └── xterm-config.ts
+│   ├── constants/                # 상수 정의
+│   │   └── terminal-themes.ts
+│   ├── assets/                   # 정적 리소스
+│   ├── config.ts                 # 앱 설정
+│   ├── globals.css               # 전역 스타일
 │   ├── App.tsx                   # 메인 앱 컴포넌트
 │   └── main.tsx                  # 엔트리 포인트
 │
@@ -51,12 +93,17 @@ rusterm/
     ├── src/
     │   ├── commands/             # Tauri 커맨드
     │   │   ├── mod.rs
-    │   │   └── pty_commands.rs   # PTY 관련 커맨드
+    │   │   ├── pty_commands.rs   # PTY 관련 커맨드
+    │   │   └── settings_commands.rs  # 설정 관련 커맨드
     │   ├── pty/                  # PTY (Pseudo-Terminal) 관리
     │   │   ├── mod.rs
     │   │   ├── manager.rs        # PTY 세션 관리자
     │   │   ├── session.rs        # PTY 세션
     │   │   └── types.rs          # 타입 정의
+    │   ├── settings/             # 설정 관리
+    │   │   ├── mod.rs
+    │   │   ├── manager.rs        # 설정 관리자
+    │   │   └── types.rs          # 설정 타입 정의
     │   ├── main.rs               # Rust 엔트리 포인트
     │   └── lib.rs                # 라이브러리 설정
     └── Cargo.toml                # Rust 의존성
@@ -138,12 +185,26 @@ pnpm tauri build
 - `src/components/layout/MainLayout.tsx`: 메인 레이아웃 (타이틀바, 탭바, 터미널)
 - `src/components/command/CommandPalette.tsx`: 커맨드 팔레트 (Cmd/Ctrl+K)
 - `src/components/settings/SettingsDialog.tsx`: 설정 다이얼로그 (Cmd/Ctrl+,)
+- `src/components/settings/TerminalPreview.tsx`: 터미널 미리보기 컴포넌트
+- `src/components/home/Home.tsx`: 홈 화면 컴포넌트
+- `src/stores/use-tab-store.ts`: 탭 상태 관리 스토어
+- `src/stores/use-settings-store.ts`: 설정 상태 관리 스토어
+- `src/hooks/use-pty.ts`: PTY 관련 커스텀 훅
+- `src/hooks/use-shortcuts.ts`: 단축키 관련 커스텀 훅
+- `src/hooks/use-clipboard.ts`: 클립보드 관련 커스텀 훅
+- `src/hooks/use-window-controls.ts`: 윈도우 제어 커스텀 훅
+- `src/lib/xterm-config.ts`: xterm.js 설정 유틸리티
+- `src/lib/terminal-events.ts`: 터미널 이벤트 처리 유틸리티
+- `src/constants/terminal-themes.ts`: 터미널 테마 정의
 
 **Backend:**
 - `src-tauri/src/main.rs`: Tauri 애플리케이션 엔트리 포인트
 - `src-tauri/src/commands/pty_commands.rs`: PTY 관련 Tauri 커맨드
+- `src-tauri/src/commands/settings_commands.rs`: 설정 관련 Tauri 커맨드
 - `src-tauri/src/pty/manager.rs`: PTY 세션 관리자
 - `src-tauri/src/pty/session.rs`: 개별 PTY 세션 구현
+- `src-tauri/src/settings/manager.rs`: 설정 관리자
+- `src-tauri/src/settings/types.rs`: 설정 타입 정의
 
 ### 기능 추가 시 주의사항
 
