@@ -106,13 +106,14 @@
 ## Phase 5: 설정 시스템
 
 ### 5.1 설정 저장/로드
-- [ ] 설정 타입 정의
+- [x] 설정 타입 정의
   - `src/types/settings.ts`: 테마, 폰트, 키바인딩 등
-- [ ] 백엔드 설정 관리
-  - `src-tauri/src/commands/settings.rs`
-  - JSON 파일로 저장 (앱 데이터 디렉토리)
-- [ ] 프론트엔드 훅
-  - `src/hooks/use-settings.ts`: 설정 로드/저장
+- [x] 백엔드 설정 관리
+  - `src-tauri/src/commands/settings_commands.rs`
+  - `src-tauri/src/settings/manager.rs`
+  - JSON 파일로 저장 (앱 데이터 디렉토리: `~/.config/rusterm/settings.json`)
+- [x] 프론트엔드 훅
+  - `src/stores/use-settings-store.ts`: Zustand 스토어로 설정 로드/저장
 
 ### 5.2 설정 UI
 - [ ] shadcn/ui `Dialog` 컴포넌트 추가
