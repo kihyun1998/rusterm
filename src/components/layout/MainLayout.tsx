@@ -1,6 +1,7 @@
 import { Home } from '@/components/home/Home';
 import { Terminal } from '@/components/terminal/Terminal';
 import { useTabStore, useSettingsStore } from '@/stores';
+import { getThemeById } from '@/constants/terminal-themes';
 import { TabBar } from './TabBar';
 import { TitleBar } from './TitleBar';
 
@@ -17,11 +18,14 @@ interface MainLayoutProps {
 export function MainLayout({ showDemoButton, onDemoClick, onShowSettings }: MainLayoutProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
-  const terminalTheme = useSettingsStore((state) => state.settings?.theme);
+  const terminalThemeId = useSettingsStore((state) => state.settings?.terminalThemeId);
 
   // Check if current active tab is a terminal
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const isTerminalActive = activeTab?.type === 'terminal';
+
+  // Get terminal theme from ID
+  const terminalTheme = terminalThemeId ? getThemeById(terminalThemeId)?.theme : undefined;
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">

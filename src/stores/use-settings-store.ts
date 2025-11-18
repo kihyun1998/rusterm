@@ -12,7 +12,7 @@ interface SettingsState {
   saveSettings: (settings: Settings) => Promise<void>;
   updateSettings: (updates: Partial<Omit<Settings, 'version'>>) => Promise<void>;
   updateAppTheme: (appTheme: 'dark' | 'light') => Promise<void>;
-  updateTheme: (theme: Partial<TerminalTheme>, themeId?: string) => Promise<void>;
+  updateTerminalThemeId: (themeId: string) => Promise<void>;
   updateFontSize: (fontSize: number) => Promise<void>;
   updateFontFamily: (fontFamily: string) => Promise<void>;
   resetSettings: () => Promise<void>;
@@ -66,13 +66,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await saveSettings(newSettings);
   },
 
-  updateTheme: async (theme: Partial<TerminalTheme>, themeId?: string) => {
+  updateTerminalThemeId: async (themeId: string) => {
     const { settings, saveSettings } = get();
     if (!settings) return;
 
     const newSettings: Settings = {
       ...settings,
-      theme: { ...settings.theme, ...theme },
       terminalThemeId: themeId,
     };
     await saveSettings(newSettings);

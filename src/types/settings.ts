@@ -10,8 +10,7 @@ export interface Settings {
   appTheme: 'dark' | 'light';
   fontSize: number;
   fontFamily: string;
-  theme: TerminalTheme;
-  terminalThemeId?: string;
+  terminalThemeId: string;
 }
 
 export interface TerminalTheme {
@@ -40,7 +39,7 @@ export interface TerminalTheme {
 }
 
 /**
- * Default settings values (Retro theme)
+ * Default settings values
  */
 export const defaultSettings: Settings = {
   version: '1.0.0',
@@ -48,27 +47,4 @@ export const defaultSettings: Settings = {
   fontSize: 14,
   fontFamily: 'Cascadia Code, Consolas, Monaco, monospace',
   terminalThemeId: 'retro',
-  theme: {
-    background: '#000000',
-    foreground: '#13a10e',
-    cursor: '#13a10e',
-    cursorAccent: '#000000',
-    selectionBackground: '#ffffff',
-    black: '#13a10e',
-    red: '#13a10e',
-    green: '#13a10e',
-    yellow: '#13a10e',
-    blue: '#13a10e',
-    magenta: '#13a10e',
-    cyan: '#13a10e',
-    white: '#13a10e',
-    brightBlack: '#16ba10',
-    brightRed: '#16ba10',
-    brightGreen: '#16ba10',
-    brightYellow: '#16ba10',
-    brightBlue: '#16ba10',
-    brightMagenta: '#16ba10',
-    brightCyan: '#16ba10',
-    brightWhite: '#16ba10',
-  },
 };
