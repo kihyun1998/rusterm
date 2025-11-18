@@ -238,24 +238,26 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 8: SSH Hook 구현
 
 ### 8.1 use-ssh 훅 생성
-- [ ] `src/hooks/use-ssh.ts` 파일 생성
-  - [ ] `useSSH()` 훅 구현
+- [x] `src/hooks/use-ssh.ts` 파일 생성 (210줄, 6.5KB)
+  - [x] `useSsh()` 훅 구현
     ```typescript
-    export function useSSH(tabId: string, config: SshConfig) {
+    export function useSsh(options: UseSshOptions): UseSshReturn {
       const [sessionId, setSessionId] = useState<string | null>(null);
-      const [status, setStatus] = useState<SshConnectionState>('connecting');
+      const [status, setStatus] = useState<SshConnectionState>('disconnected');
       // ...
     }
     ```
-  - [ ] `connect()` 함수: SSH 세션 생성
-  - [ ] `sendInput()` 함수: 입력 전송
-  - [ ] `resize()` 함수: 크기 조정
-  - [ ] `disconnect()` 함수: 연결 종료
+  - [x] `connect()` 함수: SSH 세션 생성 및 이벤트 리스너 등록
+  - [x] `sendInput()` 함수: 사용자 입력 전송 (`write_to_ssh` 호출)
+  - [x] `resize()` 함수: 터미널 크기 조정 (`resize_ssh_session` 호출)
+  - [x] `disconnect()` 함수: 연결 종료 및 cleanup (`close_ssh_session` 호출)
 
 ### 8.2 SSH 이벤트 리스너
-- [ ] `ssh://output/{session_id}` 이벤트 구독
-- [ ] xterm에 출력 데이터 쓰기
-- [ ] 연결 상태 변경 처리
+- [x] `ssh://output/{session_id}` 이벤트 구독 (connect() 함수 내)
+- [x] `ssh://exit/{session_id}` 이벤트 구독 (connect() 함수 내)
+- [x] onOutput 콜백을 통해 xterm에 출력 데이터 전달
+- [x] onStateChange 콜백을 통해 연결 상태 변경 처리
+- [x] Cleanup 로직 (unmount 시 이벤트 리스너 해제)
 
 ---
 
