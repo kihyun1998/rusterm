@@ -3,7 +3,7 @@ use ssh2::Session;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::thread;
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
 
 /// SSH 채널 작업 명령
@@ -62,7 +62,7 @@ impl SshSession {
         let (command_tx, command_rx) = mpsc::unbounded_channel();
 
         // 백그라운드 I/O 스레드 시작 (읽기/쓰기 모두 처리)
-        Self::start_io_thread(session_id.clone(), channel, command_rx, app_handle);
+        Self::start_io_thread(session_id.clone(), session, channel, command_rx, app_handle);
 
         Ok(Self {
             session_id,
@@ -111,13 +111,17 @@ impl SshSession {
     /// - 쓰기: command_rx를 통해 받은 명령(Write, Resize) 처리
     fn start_io_thread(
         session_id: String,
+        session: Session,
         mut channel: ssh2::Channel,
         mut command_rx: mpsc::UnboundedReceiver<SshCommand>,
         app_handle: AppHandle,
     ) {
         thread::spawn(move || {
-            // 채널을 논블로킹 모드로 설정
-            channel.set_blocking(false);
+            // 세션을 논블로킹 모드로 설정 (채널도 자동으로 논블로킹이 됨)
+            session.set_blocking(false);
+            
+            // Session을 유지해야 연결이 유지됨
+            let _session = session;
 
             let mut buffer = [0u8; 4096];
 
