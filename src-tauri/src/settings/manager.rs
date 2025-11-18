@@ -50,8 +50,16 @@ impl SettingsManager {
     fn load_or_create(path: &PathBuf) -> Result<Settings, SettingsError> {
         if path.exists() {
             let content = fs::read_to_string(path)?;
-            let settings = serde_json::from_str(&content)?;
-            Ok(settings)
+            match serde_json::from_str(&content) {
+                Ok(settings) => Ok(settings),
+                Err(e) => {
+                    // If parsing fails (e.g., old format), use defaults and overwrite
+                    eprintln!("Failed to parse settings ({}), using defaults", e);
+                    let settings = Settings::default();
+                    Self::save_to_file(path, &settings)?;
+                    Ok(settings)
+                }
+            }
         } else {
             let settings = Settings::default();
             // Create initial file
@@ -97,7 +105,7 @@ mod tests {
     fn test_default_settings() {
         let settings = Settings::default();
         assert_eq!(settings.version, "1.0.0");
-        assert_eq!(settings.terminal.font_size, 14);
-        assert_eq!(settings.window.width, 1200);
+        assert_eq!(settings.font_size, 14);
+        assert_eq!(settings.font_family, "Cascadia Code, Consolas, Monaco, monospace");
     }
 }

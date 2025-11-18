@@ -1,5 +1,5 @@
 mod manager;
 mod types;
 
-pub use manager::{SettingsError, SettingsManager};
-pub use types::{Settings, TerminalTheme};
+pub use manager::SettingsManager;
+pub use types::Settings;
