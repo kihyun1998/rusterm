@@ -47,24 +47,23 @@
   - [x] 민감 정보(password, privateKey) 제외
 
 ### 2.3 Keyring 통합 (민감 정보 보안 저장)
-- [ ] Rust 백엔드: keyring-rs 설정
-  - [ ] `src-tauri/Cargo.toml`에 keyring 의존성 추가
-  - [ ] `src-tauri/src/keyring/` 디렉토리 생성
-  - [ ] `mod.rs`, `types.rs`, `commands.rs` 파일 구조 설정
-- [ ] Tauri 커맨드 구현
-  - [ ] `save_credential(service: string, account: string, secret: string)` 커맨드
-  - [ ] `get_credential(service: string, account: string)` 커맨드
-  - [ ] `delete_credential(service: string, account: string)` 커맨드
-  - [ ] 에러 처리 (credential not found, access denied 등)
-- [ ] TypeScript 타입 정의
-  - [ ] `src/types/keyring.ts` 파일 생성
-  - [ ] CredentialService 타입 정의
-  - [ ] Keyring 관련 인터페이스 정의
-- [ ] 프론트엔드 통합
-  - [ ] `src/lib/keyring.ts` 유틸리티 생성
-  - [ ] Keyring 커맨드 래퍼 함수 구현
-  - [ ] 프로필 저장 시 민감 정보 keyring에 분리 저장
-  - [ ] 프로필 로드 시 keyring에서 민감 정보 가져오기
+- [x] Rust 백엔드: keyring-rs 설정
+  - [x] `src-tauri/Cargo.toml`에 keyring 의존성 추가
+  - [x] `src-tauri/src/commands/keyring_commands.rs` 파일 생성 (간소화된 구조)
+- [x] Tauri 커맨드 구현
+  - [x] `save_credential(service: string, account: string, secret: string)` 커맨드
+  - [x] `get_credential(service: string, account: string)` 커맨드
+  - [x] `delete_credential(service: string, account: string)` 커맨드
+  - [x] 에러 처리 (credential not found, access denied 등)
+- [x] TypeScript 타입 정의
+  - [x] `src/types/keyring.ts` 파일 생성
+  - [x] KeyringService 타입 정의
+  - [x] CredentialType 타입 및 헬퍼 함수 정의
+- [x] 프론트엔드 통합
+  - [x] `src/lib/keyring.ts` 유틸리티 생성
+  - [x] Keyring 커맨드 래퍼 함수 구현
+  - [x] 프로필 저장 시 민감 정보 keyring에 분리 저장
+  - [x] 프로필 삭제 시 keyring에서 민감 정보 제거
 
 ---
 
@@ -278,5 +277,5 @@ save_credential("rusterm-ssh", "abc123-passphrase", "keypass")
 ---
 
 **작성일**: 2025-11-18
-**수정일**: 2025-11-18 (Phase 2.1, 2.2 완료)
+**수정일**: 2025-11-18 (Phase 2.1, 2.2, 2.3 완료)
 **관련 Task**: TASK_SSH_CONNECTION.md
