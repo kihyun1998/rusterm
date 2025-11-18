@@ -14,7 +14,9 @@ pub struct SshConfig {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum AuthMethod {
+    #[serde(rename = "password")]
     Password { password: String },
+    #[serde(rename = "privateKey")]
     PrivateKey { path: String, passphrase: Option<String> },
 }
 
