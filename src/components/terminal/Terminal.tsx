@@ -1,7 +1,7 @@
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Terminal as XTerm } from '@xterm/xterm';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { TerminalContextMenu } from '@/components/menu/TerminalContextMenu';
 import { getThemeById } from '@/constants/terminal-themes';
 import { useClipboard } from '@/hooks/use-clipboard';
@@ -12,7 +12,7 @@ import { getTerminalConfig } from '@/lib/xterm-config';
 import { useSettingsStore } from '@/stores';
 import type { ConnectionConfig, ConnectionType } from '@/types/connection';
 import { isSSHConfig } from '@/types/connection';
-import { toBackendSshConfig } from '@/types/ssh';
+import { toBackendSshConfig, type SshConnectionState } from '@/types/ssh';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -52,6 +52,14 @@ export function Terminal({
   // Clipboard management
   const { copyToClipboard } = useClipboard();
 
+  // Refs for SSH error messages (to avoid recreating callback)
+  const sshErrorRef = useRef<string | null>(null);
+  const connectionConfigRef = useRef(connectionConfig);
+
+  useEffect(() => {
+    connectionConfigRef.current = connectionConfig;
+  }, [connectionConfig]);
+
   // PTY connection management (for local terminals)
   const ptyHook = usePty({
     onOutput: (data) => {
@@ -72,6 +80,28 @@ export function Terminal({
     },
   });
 
+  // SSH state change handler (stable with useCallback)
+  const handleSshStateChange = useCallback((state: SshConnectionState) => {
+    if (!xtermRef.current) return;
+
+    const terminal = xtermRef.current;
+
+    if (state === 'connecting') {
+      const config = connectionConfigRef.current;
+      if (config && isSSHConfig(config)) {
+        terminal.write(`\x1b[1;36mConnecting to ${config.username}@${config.host}:${config.port}...\x1b[0m\r\n`);
+      }
+    } else if (state === 'connected') {
+      terminal.write(`\x1b[1;32mConnected successfully!\x1b[0m\r\n`);
+    } else if (state === 'failed') {
+      const errorMsg = sshErrorRef.current || 'Authentication failed or connection refused';
+      terminal.write(`\r\n\x1b[1;31m[Connection Failed: ${errorMsg}]\x1b[0m\r\n`);
+    } else if (state === 'error') {
+      const errorMsg = sshErrorRef.current || 'An error occurred during SSH session';
+      terminal.write(`\r\n\x1b[1;31m[Error: ${errorMsg}]\x1b[0m\r\n`);
+    }
+  }, []);
+
   // SSH connection management (for SSH terminals)
   const sshHook = useSsh({
     onOutput: (data) => {
@@ -87,32 +117,28 @@ export function Terminal({
         xtermRef.current.write(message);
       }
     },
-    onStateChange: (state) => {
-      if (!xtermRef.current) return;
-
-      const terminal = xtermRef.current;
-
-      if (state === 'connecting') {
-        if (connectionConfig && isSSHConfig(connectionConfig)) {
-          terminal.write(`\x1b[1;36mConnecting to ${connectionConfig.username}@${connectionConfig.host}:${connectionConfig.port}...\x1b[0m\r\n`);
-        }
-      } else if (state === 'connected') {
-        terminal.write(`\x1b[1;32mConnected successfully!\x1b[0m\r\n`);
-      } else if (state === 'failed') {
-        const errorMsg = sshHook.error || 'Authentication failed or connection refused';
-        terminal.write(`\r\n\x1b[1;31m[Connection Failed: ${errorMsg}]\x1b[0m\r\n`);
-      } else if (state === 'error') {
-        const errorMsg = sshHook.error || 'An error occurred during SSH session';
-        terminal.write(`\r\n\x1b[1;31m[Error: ${errorMsg}]\x1b[0m\r\n`);
-      }
-    },
+    onStateChange: handleSshStateChange,
   });
+
+  // Update SSH error ref when error changes
+  useEffect(() => {
+    sshErrorRef.current = sshHook.error;
+  }, [sshHook.error]);
 
   // Select active hook based on connection type
   const isConnected = isLocalConnection
     ? ptyHook.isConnected
     : sshHook.status === 'connected';
   const error = isLocalConnection ? ptyHook.error : sshHook.error;
+
+  // Store resize/close functions in refs to avoid dependency issues
+  const ptyResizeRef = useRef(ptyHook.resizePty);
+  const sshResizeRef = useRef(sshHook.resize);
+
+  useEffect(() => {
+    ptyResizeRef.current = ptyHook.resizePty;
+    sshResizeRef.current = sshHook.resize;
+  }, [ptyHook.resizePty, sshHook.resize]);
 
   // Store write function in ref to avoid recreating xterm on every render
   const writeInputRef = useRef<(data: string) => Promise<void>>(
@@ -232,15 +258,9 @@ export function Terminal({
       }
       ptyCreatedRef.current = false;
     };
-  }, [
-    isReady,
-    connectionType,
-    connectionConfig,
-    isLocalConnection,
-    isSshConnection,
-    ptyHook,
-    sshHook,
-  ]);
+    // Only run once when terminal is ready - hooks are stable via useCallback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady]);
 
   // Handle terminal resize
   useEffect(() => {
@@ -280,9 +300,9 @@ export function Terminal({
           // This prevents content loss when window becomes very small
           if (isConnected && cols >= MIN_COLS && rows >= MIN_ROWS) {
             if (isLocalConnection) {
-              ptyHook.resizePty(cols, rows);
+              ptyResizeRef.current(cols, rows);
             } else if (isSshConnection) {
-              sshHook.resize(cols, rows);
+              sshResizeRef.current(cols, rows);
             }
           }
         } catch (err) {
@@ -307,7 +327,7 @@ export function Terminal({
       }
       resizeObserver.disconnect();
     };
-  }, [isReady, isConnected, isLocalConnection, isSshConnection, ptyHook, sshHook]);
+  }, [isReady, isConnected, isLocalConnection, isSshConnection]);
 
   // Display error for local PTY connections (SSH errors handled in onStateChange)
   useEffect(() => {
@@ -332,9 +352,9 @@ export function Terminal({
         fitAddon.fit();
         if (isConnected) {
           if (isLocalConnection) {
-            ptyHook.resizePty(terminal.cols, terminal.rows);
+            ptyResizeRef.current(terminal.cols, terminal.rows);
           } else if (isSshConnection) {
-            sshHook.resize(terminal.cols, terminal.rows);
+            sshResizeRef.current(terminal.cols, terminal.rows);
           }
         }
       } catch (err) {
@@ -352,7 +372,7 @@ export function Terminal({
         ...theme,
       };
     }
-  }, [settings, isReady, isConnected, isLocalConnection, isSshConnection, ptyHook, sshHook]);
+  }, [settings, isReady, isConnected, isLocalConnection, isSshConnection]);
 
   // Listen to terminal events from CommandPalette and other components
   useEffect(() => {
@@ -421,9 +441,9 @@ export function Terminal({
           // Notify backend of potential size change
           if (isConnected) {
             if (isLocalConnection) {
-              ptyHook.resizePty(terminal.cols, terminal.rows);
+              ptyResizeRef.current(terminal.cols, terminal.rows);
             } else if (isSshConnection) {
-              sshHook.resize(terminal.cols, terminal.rows);
+              sshResizeRef.current(terminal.cols, terminal.rows);
             }
           }
         } catch (err) {
@@ -445,8 +465,6 @@ export function Terminal({
     isConnected,
     isLocalConnection,
     isSshConnection,
-    ptyHook,
-    sshHook,
     copyToClipboard,
   ]);
 
