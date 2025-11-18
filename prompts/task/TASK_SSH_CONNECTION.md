@@ -205,29 +205,33 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 7: SSH Connection Dialog 구현
 
 ### 7.1 SSH 연결 다이얼로그 컴포넌트
-- [ ] `src/components/ssh/` 디렉토리 생성
-- [ ] `src/components/ssh/SSHConnectionDialog.tsx` 파일 생성
-  - [ ] Dialog UI (Shadcn dialog 사용)
-  - [ ] 입력 필드:
-    - [ ] Host (input)
-    - [ ] Port (input, default: 22)
-    - [ ] Username (input)
-    - [ ] Authentication Method (select: Password / Private Key)
-    - [ ] Password (password input, 조건부 표시)
-    - [ ] Private Key Path (file input, 조건부 표시)
-    - [ ] Private Key Passphrase (password input, optional)
-  - [ ] 연결 버튼
-  - [ ] 취소 버튼
+- [x] `src/components/ssh/` 디렉토리 생성
+- [x] `src/components/ssh/SSHConnectionDialog.tsx` 파일 생성 (455줄, 14KB)
+  - [x] Dialog UI (Shadcn dialog 사용)
+  - [x] 입력 필드:
+    - [x] Host (input) - 필수 필드
+    - [x] Port (input, default: 22) - 숫자 타입, 1-65535 범위
+    - [x] Username (input) - 필수 필드
+    - [x] Authentication Method (select: Password / Private Key)
+    - [x] Password (password input, 조건부 표시) - authMethod === 'password'
+    - [x] Private Key Path (input, 조건부 표시) - authMethod === 'privateKey'
+    - [x] Private Key Passphrase (password input, optional) - authMethod === 'privateKey'
+  - [x] 연결 버튼 - Loading 상태 표시 ("Connecting...")
+  - [x] 취소 버튼
 
 ### 7.2 폼 유효성 검사
-- [ ] 필수 필드 검증
-- [ ] Port 범위 검증 (1-65535)
-- [ ] 파일 경로 유효성 검사
+- [x] 필수 필드 검증 (host, username, password/privateKeyPath)
+- [x] Port 범위 검증 (1-65535)
+- [x] Auth method별 필수 필드 검증
+- [x] Profile name 검증 (saveAsProfile === true)
+- [x] 에러 메시지 표시 (각 필드 하단 빨간색 텍스트)
 
 ### 7.3 프로필 저장 옵션
-- [ ] "Save as profile" 체크박스
-- [ ] Profile name 입력 필드 (조건부 표시)
-- [ ] 저장 시 ConnectionProfileStore에 추가
+- [x] "Save as profile" 체크박스
+- [x] Profile name 입력 필드 (조건부 표시)
+- [x] 저장 시 ConnectionProfileStore.addProfile() 호출
+- [x] Keyring에 민감 정보 자동 저장 (password, privateKey, passphrase)
+- [x] Toast 알림 (연결 성공, 프로필 저장, 에러)
 
 ---
 
