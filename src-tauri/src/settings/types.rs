@@ -5,10 +5,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub version: String,
+    #[serde(default = "default_app_theme")]
     pub app_theme: String,
     pub font_size: u32,
     pub font_family: String,
     pub theme: TerminalTheme,
+}
+
+fn default_app_theme() -> String {
+    "dark".to_string()
 }
 
 /// Terminal color theme
