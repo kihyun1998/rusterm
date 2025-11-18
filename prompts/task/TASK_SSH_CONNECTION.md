@@ -110,11 +110,11 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 5: Tauri Commands 구현
 
 ### 5.1 SSH 커맨드 파일 생성
-- [ ] `src-tauri/src/commands/ssh_commands.rs` 파일 생성
-- [ ] `src-tauri/src/commands/mod.rs`에 ssh_commands 추가
+- [x] `src-tauri/src/commands/ssh_commands.rs` 파일 생성
+- [x] `src-tauri/src/commands/mod.rs`에 ssh_commands 추가
 
 ### 5.2 커맨드 함수 구현
-- [ ] `create_ssh_session` 커맨드
+- [x] `create_ssh_session` 커맨드
   ```rust
   #[tauri::command]
   async fn create_ssh_session(
@@ -122,20 +122,20 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
       config: SshConfig,
   ) -> Result<String, String>
   ```
-  - [ ] SSH 세션 생성
-  - [ ] 세션 ID 반환
+  - [x] SSH 세션 생성
+  - [x] 세션 ID 반환
 
-- [ ] `send_ssh_input` 커맨드
+- [x] `write_to_ssh` 커맨드 (send_ssh_input 대신)
   ```rust
   #[tauri::command]
-  async fn send_ssh_input(
+  async fn write_to_ssh(
       manager: State<'_, SshManager>,
       session_id: String,
       data: String,
   ) -> Result<(), String>
   ```
 
-- [ ] `resize_ssh_session` 커맨드
+- [x] `resize_ssh_session` 커맨드
   ```rust
   #[tauri::command]
   async fn resize_ssh_session(
@@ -146,7 +146,7 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
   ) -> Result<(), String>
   ```
 
-- [ ] `close_ssh_session` 커맨드
+- [x] `close_ssh_session` 커맨드
   ```rust
   #[tauri::command]
   async fn close_ssh_session(
@@ -156,11 +156,11 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
   ```
 
 ### 5.3 커맨드 등록
-- [ ] `src-tauri/src/main.rs`에서 커맨드 등록
+- [x] `src-tauri/src/lib.rs`에서 커맨드 등록
   ```rust
   .invoke_handler(tauri::generate_handler![
       create_ssh_session,
-      send_ssh_input,
+      write_to_ssh,
       resize_ssh_session,
       close_ssh_session,
   ])
