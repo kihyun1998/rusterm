@@ -55,6 +55,8 @@ export function Terminal({
   // Refs for SSH error messages (to avoid recreating callback)
   const sshErrorRef = useRef<string | null>(null);
   const connectionConfigRef = useRef(connectionConfig);
+  // Track if SSH connection is using PTY (for interactive auth without credentials)
+  const useSshViaPtyRef = useRef(false);
 
   useEffect(() => {
     connectionConfigRef.current = connectionConfig;
@@ -142,10 +144,10 @@ export function Terminal({
 
   // Store write function in ref to avoid recreating xterm on every render
   const writeInputRef = useRef<(data: string) => Promise<void>>(
-    isLocalConnection ? ptyHook.writeToPty : sshHook.sendInput
+    isLocalConnection || useSshViaPtyRef.current ? ptyHook.writeToPty : sshHook.sendInput
   );
   useEffect(() => {
-    writeInputRef.current = isLocalConnection ? ptyHook.writeToPty : sshHook.sendInput;
+    writeInputRef.current = isLocalConnection || useSshViaPtyRef.current ? ptyHook.writeToPty : sshHook.sendInput;
   }, [isLocalConnection, ptyHook.writeToPty, sshHook.sendInput]);
 
   // Initialize xterm.js
@@ -246,10 +248,12 @@ export function Terminal({
 
       if (hasAuth) {
         // Use SSH library for direct connection with credentials
+        useSshViaPtyRef.current = false;
         const backendConfig = toBackendSshConfig(connectionConfig);
         sshHook.connect(backendConfig, cols, rows);
       } else {
         // Use PTY with ssh command for interactive authentication
+        useSshViaPtyRef.current = true;
         const sshArgs = [
           `${connectionConfig.username}@${connectionConfig.host}`,
           '-p',
@@ -320,7 +324,7 @@ export function Terminal({
           // Only notify backend if size is reasonable
           // This prevents content loss when window becomes very small
           if (isConnected && cols >= MIN_COLS && rows >= MIN_ROWS) {
-            if (isLocalConnection) {
+            if (isLocalConnection || useSshViaPtyRef.current) {
               ptyResizeRef.current(cols, rows);
             } else if (isSshConnection) {
               sshResizeRef.current(cols, rows);
@@ -372,7 +376,7 @@ export function Terminal({
       try {
         fitAddon.fit();
         if (isConnected) {
-          if (isLocalConnection) {
+          if (isLocalConnection || useSshViaPtyRef.current) {
             ptyResizeRef.current(terminal.cols, terminal.rows);
           } else if (isSshConnection) {
             sshResizeRef.current(terminal.cols, terminal.rows);
@@ -461,7 +465,7 @@ export function Terminal({
           fitAddon.fit();
           // Notify backend of potential size change
           if (isConnected) {
-            if (isLocalConnection) {
+            if (isLocalConnection || useSshViaPtyRef.current) {
               ptyResizeRef.current(terminal.cols, terminal.rows);
             } else if (isSshConnection) {
               sshResizeRef.current(terminal.cols, terminal.rows);
