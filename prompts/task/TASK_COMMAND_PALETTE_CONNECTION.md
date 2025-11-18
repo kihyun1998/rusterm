@@ -81,6 +81,11 @@
   - [ ] 아이콘 + 이름 + 타입 표시
   - [ ] 최근 사용 시간 표시 (optional)
   - [ ] 즐겨찾기 아이콘 표시
+- [ ] 즐겨찾기 토글 기능
+  - [ ] 아이템 우측에 별 아이콘 버튼 추가
+  - [ ] 클릭 시 toggleFavorite() 호출
+  - [ ] favorite=true면 채워진 별, false면 빈 별 표시
+  - [ ] 클릭 시 Command Palette 닫히지 않고 즉시 UI 반영
 
 ### 3.3 검색 기능
 - [ ] Connection 모드 검색 로직 구현
@@ -273,5 +278,5 @@ save_credential("rusterm-ssh", "abc123-passphrase", "keypass")
 ---
 
 **작성일**: 2025-11-18
-**수정일**: 2025-11-18 (Phase 2 보안 강화)
+**수정일**: 2025-11-18 (Phase 3.2 즐겨찾기 토글 기능 추가)
 **관련 Task**: TASK_SSH_CONNECTION.md
