@@ -75,7 +75,10 @@ export function TerminalPreview({ theme, fontSize = 12, fontFamily }: TerminalPr
   }, [theme, fontSize, fontFamily]);
 
   return (
-    <div className="rounded-md border border-border overflow-hidden bg-background">
+    <div
+      className="rounded-md border border-border overflow-hidden"
+      style={{ backgroundColor: theme.background }}
+    >
       <div ref={terminalRef} className="p-2" />
     </div>
   );
