@@ -297,20 +297,20 @@ RusTerm에 SSH 연결 기능을 추가하여 원격 서버에 접속할 수 있�
 ## Phase 10: 탭 관리 통합
 
 ### 10.1 탭 생성 로직 수정
-- [ ] `src/stores/use-tab-store.ts` 업데이트
-  - [ ] `addTab()` 함수에 connectionType 및 config 파라미터 추가
-  - [ ] SSH 탭 생성 시 적절한 메타데이터 설정
+- [x] `src/stores/use-tab-store.ts` 업데이트
+  - [x] `addTab()` 함수에 connectionType 및 config 파라미터 추가 (Phase 1에서 완료)
+  - [x] SSH 탭 생성 시 적절한 메타데이터 설정 (App.tsx handleSshConnect)
 
 ### 10.2 탭 닫기 로직
-- [ ] SSH 탭 닫기 시 `close_ssh_session` 호출
-- [ ] 리소스 정리 확인
+- [x] SSH 탭 닫기 시 `close_ssh_session` 호출 (Terminal cleanup에서 자동 처리)
+- [x] 리소스 정리 확인 (Terminal.tsx:210-218 unmount cleanup)
 
 ---
 
 ## Phase 11: UI/UX 개선
 
 ### 11.1 탭 표시
-- [ ] 탭에 SSH 아이콘 또는 뱃지 추가
+- [x] 탭에 SSH 아이콘 또는 뱃지 추가 (TabBar.tsx - Server/Terminal 아이콘)
 - [ ] 연결 상태 표시 (연결 중, 연결됨, 오류)
 - [ ] 호스트 정보 표시 (user@host:port)
 
