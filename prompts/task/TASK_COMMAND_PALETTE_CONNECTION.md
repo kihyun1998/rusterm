@@ -27,44 +27,43 @@
 ## Phase 2: Connection Profile Store 구현 (보안 강화)
 
 ### 2.1 프로필 스토어 생성 (메타데이터 관리)
-- [ ] `src/stores/use-connection-profile-store.ts` 파일 생성
-  - [ ] 상태 정의
-    - [ ] `profiles: ConnectionProfile[]` (비민감 정보만)
-    - [ ] `recentConnections: string[]` (profile IDs)
-  - [ ] Actions 정의
-    - [ ] `addProfile(profile: ConnectionProfile)`
-    - [ ] `updateProfile(id: string, profile: Partial<ConnectionProfile>)`
-    - [ ] `deleteProfile(id: string)`
-    - [ ] `toggleFavorite(id: string)`
-    - [ ] `addToRecent(id: string)`
-    - [ ] `getRecentProfiles(limit?: number)`
-    - [ ] `getFavoriteProfiles()`
+- [x] `src/stores/use-connection-profile-store.ts` 파일 생성
+  - [x] 상태 정의
+    - [x] `profiles: ConnectionProfile[]` (비민감 정보만)
+    - [x] `recentConnections: string[]` (profile IDs)
+  - [x] Actions 정의
+    - [x] `addProfile(profile: ConnectionProfile)`
+    - [x] `updateProfile(id: string, profile: Partial<ConnectionProfile>)`
+    - [x] `deleteProfile(id: string)`
+    - [x] `toggleFavorite(id: string)`
+    - [x] `addToRecent(id: string)`
+    - [x] `getRecentProfiles(limit?: number)`
+    - [x] `getFavoriteProfiles()`
 
 ### 2.2 로컬 스토리지 연동 (비민감 정보)
-- [ ] Zustand persist middleware 설정
-  - [ ] 프로필 메타데이터만 localStorage에 저장
-  - [ ] 앱 시작 시 자동 로드
-  - [ ] 민감 정보(password, privateKey) 제외
+- [x] Zustand persist middleware 설정
+  - [x] 프로필 메타데이터만 localStorage에 저장
+  - [x] 앱 시작 시 자동 로드
+  - [x] 민감 정보(password, privateKey) 제외
 
 ### 2.3 Keyring 통합 (민감 정보 보안 저장)
-- [ ] Rust 백엔드: keyring-rs 설정
-  - [ ] `src-tauri/Cargo.toml`에 keyring 의존성 추가
-  - [ ] `src-tauri/src/keyring/` 디렉토리 생성
-  - [ ] `mod.rs`, `types.rs`, `commands.rs` 파일 구조 설정
-- [ ] Tauri 커맨드 구현
-  - [ ] `save_credential(service: string, account: string, secret: string)` 커맨드
-  - [ ] `get_credential(service: string, account: string)` 커맨드
-  - [ ] `delete_credential(service: string, account: string)` 커맨드
-  - [ ] 에러 처리 (credential not found, access denied 등)
-- [ ] TypeScript 타입 정의
-  - [ ] `src/types/keyring.ts` 파일 생성
-  - [ ] CredentialService 타입 정의
-  - [ ] Keyring 관련 인터페이스 정의
-- [ ] 프론트엔드 통합
-  - [ ] `src/lib/keyring.ts` 유틸리티 생성
-  - [ ] Keyring 커맨드 래퍼 함수 구현
-  - [ ] 프로필 저장 시 민감 정보 keyring에 분리 저장
-  - [ ] 프로필 로드 시 keyring에서 민감 정보 가져오기
+- [x] Rust 백엔드: keyring-rs 설정
+  - [x] `src-tauri/Cargo.toml`에 keyring 의존성 추가
+  - [x] `src-tauri/src/commands/keyring_commands.rs` 파일 생성 (간소화된 구조)
+- [x] Tauri 커맨드 구현
+  - [x] `save_credential(service: string, account: string, secret: string)` 커맨드
+  - [x] `get_credential(service: string, account: string)` 커맨드
+  - [x] `delete_credential(service: string, account: string)` 커맨드
+  - [x] 에러 처리 (credential not found, access denied 등)
+- [x] TypeScript 타입 정의
+  - [x] `src/types/keyring.ts` 파일 생성
+  - [x] KeyringService 타입 정의
+  - [x] CredentialType 타입 및 헬퍼 함수 정의
+- [x] 프론트엔드 통합
+  - [x] `src/lib/keyring.ts` 유틸리티 생성
+  - [x] Keyring 커맨드 래퍼 함수 구현
+  - [x] 프로필 저장 시 민감 정보 keyring에 분리 저장
+  - [x] 프로필 삭제 시 keyring에서 민감 정보 제거
 
 ---
 
@@ -81,6 +80,11 @@
   - [ ] 아이콘 + 이름 + 타입 표시
   - [ ] 최근 사용 시간 표시 (optional)
   - [ ] 즐겨찾기 아이콘 표시
+- [ ] 즐겨찾기 토글 기능
+  - [ ] 아이템 우측에 별 아이콘 버튼 추가
+  - [ ] 클릭 시 toggleFavorite() 호출
+  - [ ] favorite=true면 채워진 별, false면 빈 별 표시
+  - [ ] 클릭 시 Command Palette 닫히지 않고 즉시 UI 반영
 
 ### 3.3 검색 기능
 - [ ] Connection 모드 검색 로직 구현
@@ -273,5 +277,5 @@ save_credential("rusterm-ssh", "abc123-passphrase", "keypass")
 ---
 
 **작성일**: 2025-11-18
-**수정일**: 2025-11-18 (Phase 2 보안 강화)
+**수정일**: 2025-11-18 (Phase 2.1, 2.2, 2.3 완료)
 **관련 Task**: TASK_SSH_CONNECTION.md
