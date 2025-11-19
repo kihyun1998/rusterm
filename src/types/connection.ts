@@ -55,12 +55,12 @@ export interface SFTPConfig {
 // Union type for all connection configurations
 export type ConnectionConfig = LocalConfig | SSHConfig | TelnetConfig | RDPConfig | SFTPConfig;
 
-// Auth method types for deduplication
+// Auth method types for UI display
 export type AuthMethod = 'password' | 'privateKey' | 'noAuth';
 
 /**
  * Get authentication method from SSH config
- * Used for smart deduplication based on 5 conditions
+ * Used for UI display in ConnectionCard
  */
 export function getAuthMethod(config: SSHConfig): AuthMethod {
   if (config.password) {

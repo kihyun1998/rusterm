@@ -92,7 +92,7 @@ export function SSHConnectionDialog({
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Store
-  const findOrCreateProfile = useConnectionProfileStore((state) => state.findOrCreateProfile);
+  const addProfile = useConnectionProfileStore((state) => state.addProfile);
 
   /**
    * Handle field change
@@ -199,9 +199,8 @@ export function SSHConnectionDialog({
         passphrase: formState.passphrase || undefined,
       };
 
-      // 2. Auto-save profile (always, with smart deduplication)
-      // Create profile without credentials for deduplication check
-      const profileWithoutCreds: ConnectionProfile = {
+      // 2. Auto-save profile (always create new profile)
+      const newProfile: ConnectionProfile = {
         id: crypto.randomUUID(),
         name: formState.profileName.trim() || formState.host, // Default to host if empty
         type: 'ssh',
@@ -214,11 +213,10 @@ export function SSHConnectionDialog({
         createdAt: Date.now(),
       };
 
-      // Use findOrCreateProfile for smart 5-condition deduplication
-      // This returns the profile ID (either existing or newly created)
-      const profileId = await findOrCreateProfile(profileWithoutCreds);
+      // Create new profile
+      const profileId = await addProfile(newProfile);
 
-      console.log('Profile saved with ID:', profileId);
+      console.log('New profile created with ID:', profileId);
 
       // Save credentials to keyring using the correct profile ID
       try {
