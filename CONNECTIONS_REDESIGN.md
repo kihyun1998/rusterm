@@ -19,17 +19,12 @@ Connection Profile 관리를 단순화하고 사용자 친화적으로 개선
 - `saveAsProfile` 체크박스 제거
 - 프로필 이름 기본값: **host** (사용자가 수정 가능)
 
-### 2. 스마트 중복 처리
-- **5가지 조건** (Host, Port, Protocol, Username, AuthMethod)이 모두 같으면 중복 처리
-- 이름이 달라도 실제 연결 정보가 같으면 업데이트
-- 같은 서버에 다른 인증 방식(Password/Key/Interactive)은 별도 저장
-
-### 3. Favorite/Recent 섹션 제거
+### 2. Favorite/Recent 섹션 제거
 - 별표(★) 기능 완전 제거
 - Recent 섹션 제거 (All이 이미 최근 순 정렬)
 - **"All Connections"** 하나로 통합 (최근 사용 순 자동 정렬)
 
-### 4. Home 화면 개편
+### 3. Home 화면 개편
 Connection 관리의 중심지로 변경 (검색, 편집, 삭제 기능 제공)
 
 ## 화면 구성
@@ -133,99 +128,6 @@ Profile Name: [192.168.1.100    ]  <- 기본값: host (수정 가능)
 [Connect]  <- 항상 자동 저장
 ```
 
-### 중복 연결 처리
-
-#### 중복 판단 기준 (5가지 조건)
-
-다음 **5가지 조건이 모두 동일**하면 중복으로 처리:
-
-1. **Host** (호스트 주소)
-2. **Port** (포트 번호)
-3. **Protocol** (연결 타입: ssh, telnet, rdp, sftp)
-4. **Username** (사용자명)
-5. **Auth Method** (인증 방식)
-   - `password` - 비밀번호 인증
-   - `privateKey` - 개인키 인증
-   - `noAuth` - 인증 없음 (interactive)
-
-> **중요**: 이름(name)이 달라도 위 5가지가 같으면 **중복**으로 처리하여 업데이트
-
-#### 인증 방식 판단
-
-```typescript
-type AuthMethod = 'password' | 'privateKey' | 'noAuth';
-
-function getAuthMethod(config: SSHConfig): AuthMethod {
-  if (config.password) {
-    return 'password';
-  } else if (config.privateKey) {
-    return 'privateKey';
-  } else {
-    return 'noAuth';  // 비밀번호도 키도 없으면 interactive
-  }
-}
-```
-
-#### 중복 체크 로직
-
-```typescript
-// SSH 연결 시
-const authMethod = getAuthMethod(config);
-
-// 5가지 조건으로 중복 체크
-const existing = profiles.find(p =>
-  p.type === 'ssh' &&                              // 1. Protocol
-  p.config.host === config.host &&                 // 2. Host
-  p.config.port === config.port &&                 // 3. Port
-  p.config.username === config.username &&         // 4. Username
-  getAuthMethod(p.config) === authMethod           // 5. Auth Method
-);
-
-if (existing) {
-  // 중복 발견 → 기존 프로필 업데이트
-  updateProfile(existing.id, {
-    name: formState.profileName || existing.name,  // 이름 변경 가능
-    config,                                        // credential 등 업데이트
-    lastUsed: Date.now(),
-  });
-  profileId = existing.id;
-} else {
-  // 중복 아님 → 새 프로필 생성
-  const newProfile = {
-    id: crypto.randomUUID(),
-    name: formState.profileName || config.host,    // 기본값: host
-    type: 'ssh',
-    config,
-    createdAt: Date.now(),
-    lastUsed: Date.now(),
-  };
-  await addProfile(newProfile);
-  profileId = newProfile.id;
-}
-```
-
-#### 예시 시나리오
-
-```typescript
-// 시나리오 1: 같은 서버, 다른 인증 방식 → 별도 프로필
-Profile 1: "192.168.1.100"     - root@192.168.1.100:22 [SSH] Password
-Profile 2: "Production Key"    - root@192.168.1.100:22 [SSH] PrivateKey
-Profile 3: "Prod Interactive"  - root@192.168.1.100:22 [SSH] NoAuth
-// → 3개 모두 별도 프로필로 저장됨 (Auth Method가 다름)
-
-// 시나리오 2: 같은 서버, 다른 사용자 → 별도 프로필
-Profile 4: "Admin Account"  - admin@192.168.1.100:22 [SSH] Password
-Profile 5: "Root Account"   - root@192.168.1.100:22 [SSH] Password
-// → 2개 별도 프로필로 저장됨 (Username이 다름)
-
-// 시나리오 3: 이름만 변경 → 중복 처리 (업데이트)
-1. 첫 접속: "192.168.1.100" - root@192.168.1.100:22 [SSH] Password
-2. 사용자가 Edit에서 이름을 "Production Server"로 변경
-3. 다시 같은 조건으로 접속 시도
-   → "Production Server" 프로필이 업데이트됨 (새 프로필 생성 안 됨)
-   → 이름은 "Production Server" 유지
-```
-
 ## Command Palette 간소화
 
 ### Before
@@ -267,18 +169,16 @@ New Connection
 - [ ] Migration 로직 (기존 데이터 호환)
 
 ### Phase 2: SSH Dialog 수정
-- [ ] `saveAsProfile` 체크박스 제거
-- [ ] Profile Name 기본값을 `host`로 설정
-- [ ] 자동 저장 로직 구현
-- [ ] `getAuthMethod()` 함수 추가
-- [ ] 5가지 조건 중복 체크 & 업데이트 로직 구현
+- [x] `saveAsProfile` 체크박스 제거
+- [x] Profile Name 기본값을 `host`로 설정
+- [x] 자동 저장 로직 구현
 
 ### Phase 3: Store 수정
 - [ ] `toggleFavorite` 제거
 - [ ] `getFavoriteProfiles` 제거
 - [ ] `getRecentProfiles` 제거 (Recent 섹션 삭제)
-- [ ] `addProfile` 로직 수정 (5가지 조건 중복 체크)
-- [ ] `findOrUpdateProfile` 함수 추가
+- [x] `findOrCreateProfile` 함수 제거 (중복 체크 제거)
+- [x] `addProfile` 반환 타입 변경 (profile ID 반환)
 
 ### Phase 4: Home 화면 구현
 - [ ] ConnectionCard 컴포넌트
@@ -372,7 +272,6 @@ const migrateProfiles = (oldProfiles: OldConnectionProfile[]) => {
 ### 1. 사용성 개선
 - ✅ 클릭 한 번으로 접속 (credential 자동 복원)
 - ✅ 모든 연결 자동 저장 (잊어버릴 일 없음)
-- ✅ 스마트 중복 처리 (같은 서버 재접속 시 자동 업데이트)
 - ✅ 직관적한 카드 UI (인증 방식 표시)
 - ✅ 빠른 검색 및 필터링
 - ✅ Home 화면에서 편집/삭제 가능
@@ -382,14 +281,13 @@ const migrateProfiles = (oldProfiles: OldConnectionProfile[]) => {
 - ❌ Recent/Favorite/All 구분 로직 제거
 - ❌ saveAsProfile 체크박스 로직 제거
 - ✅ 단일 리스트 관리 (All Connections)
-- ✅ 5가지 조건 기반 명확한 중복 처리
+- ✅ 중복 체크 로직 제거로 코드 간소화
 
 ### 3. 성능
 - 상태 구독 단순화
 - 불필요한 re-render 감소
-- 중복 프로필 방지로 스토리지 효율성 향상
 
 ## 참고 사항
 - 기존 Favorite 기능 사용자를 위한 안내 필요
 - 마이그레이션 후 첫 실행 시 변경사항 알림 (선택사항)
-- 테스트: 중복 연결, 편집, 삭제, 검색 등
+- 테스트: 편집, 삭제, 검색 등

@@ -2,15 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { deleteAllCredentials } from '@/lib/keyring';
 import type { ConnectionProfile, StoredConnectionProfile } from '@/types/connection';
-import { getAuthMethod, isSSHConfig, sanitizeProfile } from '@/types/connection';
+import { isSSHConfig, sanitizeProfile } from '@/types/connection';
 
 interface ConnectionProfileState {
   profiles: StoredConnectionProfile[];
   recentConnections: string[]; // Profile IDs (max 10)
 
   // Profile management
-  addProfile: (profile: ConnectionProfile) => Promise<void>;
-  findOrCreateProfile: (profile: ConnectionProfile) => Promise<string>; // Returns profile ID
+  addProfile: (profile: ConnectionProfile) => Promise<string>; // Returns profile ID
   updateProfile: (id: string, updates: Partial<ConnectionProfile>) => void;
   deleteProfile: (id: string) => Promise<void>;
 
@@ -34,59 +33,16 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
 
       addProfile: async (profile: ConnectionProfile) => {
         // NOTE: Credentials are NOT saved here - they should be saved by the caller
-        // using the correct profile ID after calling findOrCreateProfile
-        // This ensures credentials are saved with the right ID (either new or existing)
+        // using the profile ID returned from this function
 
         // Sanitize and store in localStorage (credentials already removed by sanitize)
         const sanitized = sanitizeProfile(profile);
         set((state) => ({
           profiles: [...state.profiles, sanitized],
         }));
-      },
 
-      findOrCreateProfile: async (profile: ConnectionProfile) => {
-        const { config, type, name } = profile;
-
-        // 5-condition deduplication check (only for SSH connections)
-        if (type === 'ssh' && isSSHConfig(config)) {
-          const authMethod = getAuthMethod(config);
-
-          // Find existing profile with same 5 conditions
-          const existing = get().profiles.find((p) => {
-            if (p.type !== 'ssh' || !isSSHConfig(p.config)) return false;
-
-            return (
-              p.config.host === config.host &&
-              p.config.port === config.port &&
-              p.config.username === config.username &&
-              getAuthMethod(p.config) === authMethod
-            );
-          });
-
-          if (existing) {
-            // Update existing profile
-            // NOTE: Credentials are NOT saved here - they should be saved by the caller
-            const updates: Partial<ConnectionProfile> = {
-              name: name || existing.name, // Keep existing name if not provided
-              config,
-            };
-
-            // Update profile in store
-            get().updateProfile(existing.id, updates);
-
-            return existing.id;
-          }
-        }
-
-        // No existing profile found - create new one
-        await get().addProfile(profile);
-
-        // Find and return the newly created profile ID
-        const newProfile = get().profiles.find(
-          (p) => p.name === profile.name && p.createdAt === profile.createdAt
-        );
-
-        return newProfile?.id || profile.id;
+        // Return the profile ID
+        return profile.id;
       },
 
       updateProfile: (id: string, updates: Partial<ConnectionProfile>) => {
