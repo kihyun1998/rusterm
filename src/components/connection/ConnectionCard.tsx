@@ -1,10 +1,10 @@
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Key, Lock, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CONNECTION_ICONS } from '@/constants/connection-icons';
 import type { StoredConnectionProfile } from '@/types/connection';
-import { isSSHConfig } from '@/types/connection';
+import { isSSHConfig, getAuthMethod } from '@/types/connection';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ConnectionCardProps {
@@ -32,6 +32,24 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
     return profile.name;
   };
 
+  // Get auth method info for SSH connections
+  const getAuthMethodInfo = () => {
+    if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
+      const authMethod = getAuthMethod(profile.config);
+      switch (authMethod) {
+        case 'password':
+          return { icon: Lock, label: 'Password', color: 'text-blue-500' };
+        case 'privateKey':
+          return { icon: Key, label: 'Private Key', color: 'text-green-500' };
+        case 'noAuth':
+          return { icon: UserCircle, label: 'Interactive', color: 'text-orange-500' };
+        default:
+          return null;
+      }
+    }
+    return null;
+  };
+
   // Format last used time
   const getLastUsedLabel = () => {
     if (!profile.lastUsed) return 'Never';
@@ -43,6 +61,7 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
   };
 
   const connectionDetails = getConnectionDetails();
+  const authMethodInfo = getAuthMethodInfo();
   const lastUsedLabel = getLastUsedLabel();
 
   return (
@@ -57,9 +76,15 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
           </Badge>
         </div>
 
-        {/* Bottom Row: Connection details + Time */}
-        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground min-w-0">
-          <span className="truncate">{connectionDetails}</span>
+        {/* Bottom Row: Connection details + Auth Method + Time */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+          <span className="truncate flex-1">{connectionDetails}</span>
+          {authMethodInfo && (
+            <div className="flex items-center gap-1 shrink-0">
+              <authMethodInfo.icon className={`h-3 w-3 ${authMethodInfo.color}`} />
+              <span className={authMethodInfo.color}>{authMethodInfo.label}</span>
+            </div>
+          )}
           <span className="shrink-0">{lastUsedLabel}</span>
         </div>
 
