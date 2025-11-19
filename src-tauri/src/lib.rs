@@ -35,7 +35,7 @@ pub fn run() {
         .setup(move |_app| {
             // IPC 서버 시작 (비동기 실행)
             let ipc_clone = ipc_server_clone.clone();
-            tokio::spawn(async move {
+            tauri::async_runtime::spawn(async move {
                 match IpcServer::start().await {
                     Ok(server) => {
                         *ipc_clone.lock().unwrap() = Some(server);
