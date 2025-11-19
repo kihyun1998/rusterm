@@ -216,31 +216,12 @@ export function CommandPalette({
   // Connection mode handlers
   const handleSelectProfile = async (profileId: string) => {
     const profile = getProfileById(profileId);
-    if (!profile) return;
-
-    // Restore credentials from keyring if it's an SSH profile
-    let connectionConfig: any = profile.config;
-
-    if (profile.type === 'ssh') {
-      try {
-        const { getCredential } = await import('@/lib/keyring');
-        const [password, privateKey, passphrase] = await Promise.all([
-          getCredential(profileId, 'ssh', 'password'),
-          getCredential(profileId, 'ssh', 'privatekey'),
-          getCredential(profileId, 'ssh', 'passphrase'),
-        ]);
-
-        connectionConfig = {
-          ...profile.config,
-          password: password || undefined,
-          privateKey: privateKey || undefined,
-          passphrase: passphrase || undefined,
-        };
-      } catch (error) {
-        console.error('Failed to retrieve credentials from keyring:', error);
-        // Continue with stored config (without credentials)
-      }
+    if (!profile) {
+      console.error('Profile not found:', profileId);
+      return;
     }
+
+    console.log('Connecting to profile:', profileId, profile.name);
 
     const newTabId = crypto.randomUUID();
     addTab({
@@ -249,7 +230,6 @@ export function CommandPalette({
       type: 'terminal',
       closable: true,
       connectionType: profile.type,
-      connectionConfig,
       connectionProfileId: profileId,
     });
 

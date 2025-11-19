@@ -29,7 +29,7 @@ import type { ConnectionProfile, SSHConfig } from '@/types/connection';
 interface SSHConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnect?: (config: SSHConfig, profileId: string) => void;
+  onConnect?: (profileId: string) => void;
   initialConfig?: Partial<SSHConfig>;
 }
 
@@ -189,17 +189,7 @@ export function SSHConnectionDialog({
     setIsConnecting(true);
 
     try {
-      // 1. Create UI config
-      const uiConfig: SSHConfig = {
-        host: formState.host,
-        port: formState.port,
-        username: formState.username,
-        password: formState.authMethod === 'password' ? formState.password : undefined,
-        privateKey: formState.authMethod === 'privateKey' ? formState.privateKeyPath : undefined,
-        passphrase: formState.passphrase || undefined,
-      };
-
-      // 2. Auto-save profile (always create new profile)
+      // 1. Auto-save profile (always create new profile)
       const newProfile: ConnectionProfile = {
         id: crypto.randomUUID(),
         name: formState.profileName.trim() || formState.host, // Default to host if empty
@@ -218,7 +208,7 @@ export function SSHConnectionDialog({
 
       console.log('New profile created with ID:', profileId);
 
-      // Save credentials to keyring using the correct profile ID
+      // 2. Save credentials to keyring using the correct profile ID
       try {
         const { saveCredential } = await import('@/lib/keyring');
 
@@ -241,8 +231,8 @@ export function SSHConnectionDialog({
         // Continue anyway - profile is saved even if credentials fail
       }
 
-      // 3. Notify parent with config and profileId
-      onConnect?.(uiConfig, profileId);
+      // 3. Notify parent with profileId only (credentials will be restored from keyring)
+      onConnect?.(profileId);
 
       // 4. Close dialog
       onOpenChange(false);

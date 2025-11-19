@@ -8,7 +8,8 @@ import { useShortcuts } from '@/hooks/use-shortcuts';
 import { useTheme } from '@/hooks/use-theme';
 import ComponentDemo from '@/pages/ComponentDemo';
 import { useSettingsStore, useTabStore } from '@/stores';
-import type { SSHConfig } from '@/types/connection';
+import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
+import { isSSHConfig } from '@/types/connection';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
@@ -50,17 +51,28 @@ function App() {
   };
 
   // Handle SSH connection from dialog
-  const handleSshConnect = (config: SSHConfig, profileId: string) => {
+  const handleSshConnect = (profileId: string) => {
+    // Get profile to extract connection info for tab title
+    const profile = useConnectionProfileStore.getState().getProfileById(profileId);
+
+    if (!profile) {
+      console.error('Profile not found:', profileId);
+      return;
+    }
+
+    // Extract connection details for tab title
+    const sshConfig = isSSHConfig(profile.config) ? profile.config : null;
+    const title = sshConfig ? `${sshConfig.username}@${sshConfig.host}` : profile.name;
+
     // Create new SSH tab
     const newTabId = crypto.randomUUID();
     addTab({
       id: newTabId,
-      title: `${config.username}@${config.host}`,
+      title,
       type: 'terminal',
       closable: true,
       connectionType: 'ssh',
-      connectionConfig: config,
-      connectionProfileId: profileId, // Save profile ID for credential restoration
+      connectionProfileId: profileId, // Terminal will restore credentials from keyring
     });
   };
 

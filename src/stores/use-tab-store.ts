@@ -12,10 +12,9 @@ export interface Tab {
   ptyId?: number;
   isActive: boolean;
   workingDirectory?: string;
-  // Connection-related fields (Phase 1: Command Palette Connection)
+  // Connection-related fields
   connectionType?: ConnectionType; // Connection type (default: 'local' if not specified)
-  connectionConfig?: ConnectionConfig; // Connection configuration (optional)
-  connectionProfileId?: string; // Profile ID if created from a saved profile (optional)
+  connectionProfileId?: string; // Profile ID - credentials will be restored from keyring
 }
 
 interface TabState {
