@@ -243,6 +243,14 @@ export function Terminal({
         return;
       }
 
+      console.log('Terminal received SSH config:', {
+        host: connectionConfig.host,
+        username: connectionConfig.username,
+        hasPassword: !!connectionConfig.password,
+        hasPrivateKey: !!connectionConfig.privateKey,
+        hasPassphrase: !!connectionConfig.passphrase,
+      });
+
       // Check if password or privateKey is provided
       const hasAuth = connectionConfig.password || connectionConfig.privateKey;
 
