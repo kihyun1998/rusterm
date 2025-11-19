@@ -142,15 +142,12 @@ export function TabBar({ isTerminalActive, terminalTheme, onOpenConnectionPalett
                 className="flex items-center gap-2 flex-1 text-sm truncate select-none text-left"
               >
                 {/* Connection type icon */}
-                {tab.type === 'terminal' && (
-                  <>
-                    {tab.connectionType === 'ssh' ? (
-                      <Server className="w-3 h-3 flex-shrink-0" />
-                    ) : (
-                      <TerminalIcon className="w-3 h-3 flex-shrink-0" />
-                    )}
-                  </>
-                )}
+                {tab.type === 'terminal' &&
+                  (tab.connectionType === 'ssh' ? (
+                    <Server className="w-3 h-3 flex-shrink-0" />
+                  ) : (
+                    <TerminalIcon className="w-3 h-3 flex-shrink-0" />
+                  ))}
                 <span className="truncate">{tab.title}</span>
               </button>
 

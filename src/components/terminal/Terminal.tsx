@@ -216,7 +216,7 @@ export function Terminal({
       fitAddonRef.current = null;
       isInitializedRef.current = false;
     };
-  }, []); // No dependencies - only run once
+  }, [settings]); // No dependencies - only run once
 
   // Create session when terminal is ready (PTY or SSH)
   useEffect(() => {
@@ -294,7 +294,16 @@ export function Terminal({
     };
     // Only run once when terminal is ready - hooks are stable via useCallback
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady]);
+  }, [
+    isReady,
+    connectionConfig,
+    isLocalConnection,
+    isSshConnection,
+    ptyHook.closePty,
+    ptyHook.createPty,
+    sshHook.connect,
+    sshHook.disconnect,
+  ]);
 
   // Handle terminal resize
   useEffect(() => {

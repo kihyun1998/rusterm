@@ -99,7 +99,7 @@ export function CommandPalette({
 
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
-  }, [mode, isOpen]);
+  }, [mode, isOpen, setOpen]);
 
   // Execute command and close dialog
   const runCommand = (callback: () => void) => {

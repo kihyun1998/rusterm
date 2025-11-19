@@ -173,7 +173,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                     min="1"
                     max="65535"
                     value={port}
-                    onChange={(e) => setPort(parseInt(e.target.value) || 22)}
+                    onChange={(e) => setPort(parseInt(e.target.value, 10) || 22)}
                     className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     autoComplete="off"
                   />

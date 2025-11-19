@@ -328,7 +328,7 @@ export function SSHConnectionDialog({
                 min="1"
                 max="65535"
                 value={formState.port}
-                onChange={(e) => handleFieldChange('port', parseInt(e.target.value) || 22)}
+                onChange={(e) => handleFieldChange('port', parseInt(e.target.value, 10) || 22)}
                 className={`[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.port ? 'border-destructive' : ''}`}
                 autoComplete="off"
               />
