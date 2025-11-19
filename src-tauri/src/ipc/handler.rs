@@ -4,8 +4,7 @@ use crate::ipc::protocol::{
 };
 use crate::ipc::events::{TabCreatedPayload, TabClosedPayload};
 use crate::pty::PtyManager;
-use crate::ssh::SshManager;
-use crate::ssh::types::SshOutputEvent;
+use crate::ssh::{SshManager, SshOutputEvent};
 use tauri::{AppHandle, Manager, Emitter};
 use uuid::Uuid;
 
