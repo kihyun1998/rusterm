@@ -30,7 +30,7 @@ import { useConnectionProfileStore } from '@/stores/use-connection-profile-store
 interface SSHConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnect?: (config: SSHConfig) => void;
+  onConnect?: (config: SSHConfig, profileId: string) => void;
   initialConfig?: Partial<SSHConfig>;
 }
 
@@ -214,10 +214,13 @@ export function SSHConnectionDialog({
       };
 
       // Use findOrCreateProfile for smart 5-condition deduplication
-      await findOrCreateProfile(profile);
+      // This returns the profile ID (either existing or newly created)
+      const profileId = await findOrCreateProfile(profile);
 
-      // 3. Notify parent with config (Terminal will create the session)
-      onConnect?.(uiConfig);
+      console.log('Profile saved with ID:', profileId);
+
+      // 3. Notify parent with config and profileId
+      onConnect?.(uiConfig, profileId);
 
       // 4. Close dialog
       onOpenChange(false);

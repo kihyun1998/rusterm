@@ -53,7 +53,7 @@ function App() {
   };
 
   // Handle SSH connection from dialog
-  const handleSshConnect = (config: SSHConfig) => {
+  const handleSshConnect = (config: SSHConfig, profileId: string) => {
     // Create new SSH tab
     const newTabId = crypto.randomUUID();
     addTab({
@@ -63,6 +63,7 @@ function App() {
       closable: true,
       connectionType: 'ssh',
       connectionConfig: config,
+      connectionProfileId: profileId, // Save profile ID for credential restoration
     });
   };
 

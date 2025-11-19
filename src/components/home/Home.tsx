@@ -69,6 +69,8 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
     const profile = getProfileById(profileId);
     if (!profile) return;
 
+    console.log('Connecting to profile:', profileId, profile.name);
+
     // Restore credentials from keyring if it's an SSH profile
     let connectionConfig = profile.config;
 
@@ -80,6 +82,12 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
           getCredential(profileId, 'ssh', 'privatekey'),
           getCredential(profileId, 'ssh', 'passphrase'),
         ]);
+
+        console.log('Retrieved credentials:', {
+          hasPassword: !!password,
+          hasPrivateKey: !!privateKey,
+          hasPassphrase: !!passphrase,
+        });
 
         connectionConfig = {
           ...profile.config,
