@@ -28,6 +28,6 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 thiserror = "1.0"
 tokio = { version = "1", features = ["sync"] }
 dirs = "5.0"
-keyring = "3.6"
+keyring = { version = "3.6", features = ["apple-native", "windows-native", "linux-native-sync-persistent"] }
 ssh2 = "0.9"
 
