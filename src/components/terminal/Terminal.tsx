@@ -12,7 +12,7 @@ import { getTerminalConfig } from '@/lib/xterm-config';
 import { useSettingsStore } from '@/stores';
 import type { ConnectionConfig, ConnectionType } from '@/types/connection';
 import { isSSHConfig } from '@/types/connection';
-import { toBackendSshConfig, type SshConnectionState } from '@/types/ssh';
+import { type SshConnectionState, toBackendSshConfig } from '@/types/ssh';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -91,7 +91,9 @@ export function Terminal({
     if (state === 'connecting') {
       const config = connectionConfigRef.current;
       if (config && isSSHConfig(config)) {
-        terminal.write(`\x1b[1;36mConnecting to ${config.username}@${config.host}:${config.port}...\x1b[0m\r\n`);
+        terminal.write(
+          `\x1b[1;36mConnecting to ${config.username}@${config.host}:${config.port}...\x1b[0m\r\n`
+        );
       }
     } else if (state === 'connected') {
       terminal.write(`\x1b[1;32mConnected successfully!\x1b[0m\r\n`);
@@ -128,9 +130,7 @@ export function Terminal({
   }, [sshHook.error]);
 
   // Select active hook based on connection type
-  const isConnected = isLocalConnection
-    ? ptyHook.isConnected
-    : sshHook.status === 'connected';
+  const isConnected = isLocalConnection ? ptyHook.isConnected : sshHook.status === 'connected';
   const error = isLocalConnection ? ptyHook.error : sshHook.error;
 
   // Store resize/close functions in refs to avoid dependency issues
@@ -147,7 +147,8 @@ export function Terminal({
     isLocalConnection || useSshViaPty ? ptyHook.writeToPty : sshHook.sendInput
   );
   useEffect(() => {
-    writeInputRef.current = isLocalConnection || useSshViaPty ? ptyHook.writeToPty : sshHook.sendInput;
+    writeInputRef.current =
+      isLocalConnection || useSshViaPty ? ptyHook.writeToPty : sshHook.sendInput;
   }, [isLocalConnection, useSshViaPty, ptyHook.writeToPty, sshHook.sendInput]);
 
   // Initialize xterm.js
@@ -493,14 +494,7 @@ export function Terminal({
       unsubscribePaste();
       unsubscribeFontSize();
     };
-  }, [
-    isReady,
-    isConnected,
-    isLocalConnection,
-    isSshConnection,
-    useSshViaPty,
-    copyToClipboard,
-  ]);
+  }, [isReady, isConnected, isLocalConnection, isSshConnection, useSshViaPty, copyToClipboard]);
 
   const currentTheme = settings?.terminalThemeId
     ? getThemeById(settings.terminalThemeId)?.theme
@@ -515,10 +509,7 @@ export function Terminal({
       }}
     >
       {/* Terminal */}
-      <TerminalContextMenu
-        terminalRef={xtermRef}
-        onPaste={(text) => writeInputRef.current(text)}
-      >
+      <TerminalContextMenu terminalRef={xtermRef} onPaste={(text) => writeInputRef.current(text)}>
         <div ref={terminalRef} className={`w-full h-full ${className}`} data-terminal-id={id} />
       </TerminalContextMenu>
     </div>

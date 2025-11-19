@@ -14,9 +14,7 @@ function App() {
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sshDialogOpen, setSshDialogOpen] = useState(false);
-  const [commandPaletteMode, setCommandPaletteMode] = useState<'command' | 'connection'>(
-    'command'
-  );
+  const [commandPaletteMode, setCommandPaletteMode] = useState<'command' | 'connection'>('command');
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { setTheme } = useTheme();
   const loadSettings = useSettingsStore((state) => state.loadSettings);

@@ -94,9 +94,7 @@ export interface SshExitEvent {
 /**
  * Type guard for password authentication
  */
-export function isPasswordAuth(
-  auth: AuthMethod
-): auth is { type: 'password'; password: string } {
+export function isPasswordAuth(auth: AuthMethod): auth is { type: 'password'; password: string } {
   return auth.type === 'password';
 }
 
@@ -119,9 +117,7 @@ export function isPrivateKeyAuth(
  * @param uiConfig - SSHConfig from connection.ts (flat structure)
  * @returns SshConfig for backend commands (tagged union)
  */
-export function toBackendSshConfig(
-  uiConfig: import('./connection').SSHConfig
-): SshConfig {
+export function toBackendSshConfig(uiConfig: import('./connection').SSHConfig): SshConfig {
   let authMethod: AuthMethod | undefined;
 
   if (uiConfig.password) {
@@ -153,9 +149,7 @@ export function toBackendSshConfig(
  * @param backendConfig - SshConfig from backend
  * @returns SSHConfig for connection.ts (flat structure)
  */
-export function toUiSshConfig(
-  backendConfig: SshConfig
-): import('./connection').SSHConfig {
+export function toUiSshConfig(backendConfig: SshConfig): import('./connection').SSHConfig {
   const base = {
     host: backendConfig.host,
     port: backendConfig.port,

@@ -57,50 +57,53 @@ export function usePty(options: UsePtyOptions = {}): UsePtyReturn {
   /**
    * Create a new PTY session
    */
-  const createPty = useCallback(async (cols: number, rows: number, createOptions?: CreatePtyOptions) => {
-    try {
-      setError(null);
+  const createPty = useCallback(
+    async (cols: number, rows: number, createOptions?: CreatePtyOptions) => {
+      try {
+        setError(null);
 
-      // Call Tauri command to create PTY
-      const response = await invoke<CreatePtyResponse>('create_pty', {
-        shell: createOptions?.shell || null, // Use default shell if not provided
-        args: createOptions?.args || null, // Command arguments (for ssh, etc.)
-        cwd: createOptions?.cwd || null, // Use default working directory
-        env: createOptions?.env || null, // Use default environment
-        cols,
-        rows,
-      });
+        // Call Tauri command to create PTY
+        const response = await invoke<CreatePtyResponse>('create_pty', {
+          shell: createOptions?.shell || null, // Use default shell if not provided
+          args: createOptions?.args || null, // Command arguments (for ssh, etc.)
+          cwd: createOptions?.cwd || null, // Use default working directory
+          env: createOptions?.env || null, // Use default environment
+          cols,
+          rows,
+        });
 
-      setPtyId(response.pty_id);
-      ptyIdRef.current = response.pty_id;
-      setIsConnected(true);
+        setPtyId(response.pty_id);
+        ptyIdRef.current = response.pty_id;
+        setIsConnected(true);
 
-      // Set up output event listener
-      const outputUnlisten = await listen<PtyOutputEvent>(
-        `pty-output-${response.pty_id}`,
-        (event) => {
-          if (onOutputRef.current) {
-            onOutputRef.current(event.payload.data);
+        // Set up output event listener
+        const outputUnlisten = await listen<PtyOutputEvent>(
+          `pty-output-${response.pty_id}`,
+          (event) => {
+            if (onOutputRef.current) {
+              onOutputRef.current(event.payload.data);
+            }
           }
-        }
-      );
-      outputUnlistenRef.current = outputUnlisten;
+        );
+        outputUnlistenRef.current = outputUnlisten;
 
-      // Set up exit event listener
-      const exitUnlisten = await listen<PtyExitEvent>(`pty-exit-${response.pty_id}`, (event) => {
+        // Set up exit event listener
+        const exitUnlisten = await listen<PtyExitEvent>(`pty-exit-${response.pty_id}`, (event) => {
+          setIsConnected(false);
+          if (onExitRef.current) {
+            onExitRef.current(event.payload.exit_code);
+          }
+        });
+        exitUnlistenRef.current = exitUnlisten;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(errorMessage);
         setIsConnected(false);
-        if (onExitRef.current) {
-          onExitRef.current(event.payload.exit_code);
-        }
-      });
-      exitUnlistenRef.current = exitUnlisten;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(errorMessage);
-      setIsConnected(false);
-      console.error('Failed to create PTY:', err);
-    }
-  }, []); // No dependencies - uses refs instead
+        console.error('Failed to create PTY:', err);
+      }
+    },
+    []
+  ); // No dependencies - uses refs instead
 
   /**
    * Write data to PTY (user input)

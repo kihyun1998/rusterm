@@ -1,12 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ConnectionProfile, StoredConnectionProfile } from '@/types/connection';
-import {
-  sanitizeProfile,
-  isSSHConfig,
-  getAuthMethod,
-} from '@/types/connection';
 import { deleteAllCredentials } from '@/lib/keyring';
+import type { ConnectionProfile, StoredConnectionProfile } from '@/types/connection';
+import { getAuthMethod, isSSHConfig, sanitizeProfile } from '@/types/connection';
 
 interface ConnectionProfileState {
   profiles: StoredConnectionProfile[];
@@ -86,9 +82,8 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
         await get().addProfile(profile);
 
         // Find and return the newly created profile ID
-        const newProfile = get().profiles.find((p) =>
-          p.name === profile.name &&
-          p.createdAt === profile.createdAt
+        const newProfile = get().profiles.find(
+          (p) => p.name === profile.name && p.createdAt === profile.createdAt
         );
 
         return newProfile?.id || profile.id;

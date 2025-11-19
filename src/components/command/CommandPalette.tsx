@@ -289,7 +289,9 @@ export function CommandPalette({
   return (
     <CommandDialog open={isOpen} onOpenChange={setOpen}>
       <CommandInput
-        placeholder={mode === 'connection' ? 'Search connections...' : 'Type a command or search...'}
+        placeholder={
+          mode === 'connection' ? 'Search connections...' : 'Type a command or search...'
+        }
       />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>

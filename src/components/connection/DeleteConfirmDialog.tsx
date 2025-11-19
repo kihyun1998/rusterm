@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import { AlertTriangleIcon } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,9 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
-import type { StoredConnectionProfile } from '@/types/connection';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
+import type { StoredConnectionProfile } from '@/types/connection';
 
 interface DeleteConfirmDialogProps {
   open: boolean;
@@ -26,11 +26,7 @@ interface DeleteConfirmDialogProps {
  * Shows a confirmation dialog before deleting a connection profile
  * Warns user that saved credentials will also be removed
  */
-export function DeleteConfirmDialog({
-  open,
-  onOpenChange,
-  profile,
-}: DeleteConfirmDialogProps) {
+export function DeleteConfirmDialog({ open, onOpenChange, profile }: DeleteConfirmDialogProps) {
   const deleteProfile = useConnectionProfileStore((state) => state.deleteProfile);
   const [isDeleting, setIsDeleting] = useState(false);
 

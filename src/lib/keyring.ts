@@ -6,12 +6,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import type { ConnectionType } from '@/types/connection';
-import {
-  getServiceName,
-  getAccountName,
-  type CredentialType,
-  KeyringError,
-} from '@/types/keyring';
+import { type CredentialType, getAccountName, getServiceName, KeyringError } from '@/types/keyring';
 
 /**
  * Save credential to OS keychain

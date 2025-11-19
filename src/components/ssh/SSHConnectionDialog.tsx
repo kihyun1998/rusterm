@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Server } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -19,9 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
-import type { SSHConfig, ConnectionProfile } from '@/types/connection';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
+import type { ConnectionProfile, SSHConfig } from '@/types/connection';
 
 /**
  * Props for SSHConnectionDialog component
@@ -97,10 +97,7 @@ export function SSHConnectionDialog({
   /**
    * Handle field change
    */
-  const handleFieldChange = <K extends keyof FormState>(
-    field: K,
-    value: FormState[K]
-  ) => {
+  const handleFieldChange = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((prev) => {
       const updates: Partial<FormState> = { [field]: value };
 
@@ -372,9 +369,7 @@ export function SSHConnectionDialog({
           {/* Conditional: Password */}
           {formState.authMethod === 'password' && (
             <div className="space-y-2">
-              <Label htmlFor="password">
-                Password (Optional)
-              </Label>
+              <Label htmlFor="password">Password (Optional)</Label>
               <Input
                 id="password"
                 type="password"
@@ -391,9 +386,7 @@ export function SSHConnectionDialog({
           {formState.authMethod === 'privateKey' && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="privateKeyPath">
-                  Private Key Path (Optional)
-                </Label>
+                <Label htmlFor="privateKeyPath">Private Key Path (Optional)</Label>
                 <Input
                   id="privateKeyPath"
                   placeholder="/home/user/.ssh/id_rsa"
@@ -438,9 +431,7 @@ export function SSHConnectionDialog({
             <p className="text-xs text-muted-foreground">
               Default: host address. Customize to identify this connection easily.
             </p>
-            {errors.profileName && (
-              <p className="text-sm text-destructive">{errors.profileName}</p>
-            )}
+            {errors.profileName && <p className="text-sm text-destructive">{errors.profileName}</p>}
           </div>
         </div>
 

@@ -1,12 +1,12 @@
-import { useState, useMemo } from 'react';
-import { Settings, Terminal, Plus, Search } from 'lucide-react';
+import { Plus, Search, Settings, Terminal } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ConnectionCard } from '@/components/connection/ConnectionCard';
+import { DeleteConfirmDialog } from '@/components/connection/DeleteConfirmDialog';
+import { EditProfileDialog } from '@/components/connection/EditProfileDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTabStore } from '@/stores';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
-import { ConnectionCard } from '@/components/connection/ConnectionCard';
-import { EditProfileDialog } from '@/components/connection/EditProfileDialog';
-import { DeleteConfirmDialog } from '@/components/connection/DeleteConfirmDialog';
 import type { StoredConnectionProfile } from '@/types/connection';
 import { isSSHConfig } from '@/types/connection';
 
@@ -233,8 +233,7 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
         {/* Command Palette Hint */}
         <div className="text-center text-sm text-muted-foreground">
           <p>
-            Press{' '}
-            <kbd className="px-2 py-1 text-xs bg-muted rounded border">Ctrl+K</kbd> to open
+            Press <kbd className="px-2 py-1 text-xs bg-muted rounded border">Ctrl+K</kbd> to open
             Command Palette
           </p>
         </div>

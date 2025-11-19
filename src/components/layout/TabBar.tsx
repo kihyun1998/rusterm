@@ -1,4 +1,4 @@
-import { Plus, X, Terminal as TerminalIcon, Server } from 'lucide-react';
+import { Plus, Server, Terminal as TerminalIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTabStore } from '@/stores';
 import type { TerminalTheme } from '@/types/settings';
@@ -13,11 +13,7 @@ interface TabBarProps {
  * TabBar component
  * Displays all terminal tabs with controls for switching, closing, and adding tabs
  */
-export function TabBar({
-  isTerminalActive,
-  terminalTheme,
-  onOpenConnectionPalette,
-}: TabBarProps) {
+export function TabBar({ isTerminalActive, terminalTheme, onOpenConnectionPalette }: TabBarProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
   const addTab = useTabStore((state) => state.addTab);

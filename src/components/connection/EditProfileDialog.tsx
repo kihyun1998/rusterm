@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
 import { Edit } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,11 +12,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import type { StoredConnectionProfile, ConnectionProfile } from '@/types/connection';
-import { isSSHConfig } from '@/types/connection';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
+import type { ConnectionProfile, StoredConnectionProfile } from '@/types/connection';
+import { isSSHConfig } from '@/types/connection';
 
 interface EditProfileDialogProps {
   open: boolean;

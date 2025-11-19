@@ -1,10 +1,10 @@
-import { Edit, Trash2, Key, Lock, UserCircle } from 'lucide-react';
+import { Edit, Key, Lock, Trash2, UserCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { CONNECTION_ICONS } from '@/constants/connection-icons';
 import type { StoredConnectionProfile } from '@/types/connection';
-import { isSSHConfig, getAuthMethod } from '@/types/connection';
+import { getAuthMethod, isSSHConfig } from '@/types/connection';
 
 interface ConnectionCardProps {
   profile: StoredConnectionProfile;

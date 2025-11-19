@@ -1,11 +1,4 @@
-import {
-  FolderTree,
-  Lock,
-  Monitor,
-  MonitorPlay,
-  Radio,
-  type LucideIcon,
-} from 'lucide-react';
+import { FolderTree, Lock, type LucideIcon, Monitor, MonitorPlay, Radio } from 'lucide-react';
 import type { ConnectionType } from '@/types/connection';
 
 /**
