@@ -33,7 +33,6 @@ import { useTabStore } from '@/stores';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
 import { useSettingsStore } from '@/stores/use-settings-store';
 import type { ConnectionType } from '@/types/connection';
-import { isSSHConfig, getAuthMethod } from '@/types/connection';
 
 interface CommandPaletteProps {
   mode?: 'command' | 'connection';
@@ -222,30 +221,21 @@ export function CommandPalette({
     // Restore credentials from keyring if it's an SSH profile
     let connectionConfig: any = profile.config;
 
-    if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
+    if (profile.type === 'ssh') {
       try {
         const { getCredential } = await import('@/lib/keyring');
-        const authMethod = getAuthMethod(profile.config);
+        const [password, privateKey, passphrase] = await Promise.all([
+          getCredential(profileId, 'ssh', 'password'),
+          getCredential(profileId, 'ssh', 'privatekey'),
+          getCredential(profileId, 'ssh', 'passphrase'),
+        ]);
 
-        // Only retrieve credentials based on auth method
-        if (authMethod === 'password') {
-          const password = await getCredential(profileId, 'ssh', 'password');
-          connectionConfig = {
-            ...profile.config,
-            password: password || undefined,
-          };
-        } else if (authMethod === 'privateKey') {
-          const [privateKey, passphrase] = await Promise.all([
-            getCredential(profileId, 'ssh', 'privatekey'),
-            getCredential(profileId, 'ssh', 'passphrase'),
-          ]);
-          connectionConfig = {
-            ...profile.config,
-            privateKey: privateKey || undefined,
-            passphrase: passphrase || undefined,
-          };
-        }
-        // noAuth: don't retrieve any credentials
+        connectionConfig = {
+          ...profile.config,
+          password: password || undefined,
+          privateKey: privateKey || undefined,
+          passphrase: passphrase || undefined,
+        };
       } catch (error) {
         console.error('Failed to retrieve credentials from keyring:', error);
         // Continue with stored config (without credentials)

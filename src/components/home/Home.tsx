@@ -74,36 +74,27 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
     // Restore credentials from keyring if it's an SSH profile
     let connectionConfig: any = profile.config;
 
-    if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
+    if (profile.type === 'ssh') {
       try {
         const { getCredential } = await import('@/lib/keyring');
-        const { getAuthMethod } = await import('@/types/connection');
-        const authMethod = getAuthMethod(profile.config);
+        const [password, privateKey, passphrase] = await Promise.all([
+          getCredential(profileId, 'ssh', 'password'),
+          getCredential(profileId, 'ssh', 'privatekey'),
+          getCredential(profileId, 'ssh', 'passphrase'),
+        ]);
 
-        // Only retrieve credentials based on auth method
-        if (authMethod === 'password') {
-          const password = await getCredential(profileId, 'ssh', 'password');
-          console.log('Retrieved password credential:', { hasPassword: !!password });
-          connectionConfig = {
-            ...profile.config,
-            password: password || undefined,
-          };
-        } else if (authMethod === 'privateKey') {
-          const [privateKey, passphrase] = await Promise.all([
-            getCredential(profileId, 'ssh', 'privatekey'),
-            getCredential(profileId, 'ssh', 'passphrase'),
-          ]);
-          console.log('Retrieved private key credentials:', {
-            hasPrivateKey: !!privateKey,
-            hasPassphrase: !!passphrase,
-          });
-          connectionConfig = {
-            ...profile.config,
-            privateKey: privateKey || undefined,
-            passphrase: passphrase || undefined,
-          };
-        }
-        // noAuth: don't retrieve any credentials
+        console.log('Retrieved credentials:', {
+          hasPassword: !!password,
+          hasPrivateKey: !!privateKey,
+          hasPassphrase: !!passphrase,
+        });
+
+        connectionConfig = {
+          ...profile.config,
+          password: password || undefined,
+          privateKey: privateKey || undefined,
+          passphrase: passphrase || undefined,
+        };
       } catch (error) {
         console.error('Failed to retrieve credentials from keyring:', error);
         // Continue with stored config (without credentials)
