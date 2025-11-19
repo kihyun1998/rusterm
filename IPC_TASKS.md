@@ -21,9 +21,9 @@
   - `platform/mod.rs` - 플랫폼별 구현 진입점
 
 **완료 조건:**
-- [ ] 모든 파일 생성 완료
-- [ ] `mod.rs`에서 public API export
-- [ ] 컴파일 에러 없음 (`cargo check` 통과)
+- [x] 모든 파일 생성 완료
+- [x] `mod.rs`에서 public API export
+- [x] 컴파일 에러 없음 (`cargo check` 통과)
 
 **테스트 방법:**
 ```bash
@@ -55,10 +55,10 @@ cargo tree | grep rusterm
   - `IpcError` enum
 
 **완료 조건:**
-- [ ] 모든 타입 정의 완료
-- [ ] Serde derive 적용 (Serialize/Deserialize)
-- [ ] 기존 `SshConfig` 타입과 호환
-- [ ] 컴파일 에러 없음
+- [x] 모든 타입 정의 완료
+- [x] Serde derive 적용 (Serialize/Deserialize)
+- [x] 기존 `SshConfig` 타입과 호환
+- [x] 컴파일 에러 없음
 
 **테스트 방법:**
 ```bash
@@ -112,11 +112,11 @@ mod tests {
 - 연결 핸들링 기본 구조
 
 **완료 조건:**
-- [ ] `UnixListener` 생성 함수 구현
-- [ ] Socket 파일 권한 0600 설정
-- [ ] 기존 socket 파일 정리 로직
-- [ ] 비동기 연결 수락 구현
-- [ ] Linux/macOS에서 컴파일 성공
+- [x] `UnixListener` 생성 함수 구현
+- [x] Socket 파일 권한 0600 설정
+- [x] 기존 socket 파일 정리 로직
+- [x] 비동기 연결 수락 구현
+- [x] Linux/macOS에서 컴파일 성공
 
 **테스트 방법:**
 ```bash
@@ -158,10 +158,10 @@ wait
 - `interprocess` crate 활용
 
 **완료 조건:**
-- [ ] Named Pipe 생성 함수 구현
-- [ ] ACL 보안 설정
-- [ ] 비동기 연결 수락 구현
-- [ ] Windows에서 컴파일 성공
+- [x] Named Pipe 생성 함수 구현
+- [x] ACL 보안 설정
+- [x] 비동기 연결 수락 구현
+- [x] Windows에서 컴파일 성공
 
 **테스트 방법:**
 ```powershell
@@ -203,10 +203,10 @@ $pipe.Close()
 - JSON 파싱 및 응답 직렬화
 
 **완료 조건:**
-- [ ] `handle_request()` 함수 구현
-- [ ] `ping` 커맨드 처리
-- [ ] JSON 에러 핸들링
-- [ ] 단위 테스트 작성
+- [x] `handle_request()` 함수 구현
+- [x] `ping` 커맨드 처리
+- [x] JSON 에러 핸들링
+- [x] 단위 테스트 작성
 
 **테스트 방법:**
 ```bash
@@ -250,11 +250,11 @@ echo '{"command":"unknown"}' | nc -U /tmp/rusterm-$(id -u).sock
 - `oneshot` 채널로 종료 신호 전달
 
 **완료 조건:**
-- [ ] `IpcServer` 구조체 정의
-- [ ] `start()` async 함수 구현
-- [ ] `shutdown()` 함수 구현
-- [ ] `Drop` trait 구현
-- [ ] GUI 스레드 블로킹하지 않음
+- [x] `IpcServer` 구조체 정의
+- [x] `start()` async 함수 구현
+- [x] `shutdown()` 함수 구현
+- [x] `Drop` trait 구현
+- [x] GUI 스레드 블로킹하지 않음
 
 **테스트 방법:**
 ```bash
@@ -296,10 +296,10 @@ wait
 - Tauri `on_window_event`에서 shutdown 호출
 
 **완료 조건:**
-- [ ] 종료 신호 처리 구현
-- [ ] 활성 연결 우아한 종료
-- [ ] 리소스 정리 (socket 파일 등)
-- [ ] `lib.rs`에서 Tauri 통합
+- [x] 종료 신호 처리 구현
+- [x] 활성 연결 우아한 종료
+- [x] 리소스 정리 (socket 파일 등)
+- [x] `lib.rs`에서 Tauri 통합
 
 **테스트 방법:**
 ```bash
@@ -354,10 +354,10 @@ ls -la /tmp/rusterm-*.sock
 - AppHandle을 IPC 핸들러에서 사용 가능하도록 전달
 
 **완료 조건:**
-- [ ] IPC 서버가 앱 시작 시 자동 실행
-- [ ] AppHandle 전달 구조 구현
-- [ ] 앱 종료 시 IPC 서버 자동 종료
-- [ ] 컴파일 및 실행 성공
+- [x] IPC 서버가 앱 시작 시 자동 실행
+- [x] AppHandle 전달 구조 구현
+- [x] 앱 종료 시 IPC 서버 자동 종료
+- [x] 컴파일 및 실행 성공
 
 **테스트 방법:**
 ```bash
@@ -409,9 +409,9 @@ done
 - IPC → Tab Store 연동 방법 설계
 
 **완료 조건:**
-- [ ] Tab Store API 문서화
-- [ ] 필요한 Tauri 이벤트 정의
-- [ ] 연동 방법 설계 완료
+- [x] Tab Store API 문서화
+- [x] 필요한 Tauri 이벤트 정의
+- [x] 연동 방법 설계 완료
 
 **테스트 방법:**
 ```bash
@@ -456,10 +456,10 @@ grep -r "listen\|emit" src/
 - Tab ID 생성 및 반환
 
 **완료 조건:**
-- [ ] IPC 요청 처리 구현
-- [ ] PTY 세션 생성
-- [ ] Tab Store 업데이트 이벤트 emit
-- [ ] 응답 반환
+- [x] IPC 요청 처리 구현
+- [x] PTY 세션 생성
+- [x] Tab Store 업데이트 이벤트 emit
+- [x] 응답 반환
 
 **테스트 방법:**
 ```bash
@@ -523,10 +523,10 @@ cat /tmp/test_add_local_cwd.json | nc -U /tmp/rusterm-$(id -u).sock
 - Tauri 이벤트로 Frontend에 알림
 
 **완료 조건:**
-- [ ] IPC 요청 처리 구현
-- [ ] SSH 세션 생성
-- [ ] Password/PrivateKey 인증 지원
-- [ ] Tab Store 업데이트 이벤트 emit
+- [x] IPC 요청 처리 구현
+- [x] SSH 세션 생성
+- [x] Password/PrivateKey 인증 지원
+- [x] Tab Store 업데이트 이벤트 emit
 
 **테스트 방법:**
 ```bash
@@ -614,10 +614,10 @@ cat /tmp/test_add_ssh_invalid.json | nc -U /tmp/rusterm-$(id -u).sock
 - Tauri 이벤트로 Frontend에 알림
 
 **완료 조건:**
-- [ ] IPC 요청 처리 구현
-- [ ] 탭 ID로 세션 찾기
-- [ ] 세션 종료 처리
-- [ ] Tab Store 업데이트 이벤트 emit
+- [x] IPC 요청 처리 구현
+- [x] 탭 ID로 세션 찾기
+- [x] 세션 종료 처리
+- [x] Tab Store 업데이트 이벤트 emit
 
 **테스트 방법:**
 ```bash
@@ -676,9 +676,9 @@ done
 - 탭 정보 직렬화 (id, type, title, active)
 
 **완료 조건:**
-- [ ] IPC 요청 처리 구현
-- [ ] Tab Store 조회 로직
-- [ ] 응답 포맷 구현
+- [x] IPC 요청 처리 구현
+- [x] Tab Store 조회 로직
+- [x] 응답 포맷 구현
 
 **테스트 방법:**
 ```bash
@@ -1107,21 +1107,21 @@ cargo flamegraph --bin rusterm
 ## 완료 체크리스트
 
 ### Phase 1: IPC 인프라 구축
-- [ ] Task 1.1: IPC 모듈 기본 구조 생성
-- [ ] Task 1.2: IPC 프로토콜 타입 정의
-- [ ] Task 1.3: Unix Domain Socket 구현
-- [ ] Task 1.4: Named Pipes 구현
-- [ ] Task 1.5: 기본 요청 핸들러 구현 (ping)
-- [ ] Task 1.6: 백그라운드 스레드 실행 구조
-- [ ] Task 1.7: Graceful Shutdown 구현
-- [ ] Task 1.8: Tauri 앱 통합
+- [x] Task 1.1: IPC 모듈 기본 구조 생성
+- [x] Task 1.2: IPC 프로토콜 타입 정의
+- [x] Task 1.3: Unix Domain Socket 구현
+- [x] Task 1.4: Named Pipes 구현
+- [x] Task 1.5: 기본 요청 핸들러 구현 (ping)
+- [x] Task 1.6: 백그라운드 스레드 실행 구조
+- [x] Task 1.7: Graceful Shutdown 구현
+- [x] Task 1.8: Tauri 앱 통합
 
 ### Phase 2: 핵심 Tab 관리 API
-- [ ] Task 2.1: Frontend Tab Store 분석
-- [ ] Task 2.2: `add_local_tab` 구현
-- [ ] Task 2.3: `add_ssh_tab` 구현
-- [ ] Task 2.4: `close_tab` 구현
-- [ ] Task 2.5: `list_tabs` 구현
+- [x] Task 2.1: Frontend Tab Store 분석
+- [x] Task 2.2: `add_local_tab` 구현
+- [x] Task 2.3: `add_ssh_tab` 구현
+- [x] Task 2.4: `close_tab` 구현
+- [x] Task 2.5: `list_tabs` 구현
 
 ### Phase 3: 테스트 및 문서화
 - [ ] Task 3.1: 플랫폼별 통합 테스트
