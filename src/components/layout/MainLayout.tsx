@@ -79,7 +79,6 @@ export function MainLayout({
                 <Terminal
                   id={tab.id}
                   connectionType={tab.connectionType}
-                  connectionConfig={tab.connectionConfig}
                   connectionProfileId={tab.connectionProfileId}
                 />
               )}

@@ -14,12 +14,7 @@ export interface Tab {
   workingDirectory?: string;
   // Connection-related fields
   connectionType?: ConnectionType; // Connection type (default: 'local' if not specified)
-  /**
-   * @deprecated Use connectionProfileId instead. This field is kept for backward compatibility.
-   * Credentials should not be stored in tabs - they will be restored from keyring using connectionProfileId.
-   */
-  connectionConfig?: ConnectionConfig; // Connection configuration (optional, deprecated)
-  connectionProfileId?: string; // Profile ID - credentials will be restored from keyring (recommended)
+  connectionProfileId?: string; // Profile ID - credentials will be restored from keyring
 }
 
 interface TabState {

@@ -19,10 +19,6 @@ interface TerminalProps {
   id: string;
   className?: string;
   connectionType?: ConnectionType;
-  /**
-   * @deprecated Use connectionProfileId instead. This field is kept for backward compatibility.
-   */
-  connectionConfig?: ConnectionConfig;
   connectionProfileId?: string;
 }
 
@@ -34,7 +30,6 @@ export function Terminal({
   id,
   className = '',
   connectionType = 'local',
-  connectionConfig,
   connectionProfileId,
 }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -72,17 +67,10 @@ export function Terminal({
     resolvedConfigRef.current = resolvedConfig;
   }, [resolvedConfig]);
 
-  // Resolve credentials from keyring or use provided connectionConfig
+  // Resolve credentials from keyring
   useEffect(() => {
     const resolveCredentials = async () => {
-      // Case 1: connectionConfig is provided - use it directly (backward compatibility)
-      if (connectionConfig) {
-        setResolvedConfig(connectionConfig);
-        setIsResolvingCredentials(false);
-        return;
-      }
-
-      // Case 2: connectionProfileId is provided - restore from keyring
+      // Restore credentials from keyring if connectionProfileId is provided
       if (connectionProfileId) {
         setIsResolvingCredentials(true);
 
@@ -138,13 +126,13 @@ export function Terminal({
         return;
       }
 
-      // Case 3: No config and no profileId - set to null
+      // No connectionProfileId - set to null
       setResolvedConfig(null);
       setIsResolvingCredentials(false);
     };
 
     resolveCredentials();
-  }, [connectionConfig, connectionProfileId]);
+  }, [connectionProfileId]);
 
   // PTY connection management (for local terminals)
   const ptyHook = usePty({
