@@ -25,7 +25,7 @@ export interface SshConfig {
   host: string;
   port: number;
   username: string;
-  authMethod: AuthMethod;
+  authMethod?: AuthMethod; // Optional - allows keyboard-interactive auth
 }
 
 /**
@@ -118,12 +118,11 @@ export function isPrivateKeyAuth(
  *
  * @param uiConfig - SSHConfig from connection.ts (flat structure)
  * @returns SshConfig for backend commands (tagged union)
- * @throws Error if neither password nor privateKey is provided
  */
 export function toBackendSshConfig(
   uiConfig: import('./connection').SSHConfig
 ): SshConfig {
-  let authMethod: AuthMethod;
+  let authMethod: AuthMethod | undefined;
 
   if (uiConfig.password) {
     authMethod = {
@@ -136,9 +135,9 @@ export function toBackendSshConfig(
       path: uiConfig.privateKey,
       passphrase: uiConfig.passphrase,
     };
-  } else {
-    throw new Error('Either password or privateKey must be provided');
   }
+  // If neither password nor privateKey, authMethod remains undefined
+  // This allows keyboard-interactive authentication
 
   return {
     host: uiConfig.host,
@@ -163,7 +162,10 @@ export function toUiSshConfig(
     username: backendConfig.username,
   };
 
-  if (isPasswordAuth(backendConfig.authMethod)) {
+  if (!backendConfig.authMethod) {
+    // No auth method - keyboard-interactive
+    return base;
+  } else if (isPasswordAuth(backendConfig.authMethod)) {
     return {
       ...base,
       password: backendConfig.authMethod.password,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Server } from 'lucide-react';
 import {
   Dialog,
@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import type { SSHConfig, ConnectionProfile } from '@/types/connection';
@@ -30,7 +29,7 @@ import { useConnectionProfileStore } from '@/stores/use-connection-profile-store
 interface SSHConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnect?: (config: SSHConfig) => void;
+  onConnect?: (config: SSHConfig, profileId: string) => void;
   initialConfig?: Partial<SSHConfig>;
 }
 
@@ -50,8 +49,7 @@ interface FormState {
   password: string;
   privateKeyPath: string;
   passphrase: string;
-  saveAsProfile: boolean;
-  profileName: string;
+  profileName: string; // Default: host (auto-save enabled)
 }
 
 /**
@@ -83,19 +81,18 @@ export function SSHConnectionDialog({
     host: initialConfig?.host || '',
     port: initialConfig?.port || 22,
     username: initialConfig?.username || '',
-    authMethod: initialConfig?.password ? 'password' : 'privateKey',
+    authMethod: initialConfig?.privateKey ? 'privateKey' : 'password',
     password: '', // Never pre-fill for security
     privateKeyPath: initialConfig?.privateKey || '',
     passphrase: '',
-    saveAsProfile: false,
-    profileName: '',
+    profileName: initialConfig?.host || '', // Default to host address
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Store
-  const addProfile = useConnectionProfileStore((state) => state.addProfile);
+  const findOrCreateProfile = useConnectionProfileStore((state) => state.findOrCreateProfile);
 
   /**
    * Handle field change
@@ -104,10 +101,19 @@ export function SSHConnectionDialog({
     field: K,
     value: FormState[K]
   ) => {
-    setFormState((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormState((prev) => {
+      const updates: Partial<FormState> = { [field]: value };
+
+      // Auto-update profileName when host changes (if profileName was auto-generated)
+      if (field === 'host' && typeof value === 'string') {
+        // Only auto-update if current profileName matches previous host or is empty
+        if (!prev.profileName || prev.profileName === prev.host) {
+          updates.profileName = value;
+        }
+      }
+
+      return { ...prev, ...updates };
+    });
 
     // Clear error for this field
     if (errors[field as keyof ValidationErrors]) {
@@ -162,19 +168,10 @@ export function SSHConnectionDialog({
       newErrors.username = 'Username is required';
     }
 
-    // Auth method validation
-    if (formState.authMethod === 'password' && !formState.password) {
-      newErrors.password = 'Password is required';
-    }
+    // Auth method validation (optional - allows keyboard-interactive authentication)
+    // No validation for password/privateKey - they are optional
 
-    if (formState.authMethod === 'privateKey' && !formState.privateKeyPath.trim()) {
-      newErrors.privateKeyPath = 'Private key path is required';
-    }
-
-    // Profile name validation
-    if (formState.saveAsProfile && !formState.profileName.trim()) {
-      newErrors.profileName = 'Profile name is required when saving';
-    }
+    // No profile name validation needed - auto-save with host as default
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -205,26 +202,52 @@ export function SSHConnectionDialog({
         passphrase: formState.passphrase || undefined,
       };
 
-      // 2. Save profile (if requested)
-      if (formState.saveAsProfile) {
-        const profile: ConnectionProfile = {
-          id: crypto.randomUUID(),
-          name: formState.profileName,
-          type: 'ssh',
-          config: uiConfig,
-          favorite: false,
-          createdAt: Date.now(),
-        };
+      // 2. Auto-save profile (always, with smart deduplication)
+      // Create profile without credentials for deduplication check
+      const profileWithoutCreds: ConnectionProfile = {
+        id: crypto.randomUUID(),
+        name: formState.profileName.trim() || formState.host, // Default to host if empty
+        type: 'ssh',
+        config: {
+          host: formState.host,
+          port: formState.port,
+          username: formState.username,
+          // Don't include credentials in the profile - will save to keyring separately
+        },
+        createdAt: Date.now(),
+      };
 
-        await addProfile(profile);
+      // Use findOrCreateProfile for smart 5-condition deduplication
+      // This returns the profile ID (either existing or newly created)
+      const profileId = await findOrCreateProfile(profileWithoutCreds);
 
-        toast.success('Profile Saved', {
-          description: `Profile "${formState.profileName}" has been saved`,
-        });
+      console.log('Profile saved with ID:', profileId);
+
+      // Save credentials to keyring using the correct profile ID
+      try {
+        const { saveCredential } = await import('@/lib/keyring');
+
+        if (formState.authMethod === 'password' && formState.password) {
+          await saveCredential(profileId, 'ssh', 'password', formState.password);
+          console.log('Saved password to keyring');
+        }
+
+        if (formState.authMethod === 'privateKey' && formState.privateKeyPath) {
+          await saveCredential(profileId, 'ssh', 'privatekey', formState.privateKeyPath);
+          console.log('Saved private key to keyring');
+        }
+
+        if (formState.passphrase) {
+          await saveCredential(profileId, 'ssh', 'passphrase', formState.passphrase);
+          console.log('Saved passphrase to keyring');
+        }
+      } catch (error) {
+        console.error('Failed to save credentials to keyring:', error);
+        // Continue anyway - profile is saved even if credentials fail
       }
 
-      // 3. Notify parent with config (Terminal will create the session)
-      onConnect?.(uiConfig);
+      // 3. Notify parent with config and profileId
+      onConnect?.(uiConfig, profileId);
 
       // 4. Close dialog
       onOpenChange(false);
@@ -245,28 +268,27 @@ export function SSHConnectionDialog({
   /**
    * Reset form when dialog closes
    */
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormState({
       host: initialConfig?.host || '',
       port: initialConfig?.port || 22,
       username: initialConfig?.username || '',
-      authMethod: initialConfig?.password ? 'password' : 'privateKey',
+      authMethod: initialConfig?.privateKey ? 'privateKey' : 'password',
       password: '',
       privateKeyPath: initialConfig?.privateKey || '',
       passphrase: '',
-      saveAsProfile: false,
-      profileName: '',
+      profileName: initialConfig?.host || '', // Default to host address
     });
     setErrors({});
     setIsConnecting(false);
-  };
+  }, [initialConfig]);
 
   // Reset on close
   useEffect(() => {
     if (!open) {
       resetForm();
     }
-  }, [open]);
+  }, [open, resetForm]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -292,6 +314,7 @@ export function SSHConnectionDialog({
               value={formState.host}
               onChange={(e) => handleFieldChange('host', e.target.value)}
               className={errors.host ? 'border-destructive' : ''}
+              autoComplete="off"
             />
             {errors.host && <p className="text-sm text-destructive">{errors.host}</p>}
           </div>
@@ -309,7 +332,8 @@ export function SSHConnectionDialog({
                 max="65535"
                 value={formState.port}
                 onChange={(e) => handleFieldChange('port', parseInt(e.target.value) || 22)}
-                className={errors.port ? 'border-destructive' : ''}
+                className={`[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.port ? 'border-destructive' : ''}`}
+                autoComplete="off"
               />
               {errors.port && <p className="text-sm text-destructive">{errors.port}</p>}
             </div>
@@ -323,6 +347,7 @@ export function SSHConnectionDialog({
                 value={formState.username}
                 onChange={(e) => handleFieldChange('username', e.target.value)}
                 className={errors.username ? 'border-destructive' : ''}
+                autoComplete="off"
               />
               {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
             </div>
@@ -348,7 +373,7 @@ export function SSHConnectionDialog({
           {formState.authMethod === 'password' && (
             <div className="space-y-2">
               <Label htmlFor="password">
-                Password <span className="text-destructive">*</span>
+                Password (Optional)
               </Label>
               <Input
                 id="password"
@@ -356,6 +381,7 @@ export function SSHConnectionDialog({
                 value={formState.password}
                 onChange={(e) => handleFieldChange('password', e.target.value)}
                 className={errors.password ? 'border-destructive' : ''}
+                autoComplete="off"
               />
               {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
@@ -366,7 +392,7 @@ export function SSHConnectionDialog({
             <>
               <div className="space-y-2">
                 <Label htmlFor="privateKeyPath">
-                  Private Key Path <span className="text-destructive">*</span>
+                  Private Key Path (Optional)
                 </Label>
                 <Input
                   id="privateKeyPath"
@@ -374,6 +400,7 @@ export function SSHConnectionDialog({
                   value={formState.privateKeyPath}
                   onChange={(e) => handleFieldChange('privateKeyPath', e.target.value)}
                   className={errors.privateKeyPath ? 'border-destructive' : ''}
+                  autoComplete="off"
                 />
                 {errors.privateKeyPath && (
                   <p className="text-sm text-destructive">{errors.privateKeyPath}</p>
@@ -388,6 +415,7 @@ export function SSHConnectionDialog({
                   placeholder="Leave empty if no passphrase"
                   value={formState.passphrase}
                   onChange={(e) => handleFieldChange('passphrase', e.target.value)}
+                  autoComplete="off"
                 />
               </div>
             </>
@@ -396,36 +424,24 @@ export function SSHConnectionDialog({
           {/* Separator */}
           <Separator />
 
-          {/* Save as Profile */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="saveAsProfile"
-              checked={formState.saveAsProfile}
-              onCheckedChange={(checked) => handleFieldChange('saveAsProfile', !!checked)}
+          {/* Profile Name (Auto-save enabled) */}
+          <div className="space-y-2">
+            <Label htmlFor="profileName">Profile Name</Label>
+            <Input
+              id="profileName"
+              placeholder={formState.host || 'Host address will be used'}
+              value={formState.profileName}
+              onChange={(e) => handleFieldChange('profileName', e.target.value)}
+              className={errors.profileName ? 'border-destructive' : ''}
+              autoComplete="off"
             />
-            <Label htmlFor="saveAsProfile" className="cursor-pointer">
-              Save as profile
-            </Label>
+            <p className="text-xs text-muted-foreground">
+              Default: host address. Customize to identify this connection easily.
+            </p>
+            {errors.profileName && (
+              <p className="text-sm text-destructive">{errors.profileName}</p>
+            )}
           </div>
-
-          {/* Conditional: Profile Name */}
-          {formState.saveAsProfile && (
-            <div className="space-y-2">
-              <Label htmlFor="profileName">
-                Profile Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="profileName"
-                placeholder="Production Server"
-                value={formState.profileName}
-                onChange={(e) => handleFieldChange('profileName', e.target.value)}
-                className={errors.profileName ? 'border-destructive' : ''}
-              />
-              {errors.profileName && (
-                <p className="text-sm text-destructive">{errors.profileName}</p>
-              )}
-            </div>
-          )}
         </div>
 
         <DialogFooter>

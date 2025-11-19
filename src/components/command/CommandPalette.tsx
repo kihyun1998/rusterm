@@ -12,7 +12,6 @@ import {
   SunIcon,
   TextAlignJustifyIcon,
 } from '@radix-ui/react-icons';
-import { Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import {
@@ -72,9 +71,7 @@ export function CommandPalette({
   const activeTabId = useTabStore((state) => state.activeTabId);
 
   // Connection profile store
-  const getRecentProfiles = useConnectionProfileStore((state) => state.getRecentProfiles);
-  const getFavoriteProfiles = useConnectionProfileStore((state) => state.getFavoriteProfiles);
-  const toggleFavorite = useConnectionProfileStore((state) => state.toggleFavorite);
+  const getAllProfiles = useConnectionProfileStore((state) => state.getAllProfiles);
   const addToRecent = useConnectionProfileStore((state) => state.addToRecent);
   const getProfileById = useConnectionProfileStore((state) => state.getProfileById);
 
@@ -217,9 +214,33 @@ export function CommandPalette({
   };
 
   // Connection mode handlers
-  const handleSelectProfile = (profileId: string) => {
+  const handleSelectProfile = async (profileId: string) => {
     const profile = getProfileById(profileId);
     if (!profile) return;
+
+    // Restore credentials from keyring if it's an SSH profile
+    let connectionConfig: any = profile.config;
+
+    if (profile.type === 'ssh') {
+      try {
+        const { getCredential } = await import('@/lib/keyring');
+        const [password, privateKey, passphrase] = await Promise.all([
+          getCredential(profileId, 'ssh', 'password'),
+          getCredential(profileId, 'ssh', 'privatekey'),
+          getCredential(profileId, 'ssh', 'passphrase'),
+        ]);
+
+        connectionConfig = {
+          ...profile.config,
+          password: password || undefined,
+          privateKey: privateKey || undefined,
+          passphrase: passphrase || undefined,
+        };
+      } catch (error) {
+        console.error('Failed to retrieve credentials from keyring:', error);
+        // Continue with stored config (without credentials)
+      }
+    }
 
     const newTabId = crypto.randomUUID();
     addTab({
@@ -228,7 +249,7 @@ export function CommandPalette({
       type: 'terminal',
       closable: true,
       connectionType: profile.type,
-      connectionConfig: profile.config,
+      connectionConfig,
       connectionProfileId: profileId,
     });
 
@@ -237,12 +258,6 @@ export function CommandPalette({
 
     // Close dialog
     setOpen(false);
-  };
-
-  const handleToggleFavorite = (profileId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent CommandItem selection
-    toggleFavorite(profileId);
-    // Dialog stays open
   };
 
   const handleCreateConnection = (type: ConnectionType) => {
@@ -282,14 +297,15 @@ export function CommandPalette({
         {/* Render based on mode */}
         {mode === 'connection' ? (
           <>
-            {/* Recent Connections */}
+            {/* All Connections (sorted alphabetically by name) */}
             {(() => {
-              const recentProfiles = getRecentProfiles(10);
-              if (recentProfiles.length === 0) return null;
+              const allProfiles = getAllProfiles();
+
+              if (allProfiles.length === 0) return null;
 
               return (
-                <CommandGroup heading="Recent Connections">
-                  {recentProfiles.map((profile) => {
+                <CommandGroup heading="All Connections">
+                  {allProfiles.map((profile) => {
                     const Icon = CONNECTION_ICONS[profile.type];
                     return (
                       <CommandItem
@@ -299,59 +315,13 @@ export function CommandPalette({
                       >
                         <Icon className="mr-2 h-4 w-4" />
                         <span className="flex-1">{profile.name}</span>
-                        <span className="text-xs text-muted-foreground mr-2">
+                        <span className="text-xs text-muted-foreground">
                           {profile.type.toUpperCase()}
                         </span>
-                        <button
-                          onClick={(e) => handleToggleFavorite(profile.id, e)}
-                          className="p-1 hover:bg-accent rounded-sm transition-colors"
-                          aria-label={profile.favorite ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                          <Star
-                            className={`h-3 w-3 ${profile.favorite ? 'fill-current text-yellow-500' : 'text-muted-foreground'}`}
-                          />
-                        </button>
                       </CommandItem>
                     );
                   })}
                 </CommandGroup>
-              );
-            })()}
-
-            {/* Favorites */}
-            {(() => {
-              const favoriteProfiles = getFavoriteProfiles();
-              if (favoriteProfiles.length === 0) return null;
-
-              return (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup heading="Favorites">
-                    {favoriteProfiles.map((profile) => {
-                      const Icon = CONNECTION_ICONS[profile.type];
-                      return (
-                        <CommandItem
-                          key={profile.id}
-                          onSelect={() => handleSelectProfile(profile.id)}
-                          keywords={[profile.name, profile.type]}
-                        >
-                          <Icon className="mr-2 h-4 w-4" />
-                          <span className="flex-1">{profile.name}</span>
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {profile.type.toUpperCase()}
-                          </span>
-                          <button
-                            onClick={(e) => handleToggleFavorite(profile.id, e)}
-                            className="p-1 hover:bg-accent rounded-sm transition-colors"
-                            aria-label="Remove from favorites"
-                          >
-                            <Star className="h-3 w-3 fill-current text-yellow-500" />
-                          </button>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </>
               );
             })()}
 

@@ -22,7 +22,6 @@ function App() {
   const loadSettings = useSettingsStore((state) => state.loadSettings);
   const settings = useSettingsStore((state) => state.settings);
   const addTab = useTabStore((state) => state.addTab);
-  const tabs = useTabStore((state) => state.tabs);
 
   // Load settings on app start
   useEffect(() => {
@@ -53,7 +52,7 @@ function App() {
   };
 
   // Handle SSH connection from dialog
-  const handleSshConnect = (config: SSHConfig) => {
+  const handleSshConnect = (config: SSHConfig, profileId: string) => {
     // Create new SSH tab
     const newTabId = crypto.randomUUID();
     addTab({
@@ -63,6 +62,7 @@ function App() {
       closable: true,
       connectionType: 'ssh',
       connectionConfig: config,
+      connectionProfileId: profileId, // Save profile ID for credential restoration
     });
   };
 
@@ -79,6 +79,7 @@ function App() {
           onDemoClick={() => setShowDemo(true)}
           onShowSettings={() => setShowSettings(true)}
           onOpenConnectionPalette={openConnectionPalette}
+          onOpenSshDialog={openSshDialog}
         />
       </div>
 

@@ -55,15 +55,30 @@ export interface SFTPConfig {
 // Union type for all connection configurations
 export type ConnectionConfig = LocalConfig | SSHConfig | TelnetConfig | RDPConfig | SFTPConfig;
 
+// Auth method types for deduplication
+export type AuthMethod = 'password' | 'privateKey' | 'noAuth';
+
+/**
+ * Get authentication method from SSH config
+ * Used for smart deduplication based on 5 conditions
+ */
+export function getAuthMethod(config: SSHConfig): AuthMethod {
+  if (config.password) {
+    return 'password';
+  } else if (config.privateKey) {
+    return 'privateKey';
+  } else {
+    return 'noAuth'; // Interactive authentication
+  }
+}
+
 // Connection profile for saved connections
 export interface ConnectionProfile {
   id: string; // UUID
-  name: string; // User-defined profile name
+  name: string; // User-defined profile name (default: host address)
   icon?: string; // Lucide icon name (optional)
   type: ConnectionType; // Connection type
   config: ConnectionConfig; // Type-specific configuration
-  favorite: boolean; // Favorite status
-  lastUsed?: number; // Last used timestamp (optional)
   tags?: string[]; // Tags for search/categorization (optional)
   createdAt: number; // Creation timestamp
 }

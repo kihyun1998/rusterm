@@ -3,18 +3,22 @@ use thiserror::Error;
 
 /// SSH 연결 설정
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SshConfig {
     pub host: String,
     pub port: u16,
     pub username: String,
-    pub auth_method: AuthMethod,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auth_method: Option<AuthMethod>,
 }
 
 /// SSH 인증 방법
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum AuthMethod {
+    #[serde(rename = "password")]
     Password { password: String },
+    #[serde(rename = "privateKey")]
     PrivateKey { path: String, passphrase: Option<String> },
 }
 
