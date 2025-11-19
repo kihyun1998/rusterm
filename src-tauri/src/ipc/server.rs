@@ -1,5 +1,5 @@
 use tokio::sync::oneshot;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+use tokio::io::AsyncBufReadExt;
 
 use crate::ipc::{IpcError, handler, platform};
 
@@ -73,7 +73,11 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
 /// 서버 메인 루프 (Windows)
 #[cfg(windows)]
 async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcError> {
+    use std::sync::Arc;
+    use interprocess::TryClone;
+
     let listener = platform::create_listener().await?;
+    let listener = Arc::new(listener);
 
     loop {
         tokio::select! {
@@ -84,14 +88,8 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
             }
             // 연결 수락 (blocking이므로 spawn_blocking 필요)
             result = tokio::task::spawn_blocking({
-                let listener_clone = match listener.try_clone() {
-                    Ok(l) => l,
-                    Err(e) => {
-                        eprintln!("Failed to clone listener: {}", e);
-                        continue;
-                    }
-                };
-                move || platform::accept_connection(&listener_clone)
+                let listener_ref = Arc::clone(&listener);
+                move || platform::accept_connection(&listener_ref)
             }) => {
                 match result {
                     Ok(Ok(stream)) => {
@@ -117,7 +115,7 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
 /// Unix 연결 처리 (async)
 #[cfg(unix)]
 async fn handle_connection_unix(stream: tokio::net::UnixStream) {
-    use tokio::io::BufReader;
+    use tokio::io::{AsyncWriteExt, BufReader};
 
     let (reader, mut writer) = stream.into_split();
     let mut reader = BufReader::new(reader);
@@ -149,6 +147,7 @@ async fn handle_connection_unix(stream: tokio::net::UnixStream) {
 #[cfg(windows)]
 fn handle_connection_windows(stream: interprocess::local_socket::prelude::LocalSocketStream) {
     use std::io::{BufRead, BufReader, Write};
+    use interprocess::TryClone;
 
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut writer = stream;

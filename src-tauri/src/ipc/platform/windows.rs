@@ -1,4 +1,9 @@
-use interprocess::local_socket::prelude::*;
+use interprocess::local_socket::{
+    prelude::*,
+    GenericNamespaced,
+    ListenerOptions,
+    ToNsName,
+};
 
 use crate::ipc::IpcError;
 
@@ -15,15 +20,16 @@ pub async fn create_listener() -> Result<LocalSocketListener, IpcError> {
     // Windows에서는 '@'로 시작하면 Named Pipe
     let name = format!("@{}", pipe_name);
 
-    let listener = match LocalSocketListener::bind(&name) {
-        Ok(l) => l,
-        Err(e) => {
-            return Err(IpcError::BindFailed(format!(
-                "Failed to bind to pipe '{}': {}",
-                pipe_name, e
-            )));
-        }
-    };
+    let ns_name = name
+        .to_ns_name::<GenericNamespaced>()
+        .map_err(|e| IpcError::BindFailed(format!("Invalid pipe name '{}': {}", pipe_name, e)))?;
+
+    let listener = ListenerOptions::new()
+        .name(ns_name)
+        .create_sync()
+        .map_err(|e| {
+            IpcError::BindFailed(format!("Failed to bind to pipe '{}': {}", pipe_name, e))
+        })?;
 
     println!("IPC server listening on: \\\\.\\pipe\\{}", pipe_name);
 
