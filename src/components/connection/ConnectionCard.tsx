@@ -1,6 +1,6 @@
-import { Edit, Trash2, Clock } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CONNECTION_ICONS } from '@/constants/connection-icons';
 import type { StoredConnectionProfile } from '@/types/connection';
@@ -66,24 +66,21 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
 
   return (
     <Card className="hover:border-primary/50 transition-colors">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+      <div className="flex items-center gap-4 p-4">
+        {/* Left: Icon + Name + Details */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+          <div className="flex-1 min-w-0 space-y-1">
             <h3 className="font-semibold truncate">{profile.name}</h3>
+            <p className="text-sm text-muted-foreground truncate">{connectionDetails}</p>
           </div>
-          <Badge variant="secondary" className="ml-2 shrink-0">
+        </div>
+
+        {/* Middle: Metadata (Type, Port, Auth, Last Used) */}
+        <div className="hidden md:flex items-center gap-3 text-xs text-muted-foreground shrink-0">
+          <Badge variant="secondary" className="shrink-0">
             {profile.type.toUpperCase()}
           </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pb-3 space-y-2">
-        {/* Connection details */}
-        <p className="text-sm text-muted-foreground truncate">{connectionDetails}</p>
-
-        {/* Port and Auth Method */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {profile.type === 'ssh' && isSSHConfig(profile.config) && (
             <>
               <span>Port {profile.config.port}</span>
@@ -95,26 +92,23 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
               )}
             </>
           )}
-        </div>
-
-        {/* Last used */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
+          <span>•</span>
           <span>{lastUsedLabel}</span>
         </div>
-      </CardContent>
 
-      <CardFooter className="pt-3 gap-2">
-        <Button size="sm" className="flex-1" onClick={() => onConnect(profile.id)}>
-          Connect
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => onEdit(profile.id)}>
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => onDelete(profile.id)}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </CardFooter>
+        {/* Right: Action Buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button size="sm" onClick={() => onConnect(profile.id)}>
+            Connect
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onEdit(profile.id)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onDelete(profile.id)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 }
