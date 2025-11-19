@@ -4,12 +4,10 @@ import type { ConnectionProfile, StoredConnectionProfile } from '@/types/connect
 import {
   sanitizeProfile,
   isSSHConfig,
-  isRDPConfig,
-  isSFTPConfig,
   getAuthMethod,
   type AuthMethod,
 } from '@/types/connection';
-import { saveCredential, deleteAllCredentials } from '@/lib/keyring';
+import { deleteAllCredentials } from '@/lib/keyring';
 
 interface ConnectionProfileState {
   profiles: StoredConnectionProfile[];
@@ -40,41 +38,11 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
       recentConnections: [],
 
       addProfile: async (profile: ConnectionProfile) => {
-        const { config, type, id } = profile;
+        // NOTE: Credentials are NOT saved here - they should be saved by the caller
+        // using the correct profile ID after calling findOrCreateProfile
+        // This ensures credentials are saved with the right ID (either new or existing)
 
-        // Save sensitive information to keyring
-        try {
-          if (isSSHConfig(config)) {
-            if (config.password) {
-              await saveCredential(id, type, 'password', config.password);
-            }
-            if (config.privateKey) {
-              await saveCredential(id, type, 'privatekey', config.privateKey);
-            }
-            if (config.passphrase) {
-              await saveCredential(id, type, 'passphrase', config.passphrase);
-            }
-          } else if (isRDPConfig(config)) {
-            if (config.password) {
-              await saveCredential(id, type, 'password', config.password);
-            }
-          } else if (isSFTPConfig(config)) {
-            if (config.password) {
-              await saveCredential(id, type, 'password', config.password);
-            }
-            if (config.privateKey) {
-              await saveCredential(id, type, 'privatekey', config.privateKey);
-            }
-            if (config.passphrase) {
-              await saveCredential(id, type, 'passphrase', config.passphrase);
-            }
-          }
-        } catch (error) {
-          console.error('Failed to save credentials to keyring:', error);
-          // Continue anyway - credentials can be re-entered later
-        }
-
-        // Sanitize and store in localStorage
+        // Sanitize and store in localStorage (credentials already removed by sanitize)
         const sanitized = sanitizeProfile(profile);
         set((state) => ({
           profiles: [...state.profiles, sanitized],
@@ -102,26 +70,12 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
 
           if (existing) {
             // Update existing profile
+            // NOTE: Credentials are NOT saved here - they should be saved by the caller
             const updates: Partial<ConnectionProfile> = {
               name: name || existing.name, // Keep existing name if not provided
               config,
               lastUsed: Date.now(),
             };
-
-            // Save credentials to keyring
-            try {
-              if (config.password) {
-                await saveCredential(existing.id, type, 'password', config.password);
-              }
-              if (config.privateKey) {
-                await saveCredential(existing.id, type, 'privatekey', config.privateKey);
-              }
-              if (config.passphrase) {
-                await saveCredential(existing.id, type, 'passphrase', config.passphrase);
-              }
-            } catch (error) {
-              console.error('Failed to update credentials in keyring:', error);
-            }
 
             // Update profile in store
             get().updateProfile(existing.id, updates);

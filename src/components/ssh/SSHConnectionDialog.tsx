@@ -204,20 +204,49 @@ export function SSHConnectionDialog({
       };
 
       // 2. Auto-save profile (always, with smart deduplication)
-      const profile: ConnectionProfile = {
+      // Create profile without credentials for deduplication check
+      const profileWithoutCreds: ConnectionProfile = {
         id: crypto.randomUUID(),
         name: formState.profileName.trim() || formState.host, // Default to host if empty
         type: 'ssh',
-        config: uiConfig,
+        config: {
+          host: formState.host,
+          port: formState.port,
+          username: formState.username,
+          // Don't include credentials in the profile - will save to keyring separately
+        },
         createdAt: Date.now(),
         lastUsed: Date.now(),
       };
 
       // Use findOrCreateProfile for smart 5-condition deduplication
       // This returns the profile ID (either existing or newly created)
-      const profileId = await findOrCreateProfile(profile);
+      const profileId = await findOrCreateProfile(profileWithoutCreds);
 
       console.log('Profile saved with ID:', profileId);
+
+      // Save credentials to keyring using the correct profile ID
+      try {
+        const { saveCredential } = await import('@/lib/keyring');
+
+        if (formState.authMethod === 'password' && formState.password) {
+          await saveCredential(profileId, 'ssh', 'password', formState.password);
+          console.log('Saved password to keyring');
+        }
+
+        if (formState.authMethod === 'privateKey' && formState.privateKeyPath) {
+          await saveCredential(profileId, 'ssh', 'privatekey', formState.privateKeyPath);
+          console.log('Saved private key to keyring');
+        }
+
+        if (formState.passphrase) {
+          await saveCredential(profileId, 'ssh', 'passphrase', formState.passphrase);
+          console.log('Saved passphrase to keyring');
+        }
+      } catch (error) {
+        console.error('Failed to save credentials to keyring:', error);
+        // Continue anyway - profile is saved even if credentials fail
+      }
 
       // 3. Notify parent with config and profileId
       onConnect?.(uiConfig, profileId);
