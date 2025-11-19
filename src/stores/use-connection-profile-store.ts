@@ -6,6 +6,8 @@ import {
   isSSHConfig,
   isRDPConfig,
   isSFTPConfig,
+  getAuthMethod,
+  type AuthMethod,
 } from '@/types/connection';
 import { saveCredential, deleteAllCredentials } from '@/lib/keyring';
 
@@ -15,6 +17,7 @@ interface ConnectionProfileState {
 
   // Profile management
   addProfile: (profile: ConnectionProfile) => Promise<void>;
+  findOrCreateProfile: (profile: ConnectionProfile) => Promise<string>; // Returns profile ID
   updateProfile: (id: string, updates: Partial<ConnectionProfile>) => void;
   deleteProfile: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => void;
@@ -77,6 +80,67 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
         set((state) => ({
           profiles: [...state.profiles, sanitized],
         }));
+      },
+
+      findOrCreateProfile: async (profile: ConnectionProfile) => {
+        const { config, type, name } = profile;
+
+        // 5-condition deduplication check (only for SSH connections)
+        if (type === 'ssh' && isSSHConfig(config)) {
+          const authMethod = getAuthMethod(config);
+
+          // Find existing profile with same 5 conditions
+          const existing = get().profiles.find((p) => {
+            if (p.type !== 'ssh' || !isSSHConfig(p.config)) return false;
+
+            return (
+              p.config.host === config.host &&
+              p.config.port === config.port &&
+              p.config.username === config.username &&
+              getAuthMethod(p.config) === authMethod
+            );
+          });
+
+          if (existing) {
+            // Update existing profile
+            const updates: Partial<ConnectionProfile> = {
+              name: name || existing.name, // Keep existing name if not provided
+              config,
+              lastUsed: Date.now(),
+            };
+
+            // Save credentials to keyring
+            try {
+              if (config.password) {
+                await saveCredential(existing.id, type, 'password', config.password);
+              }
+              if (config.privateKey) {
+                await saveCredential(existing.id, type, 'privatekey', config.privateKey);
+              }
+              if (config.passphrase) {
+                await saveCredential(existing.id, type, 'passphrase', config.passphrase);
+              }
+            } catch (error) {
+              console.error('Failed to update credentials in keyring:', error);
+            }
+
+            // Update profile in store
+            get().updateProfile(existing.id, updates);
+
+            return existing.id;
+          }
+        }
+
+        // No existing profile found - create new one
+        await get().addProfile(profile);
+
+        // Find and return the newly created profile ID
+        const newProfile = get().profiles.find((p) =>
+          p.name === profile.name &&
+          p.createdAt === profile.createdAt
+        );
+
+        return newProfile?.id || profile.id;
       },
 
       updateProfile: (id: string, updates: Partial<ConnectionProfile>) => {
@@ -174,7 +238,23 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
     }),
     {
       name: 'rusterm-connection-profiles', // localStorage key
-      version: 1,
+      version: 2, // Incremented for favorite removal and lastUsed required migration
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          // Migration from v1 to v2: Remove favorite field, ensure lastUsed is set
+          return {
+            ...persistedState,
+            profiles: (persistedState.profiles || []).map((profile: any) => {
+              const { favorite, ...rest } = profile; // Remove favorite field
+              return {
+                ...rest,
+                lastUsed: profile.lastUsed || profile.createdAt || Date.now(), // Ensure lastUsed is set
+              };
+            }),
+          };
+        }
+        return persistedState;
+      },
     }
   )
 );
