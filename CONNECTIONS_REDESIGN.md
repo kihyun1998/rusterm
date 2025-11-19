@@ -6,26 +6,31 @@ Connection Profile 관리를 단순화하고 사용자 친화적으로 개선
 ## 현재 문제점
 1. Command Palette에서만 프로필 확인 가능
 2. 프로필 편집/삭제 불가
-3. "Save as Profile" 체크박스가 복잡함
-4. Favorite 기능이 있지만 사용성이 애매함
+3. "Save as Profile" 체크박스가 복잡함 (저장 여부를 사용자가 결정)
+4. Favorite/Recent/All 구분이 복잡하고 중복됨
 5. 연결 정보가 한눈에 안 보임
+6. 같은 서버를 다시 연결해도 새 프로필이 생성됨 (중복 누적)
+7. 인증 방식이 다른 경우 구분 안 됨
 
 ## 핵심 변경사항
 
 ### 1. 자동 저장 (Auto-Save)
 - **모든 SSH 연결을 자동으로 저장**
 - `saveAsProfile` 체크박스 제거
-- 프로필 이름 필드만 남김 (선택사항)
-  - 입력 시: 사용자 지정 이름 사용
-  - 비입력 시: `username@host` 자동 생성
+- 프로필 이름 기본값: **host** (사용자가 수정 가능)
 
-### 2. Favorite 기능 제거
+### 2. 스마트 중복 처리
+- **5가지 조건** (Host, Port, Protocol, Username, AuthMethod)이 모두 같으면 중복 처리
+- 이름이 달라도 실제 연결 정보가 같으면 업데이트
+- 같은 서버에 다른 인증 방식(Password/Key/Interactive)은 별도 저장
+
+### 3. Favorite/Recent 섹션 제거
 - 별표(★) 기능 완전 제거
-- Recent/Favorite/Saved 구분 없이 **"All Connections"** 하나로 통합
-- 최근 사용 순서로 자동 정렬
+- Recent 섹션 제거 (All이 이미 최근 순 정렬)
+- **"All Connections"** 하나로 통합 (최근 사용 순 자동 정렬)
 
-### 3. Home 화면 개편
-Connection 관리의 중심지로 변경
+### 4. Home 화면 개편
+Connection 관리의 중심지로 변경 (검색, 편집, 삭제 기능 제공)
 
 ## 화면 구성
 
@@ -43,22 +48,14 @@ Connection 관리의 중심지로 변경
 └─────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────┐
-│  Recent Connections (최근 5개)                   │
-│  ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │
-│  │ root@prod   │ │ Production  │ │ admin@dev │ │
-│  │ 192.168.1.1 │ │ root@stage  │ │ 10.0.0.1  │ │
-│  │ SSH · 22    │ │ SSH · 22    │ │ SSH · 22  │ │
-│  │ 5m ago      │ │ 1h ago      │ │ 2h ago    │ │
-│  └─────────────┘ └─────────────┘ └───────────┘ │
-└─────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────┐
 │  All Connections                    [Search 🔍] │
+│  (최근 사용 순으로 자동 정렬)                      │
+│                                                 │
 │  ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │
 │  │ Production  │ │ Staging     │ │ DB Server │ │
 │  │ root@prod   │ │ deploy@stg  │ │ dba@db    │ │
 │  │ SSH · 22    │ │ SSH · 22    │ │ SSH · 3306│ │
-│  │ Last: 5m    │ │ Last: 1d    │ │ Last: 3d  │ │
+│  │ Last: 5m ✅ │ │ Last: 1d    │ │ Last: 3d  │ │
 │  │ [Edit][Del] │ │ [Edit][Del] │ │[Edit][Del]│ │
 │  └─────────────┘ └─────────────┘ └───────────┘ │
 │                                                 │
@@ -68,21 +65,26 @@ Connection 관리의 중심지로 변경
 └─────────────────────────────────────────────────┘
 ```
 
+> **Recent 섹션 제거**: All Connections가 이미 lastUsed로 정렬되므로 중복 불필요
+
 ### Connection Card 디자인
 
 ```
 ┌─────────────────────┐
-│ Production Server   │  <- name (사용자 정의 or username@host)
+│ 192.168.1.100       │  <- name (기본값: host, 사용자가 수정 가능)
 │ root@192.168.1.100  │  <- username@host (서브텍스트)
 │ SSH · Port 22       │  <- type · port
+│ Password Auth       │  <- 인증 방식 표시
 │ Last used: 5m ago   │  <- 마지막 접속 시간
 │                     │
 │ [Connect] [Edit] [×]│  <- 액션 버튼
 └─────────────────────┘
 ```
 
-- **Recent Section**: 클릭 시 바로 접속, Edit/Delete 없음 (간소화)
-- **All Connections**: 전체 기능 제공 (Connect, Edit, Delete)
+**액션 버튼**:
+- **Connect**: 저장된 credential로 즉시 접속
+- **Edit**: 프로필 수정 (name, host, port, username 등)
+- **×** (Delete): 프로필 삭제 (confirmation 표시)
 
 ## 데이터 구조 변경
 
@@ -125,36 +127,73 @@ Profile Name: [         ]
 
 **After**
 ```
-Profile Name (Optional): [         ]
-  💡 Leave empty to auto-generate from username@host
+Profile Name: [192.168.1.100    ]  <- 기본값: host (수정 가능)
+  💡 Default is host address, you can customize it
 
 [Connect]  <- 항상 자동 저장
 ```
 
 ### 중복 연결 처리
 
+#### 중복 판단 기준 (5가지 조건)
+
+다음 **5가지 조건이 모두 동일**하면 중복으로 처리:
+
+1. **Host** (호스트 주소)
+2. **Port** (포트 번호)
+3. **Protocol** (연결 타입: ssh, telnet, rdp, sftp)
+4. **Username** (사용자명)
+5. **Auth Method** (인증 방식)
+   - `password` - 비밀번호 인증
+   - `privateKey` - 개인키 인증
+   - `noAuth` - 인증 없음 (interactive)
+
+> **중요**: 이름(name)이 달라도 위 5가지가 같으면 **중복**으로 처리하여 업데이트
+
+#### 인증 방식 판단
+
 ```typescript
-// 같은 host+username+port 조합 확인
+type AuthMethod = 'password' | 'privateKey' | 'noAuth';
+
+function getAuthMethod(config: SSHConfig): AuthMethod {
+  if (config.password) {
+    return 'password';
+  } else if (config.privateKey) {
+    return 'privateKey';
+  } else {
+    return 'noAuth';  // 비밀번호도 키도 없으면 interactive
+  }
+}
+```
+
+#### 중복 체크 로직
+
+```typescript
+// SSH 연결 시
+const authMethod = getAuthMethod(config);
+
+// 5가지 조건으로 중복 체크
 const existing = profiles.find(p =>
-  p.type === 'ssh' &&
-  p.config.host === config.host &&
-  p.config.username === config.username &&
-  p.config.port === config.port
+  p.type === 'ssh' &&                              // 1. Protocol
+  p.config.host === config.host &&                 // 2. Host
+  p.config.port === config.port &&                 // 3. Port
+  p.config.username === config.username &&         // 4. Username
+  getAuthMethod(p.config) === authMethod           // 5. Auth Method
 );
 
 if (existing) {
-  // 기존 프로필 업데이트
+  // 중복 발견 → 기존 프로필 업데이트
   updateProfile(existing.id, {
     name: formState.profileName || existing.name,  // 이름 변경 가능
+    config,                                        // credential 등 업데이트
     lastUsed: Date.now(),
-    config  // 비밀번호 등 업데이트
   });
   profileId = existing.id;
 } else {
-  // 새 프로필 생성
+  // 중복 아님 → 새 프로필 생성
   const newProfile = {
     id: crypto.randomUUID(),
-    name: formState.profileName || `${config.username}@${config.host}`,
+    name: formState.profileName || config.host,    // 기본값: host
     type: 'ssh',
     config,
     createdAt: Date.now(),
@@ -165,26 +204,44 @@ if (existing) {
 }
 ```
 
+#### 예시 시나리오
+
+```typescript
+// 시나리오 1: 같은 서버, 다른 인증 방식 → 별도 프로필
+Profile 1: "192.168.1.100"     - root@192.168.1.100:22 [SSH] Password
+Profile 2: "Production Key"    - root@192.168.1.100:22 [SSH] PrivateKey
+Profile 3: "Prod Interactive"  - root@192.168.1.100:22 [SSH] NoAuth
+// → 3개 모두 별도 프로필로 저장됨 (Auth Method가 다름)
+
+// 시나리오 2: 같은 서버, 다른 사용자 → 별도 프로필
+Profile 4: "Admin Account"  - admin@192.168.1.100:22 [SSH] Password
+Profile 5: "Root Account"   - root@192.168.1.100:22 [SSH] Password
+// → 2개 별도 프로필로 저장됨 (Username이 다름)
+
+// 시나리오 3: 이름만 변경 → 중복 처리 (업데이트)
+1. 첫 접속: "192.168.1.100" - root@192.168.1.100:22 [SSH] Password
+2. 사용자가 Edit에서 이름을 "Production Server"로 변경
+3. 다시 같은 조건으로 접속 시도
+   → "Production Server" 프로필이 업데이트됨 (새 프로필 생성 안 됨)
+   → 이름은 "Production Server" 유지
+```
+
 ## Command Palette 간소화
 
 ### Before
-- Recent Connections
+- Recent Connections (5개)
 - Favorites ⭐ (별표 토글)
 - All Profiles
 - New Connection
 
-### After
+### After (단순화)
 ```
-Recent Connections (5개)
-  Production (5m ago)
-  Staging (1h ago)
-  admin@dev (2h ago)
-  ...
+All Connections (최근 사용 순, 검색 가능)
+  [Search: type to filter...]
 
-All Connections (검색 가능)
-  [Search: "prod"]
-  Production Server
-  Production DB
+  Production Server (5m ago)
+  Staging (1h ago)
+  192.168.1.100 (2h ago)
   ...
 
 New Connection
@@ -195,9 +252,12 @@ New Connection
   SFTP
 ```
 
-- 별표 버튼 완전 제거
-- 검색으로 빠른 접근
-- 편집/삭제는 Home 화면에서만
+**변경사항**:
+- ❌ Recent 섹션 제거 (All에 이미 최근 순 정렬)
+- ❌ Favorites 섹션 제거 (별표 기능 완전 삭제)
+- ✅ All Connections만 표시 (최근 사용 순)
+- ✅ 검색으로 빠른 필터링
+- ✅ 편집/삭제는 Home 화면에서만
 
 ## 구현 순서
 
@@ -208,28 +268,32 @@ New Connection
 
 ### Phase 2: SSH Dialog 수정
 - [ ] `saveAsProfile` 체크박스 제거
-- [ ] Profile Name을 optional로 변경
+- [ ] Profile Name 기본값을 `host`로 설정
 - [ ] 자동 저장 로직 구현
-- [ ] 중복 체크 & 업데이트 로직
+- [ ] `getAuthMethod()` 함수 추가
+- [ ] 5가지 조건 중복 체크 & 업데이트 로직 구현
 
 ### Phase 3: Store 수정
 - [ ] `toggleFavorite` 제거
 - [ ] `getFavoriteProfiles` 제거
-- [ ] `addProfile` 로직 수정 (중복 체크)
+- [ ] `getRecentProfiles` 제거 (Recent 섹션 삭제)
+- [ ] `addProfile` 로직 수정 (5가지 조건 중복 체크)
 - [ ] `findOrUpdateProfile` 함수 추가
 
 ### Phase 4: Home 화면 구현
 - [ ] ConnectionCard 컴포넌트
-- [ ] Recent Connections 섹션 (5개)
-- [ ] All Connections 섹션 (그리드)
+- [ ] All Connections 섹션 (그리드, 최근 사용 순 정렬)
 - [ ] Search 기능
+- [ ] Auth Method 표시 (Password/PrivateKey/Interactive)
 - [ ] Edit Dialog
 - [ ] Delete confirmation
 
 ### Phase 5: Command Palette 정리
-- [ ] Favorite 관련 코드 제거
-- [ ] UI 간소화
-- [ ] Recent + All + New 구조로 변경
+- [ ] Recent 섹션 제거
+- [ ] Favorite 섹션 제거
+- [ ] 별표 버튼 완전 제거
+- [ ] All Connections + New Connection 구조로 변경
+- [ ] 검색 기능 개선
 
 ### Phase 6: 기타
 - [ ] 빈 화면 처리 (프로필 없을 때)
@@ -306,19 +370,24 @@ const migrateProfiles = (oldProfiles: OldConnectionProfile[]) => {
 ## 예상 효과
 
 ### 1. 사용성 개선
-- ✅ 클릭 한 번으로 접속 (중복 체크 불필요)
+- ✅ 클릭 한 번으로 접속 (credential 자동 복원)
 - ✅ 모든 연결 자동 저장 (잊어버릴 일 없음)
-- ✅ 직관적인 카드 UI
-- ✅ 빠른 검색
+- ✅ 스마트 중복 처리 (같은 서버 재접속 시 자동 업데이트)
+- ✅ 직관적한 카드 UI (인증 방식 표시)
+- ✅ 빠른 검색 및 필터링
+- ✅ Home 화면에서 편집/삭제 가능
 
 ### 2. 코드 단순화
 - ❌ Favorite 관련 코드 300+ 줄 제거
-- ❌ Recent/Favorite/Saved 구분 로직 제거
-- ✅ 단일 리스트 관리
+- ❌ Recent/Favorite/All 구분 로직 제거
+- ❌ saveAsProfile 체크박스 로직 제거
+- ✅ 단일 리스트 관리 (All Connections)
+- ✅ 5가지 조건 기반 명확한 중복 처리
 
 ### 3. 성능
 - 상태 구독 단순화
 - 불필요한 re-render 감소
+- 중복 프로필 방지로 스토리지 효율성 향상
 
 ## 참고 사항
 - 기존 Favorite 기능 사용자를 위한 안내 필요
