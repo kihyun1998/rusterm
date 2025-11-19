@@ -27,8 +27,21 @@ impl SshManager {
         rows: u16,
         app_handle: AppHandle,
     ) -> Result<CreateSshResponse, SshError> {
-        // 고유 세션 ID 생성
-        let session_id = Uuid::new_v4().to_string();
+        self.create_session_with_id(None, config, cols, rows, app_handle).await
+    }
+
+    /// SSH 세션 생성 (세션 ID 지정 가능)
+    /// IPC에서 탭을 먼저 생성하고 나중에 연결할 때 사용
+    pub async fn create_session_with_id(
+        &self,
+        session_id: Option<String>,
+        config: SshConfig,
+        cols: u16,
+        rows: u16,
+        app_handle: AppHandle,
+    ) -> Result<CreateSshResponse, SshError> {
+        // 세션 ID 생성 또는 사용
+        let session_id = session_id.unwrap_or_else(|| Uuid::new_v4().to_string());
 
         // SSH 세션 생성
         let session = SshSession::new(

@@ -63,6 +63,10 @@ export function Terminal({
   // Track if SSH connection is using PTY (for interactive auth without credentials)
   const [useSshViaPty, setUseSshViaPty] = useState(false);
 
+  // Track if this is an IPC-created SSH session (backend already created the session)
+  const [isIpcCreatedSsh, setIsIpcCreatedSsh] = useState(false);
+  const ipcSshSessionIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     resolvedConfigRef.current = resolvedConfig;
   }, [resolvedConfig]);
@@ -79,7 +83,15 @@ export function Terminal({
           const profile = useConnectionProfileStore.getState().getProfileById(connectionProfileId);
 
           if (!profile) {
-            console.error('Profile not found:', connectionProfileId);
+            // No profile found - this might be an IPC-created SSH session
+            // IPC sessions pass session_id as connectionProfileId
+            if (isSshConnection) {
+              console.log('No profile found - treating as IPC-created SSH session:', connectionProfileId);
+              setIsIpcCreatedSsh(true);
+              ipcSshSessionIdRef.current = connectionProfileId;
+            } else {
+              console.error('Profile not found:', connectionProfileId);
+            }
             setResolvedConfig(null);
             setIsResolvingCredentials(false);
             return;
@@ -201,6 +213,54 @@ export function Terminal({
     sshErrorRef.current = sshHook.error;
   }, [sshHook.error]);
 
+  // Listen for SSH events for IPC-created sessions
+  useEffect(() => {
+    if (!isIpcCreatedSsh || !ipcSshSessionIdRef.current || !xtermRef.current) {
+      return;
+    }
+
+    const sessionId = ipcSshSessionIdRef.current;
+    const terminal = xtermRef.current;
+
+    console.log('[IPC SSH] Setting up event listeners for session:', sessionId);
+
+    // Listen for SSH output events
+    const setupListeners = async () => {
+      const { listen } = await import('@tauri-apps/api/event');
+
+      // Output event listener
+      const unlistenOutput = await listen(`ssh://output/${sessionId}`, (event: any) => {
+        const data = event.payload.data;
+        if (terminal) {
+          terminal.write(data);
+        }
+      });
+
+      // Exit event listener
+      const unlistenExit = await listen(`ssh://exit/${sessionId}`, (event: any) => {
+        const reason = event.payload.reason || 'Connection closed';
+        if (terminal) {
+          terminal.write(`\r\n\x1b[1;33m[SSH connection closed: ${reason}]\x1b[0m\r\n`);
+        }
+      });
+
+      return { unlistenOutput, unlistenExit };
+    };
+
+    let cleanup: { unlistenOutput: () => void; unlistenExit: () => void } | null = null;
+
+    setupListeners().then((result) => {
+      cleanup = result;
+    });
+
+    return () => {
+      if (cleanup) {
+        cleanup.unlistenOutput();
+        cleanup.unlistenExit();
+      }
+    };
+  }, [isIpcCreatedSsh]);
+
   // Select active hook based on connection type
   const isConnected = isLocalConnection ? ptyHook.isConnected : sshHook.status === 'connected';
   const error = isLocalConnection ? ptyHook.error : sshHook.error;
@@ -315,7 +375,15 @@ export function Terminal({
       // Create PTY session
       ptyHook.createPty(cols, rows);
     } else if (isSshConnection) {
-      // Create SSH session
+      // Check if this is an IPC-created SSH session
+      if (isIpcCreatedSsh) {
+        // IPC-created session - backend already created it, just listen for events
+        console.log('[IPC SSH] Session already created by backend, skipping frontend creation');
+        // Event listeners are set up in separate useEffect
+        return;
+      }
+
+      // UI-created SSH session - create it now
       if (!resolvedConfig || !isSSHConfig(resolvedConfig)) {
         console.error('SSH connection requires valid SSHConfig');
         if (terminal) {
@@ -360,13 +428,17 @@ export function Terminal({
       if (isLocalConnection) {
         ptyHook.closePty();
       } else if (isSshConnection) {
-        // Check if we used PTY or SSH library
-        if (resolvedConfig && isSSHConfig(resolvedConfig)) {
-          const hasAuth = resolvedConfig.password || resolvedConfig.privateKey;
-          if (hasAuth) {
-            sshHook.disconnect();
-          } else {
-            ptyHook.closePty();
+        // IPC-created sessions are cleaned up via close_tab IPC command
+        // Don't try to close them from frontend
+        if (!isIpcCreatedSsh) {
+          // Check if we used PTY or SSH library
+          if (resolvedConfig && isSSHConfig(resolvedConfig)) {
+            const hasAuth = resolvedConfig.password || resolvedConfig.privateKey;
+            if (hasAuth) {
+              sshHook.disconnect();
+            } else {
+              ptyHook.closePty();
+            }
           }
         }
       }
@@ -380,6 +452,7 @@ export function Terminal({
     resolvedConfig,
     isLocalConnection,
     isSshConnection,
+    isIpcCreatedSsh,
     ptyHook.closePty,
     ptyHook.createPty,
     sshHook.connect,
