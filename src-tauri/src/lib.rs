@@ -32,11 +32,13 @@ pub fn run() {
         .manage(PtyManager::new())
         .manage(SshManager::new())
         .manage(settings_manager)
-        .setup(move |_app| {
+        .setup(move |app| {
             // IPC 서버 시작 (비동기 실행)
             let ipc_clone = ipc_server_clone.clone();
+            let app_handle = app.handle().clone();
+
             tauri::async_runtime::spawn(async move {
-                match IpcServer::start().await {
+                match IpcServer::start(app_handle).await {
                     Ok(server) => {
                         *ipc_clone.lock().unwrap() = Some(server);
                         println!("IPC server started successfully");

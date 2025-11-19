@@ -1,5 +1,6 @@
 use tokio::sync::oneshot;
 use tokio::io::AsyncBufReadExt;
+use tauri::AppHandle;
 
 use crate::ipc::{IpcError, handler, platform};
 
@@ -10,12 +11,12 @@ pub struct IpcServer {
 
 impl IpcServer {
     /// IPC 서버 시작 (백그라운드 태스크)
-    pub async fn start() -> Result<Self, IpcError> {
+    pub async fn start(app_handle: AppHandle) -> Result<Self, IpcError> {
         let (shutdown_tx, shutdown_rx) = oneshot::channel();
 
         // 백그라운드 태스크 생성
         tokio::spawn(async move {
-            if let Err(e) = run_server(shutdown_rx).await {
+            if let Err(e) = run_server(shutdown_rx, app_handle).await {
                 eprintln!("IPC server error: {}", e);
             }
         });
@@ -42,7 +43,7 @@ impl Drop for IpcServer {
 
 /// 서버 메인 루프 (Unix)
 #[cfg(unix)]
-async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcError> {
+async fn run_server(mut shutdown_rx: oneshot::Receiver<()>, app_handle: AppHandle) -> Result<(), IpcError> {
     let listener = platform::create_listener().await?;
 
     loop {
@@ -56,7 +57,10 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
             result = platform::accept_connection(&listener) => {
                 match result {
                     Ok(stream) => {
-                        tokio::spawn(handle_connection_unix(stream));
+                        let app = app_handle.clone();
+                        tokio::spawn(async move {
+                            handle_connection_unix(stream, app).await;
+                        });
                     }
                     Err(e) => {
                         eprintln!("Failed to accept connection: {}", e);
@@ -72,7 +76,7 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
 
 /// 서버 메인 루프 (Windows)
 #[cfg(windows)]
-async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcError> {
+async fn run_server(mut shutdown_rx: oneshot::Receiver<()>, app_handle: AppHandle) -> Result<(), IpcError> {
     println!("[DEBUG] run_server started (Windows)");
     let mut server = platform::create_listener().await?;
 
@@ -93,9 +97,10 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
 
                         // 현재 server를 핸들러로 넘기고, 다음 클라이언트를 위한 새 인스턴스 생성
                         let current_server = server;
+                        let app = app_handle.clone();
 
                         tokio::spawn(async move {
-                            handle_connection_windows(current_server).await;
+                            handle_connection_windows(current_server, app).await;
                         });
 
                         // 다음 클라이언트를 위한 새 파이프 인스턴스 생성
@@ -124,7 +129,7 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
 
 /// Unix 연결 처리 (async)
 #[cfg(unix)]
-async fn handle_connection_unix(stream: tokio::net::UnixStream) {
+async fn handle_connection_unix(stream: tokio::net::UnixStream, app_handle: AppHandle) {
     use tokio::io::{AsyncWriteExt, BufReader};
 
     let (reader, mut writer) = stream.into_split();
@@ -137,7 +142,7 @@ async fn handle_connection_unix(stream: tokio::net::UnixStream) {
         match reader.read_line(&mut line).await {
             Ok(0) => break, // EOF
             Ok(_) => {
-                let response = process_request(&line).await;
+                let response = process_request(&line, &app_handle).await;
                 let response_json = serde_json::to_string(&response).unwrap() + "\n";
 
                 if let Err(e) = writer.write_all(response_json.as_bytes()).await {
@@ -155,7 +160,7 @@ async fn handle_connection_unix(stream: tokio::net::UnixStream) {
 
 /// Windows 연결 처리 (async)
 #[cfg(windows)]
-async fn handle_connection_windows(server: tokio::net::windows::named_pipe::NamedPipeServer) {
+async fn handle_connection_windows(server: tokio::net::windows::named_pipe::NamedPipeServer, app_handle: AppHandle) {
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
     let mut reader = BufReader::new(server);
@@ -167,7 +172,7 @@ async fn handle_connection_windows(server: tokio::net::windows::named_pipe::Name
         match reader.read_line(&mut line).await {
             Ok(0) => break, // EOF
             Ok(_) => {
-                let response = process_request(&line).await;
+                let response = process_request(&line, &app_handle).await;
                 let response_json = serde_json::to_string(&response).unwrap() + "\n";
 
                 if let Err(e) = reader.get_mut().write_all(response_json.as_bytes()).await {
@@ -184,7 +189,7 @@ async fn handle_connection_windows(server: tokio::net::windows::named_pipe::Name
 }
 
 /// 요청 처리 (공통)
-async fn process_request(line: &str) -> crate::ipc::IpcResponse {
+async fn process_request(line: &str, app_handle: &AppHandle) -> crate::ipc::IpcResponse {
     use crate::ipc::{IpcRequest, IpcResponse};
 
     let line = line.trim();
@@ -193,7 +198,7 @@ async fn process_request(line: &str) -> crate::ipc::IpcResponse {
     }
 
     match serde_json::from_str::<IpcRequest>(line) {
-        Ok(request) => handler::handle_request(request).await,
+        Ok(request) => handler::handle_request(request, app_handle).await,
         Err(e) => IpcResponse::error(format!("Invalid JSON: {}", e)),
     }
 }
