@@ -67,39 +67,12 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
 
   const handleConnectProfile = async (profileId: string) => {
     const profile = getProfileById(profileId);
-    if (!profile) return;
+    if (!profile) {
+      console.error('Profile not found:', profileId);
+      return;
+    }
 
     console.log('Connecting to profile:', profileId, profile.name);
-
-    // Restore credentials from keyring if it's an SSH profile
-    let connectionConfig: any = profile.config;
-
-    if (profile.type === 'ssh') {
-      try {
-        const { getCredential } = await import('@/lib/keyring');
-        const [password, privateKey, passphrase] = await Promise.all([
-          getCredential(profileId, 'ssh', 'password'),
-          getCredential(profileId, 'ssh', 'privatekey'),
-          getCredential(profileId, 'ssh', 'passphrase'),
-        ]);
-
-        console.log('Retrieved credentials:', {
-          hasPassword: !!password,
-          hasPrivateKey: !!privateKey,
-          hasPassphrase: !!passphrase,
-        });
-
-        connectionConfig = {
-          ...profile.config,
-          password: password || undefined,
-          privateKey: privateKey || undefined,
-          passphrase: passphrase || undefined,
-        };
-      } catch (error) {
-        console.error('Failed to retrieve credentials from keyring:', error);
-        // Continue with stored config (without credentials)
-      }
-    }
 
     const newTabId = crypto.randomUUID();
     addTab({
@@ -108,8 +81,7 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
       type: 'terminal',
       closable: true,
       connectionType: profile.type,
-      connectionConfig,
-      connectionProfileId: profileId,
+      connectionProfileId: profileId, // Terminal will restore credentials from keyring
     });
 
     // Add to recent connections

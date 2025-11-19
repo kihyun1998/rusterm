@@ -19,7 +19,11 @@ interface TerminalProps {
   id: string;
   className?: string;
   connectionType?: ConnectionType;
+  /**
+   * @deprecated Use connectionProfileId instead. This field is kept for backward compatibility.
+   */
   connectionConfig?: ConnectionConfig;
+  connectionProfileId?: string;
 }
 
 /**
@@ -31,6 +35,7 @@ export function Terminal({
   className = '',
   connectionType = 'local',
   connectionConfig,
+  connectionProfileId,
 }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -54,13 +59,92 @@ export function Terminal({
 
   // Refs for SSH error messages (to avoid recreating callback)
   const sshErrorRef = useRef<string | null>(null);
-  const connectionConfigRef = useRef(connectionConfig);
+
+  // Credential resolution state
+  const [resolvedConfig, setResolvedConfig] = useState<ConnectionConfig | null>(null);
+  const [isResolvingCredentials, setIsResolvingCredentials] = useState(false);
+  const resolvedConfigRef = useRef<ConnectionConfig | null>(null);
+
   // Track if SSH connection is using PTY (for interactive auth without credentials)
   const [useSshViaPty, setUseSshViaPty] = useState(false);
 
   useEffect(() => {
-    connectionConfigRef.current = connectionConfig;
-  }, [connectionConfig]);
+    resolvedConfigRef.current = resolvedConfig;
+  }, [resolvedConfig]);
+
+  // Resolve credentials from keyring or use provided connectionConfig
+  useEffect(() => {
+    const resolveCredentials = async () => {
+      // Case 1: connectionConfig is provided - use it directly (backward compatibility)
+      if (connectionConfig) {
+        setResolvedConfig(connectionConfig);
+        setIsResolvingCredentials(false);
+        return;
+      }
+
+      // Case 2: connectionProfileId is provided - restore from keyring
+      if (connectionProfileId) {
+        setIsResolvingCredentials(true);
+
+        try {
+          const { useConnectionProfileStore } = await import('@/stores/use-connection-profile-store');
+          const profile = useConnectionProfileStore.getState().getProfileById(connectionProfileId);
+
+          if (!profile) {
+            console.error('Profile not found:', connectionProfileId);
+            setResolvedConfig(null);
+            setIsResolvingCredentials(false);
+            return;
+          }
+
+          let config: ConnectionConfig = profile.config;
+
+          // Restore credentials from keyring for SSH profiles
+          if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
+            try {
+              const { getCredential } = await import('@/lib/keyring');
+              const [password, privateKey, passphrase] = await Promise.all([
+                getCredential(connectionProfileId, 'ssh', 'password'),
+                getCredential(connectionProfileId, 'ssh', 'privatekey'),
+                getCredential(connectionProfileId, 'ssh', 'passphrase'),
+              ]);
+
+              console.log('Terminal: Restored credentials from keyring', {
+                profileId: connectionProfileId,
+                hasPassword: !!password,
+                hasPrivateKey: !!privateKey,
+                hasPassphrase: !!passphrase,
+              });
+
+              config = {
+                ...profile.config,
+                password: password || undefined,
+                privateKey: privateKey || undefined,
+                passphrase: passphrase || undefined,
+              };
+            } catch (error) {
+              console.error('Failed to retrieve credentials from keyring:', error);
+              // Continue with config without credentials (may fall back to interactive auth)
+            }
+          }
+
+          setResolvedConfig(config);
+        } catch (error) {
+          console.error('Failed to resolve credentials:', error);
+          setResolvedConfig(null);
+        } finally {
+          setIsResolvingCredentials(false);
+        }
+        return;
+      }
+
+      // Case 3: No config and no profileId - set to null
+      setResolvedConfig(null);
+      setIsResolvingCredentials(false);
+    };
+
+    resolveCredentials();
+  }, [connectionConfig, connectionProfileId]);
 
   // PTY connection management (for local terminals)
   const ptyHook = usePty({
@@ -89,7 +173,7 @@ export function Terminal({
     const terminal = xtermRef.current;
 
     if (state === 'connecting') {
-      const config = connectionConfigRef.current;
+      const config = resolvedConfigRef.current;
       if (config && isSSHConfig(config)) {
         terminal.write(
           `\x1b[1;36mConnecting to ${config.username}@${config.host}:${config.port}...\x1b[0m\r\n`
@@ -220,6 +304,11 @@ export function Terminal({
 
   // Create session when terminal is ready (PTY or SSH)
   useEffect(() => {
+    // Wait for credentials to be resolved
+    if (isResolvingCredentials) {
+      return;
+    }
+
     if (!isReady || !fitAddonRef.current || ptyCreatedRef.current) {
       return;
     }
@@ -239,34 +328,37 @@ export function Terminal({
       ptyHook.createPty(cols, rows);
     } else if (isSshConnection) {
       // Create SSH session
-      if (!connectionConfig || !isSSHConfig(connectionConfig)) {
+      if (!resolvedConfig || !isSSHConfig(resolvedConfig)) {
         console.error('SSH connection requires valid SSHConfig');
+        if (terminal) {
+          terminal.write('\x1b[1;31m[Error: Invalid SSH configuration]\x1b[0m\r\n');
+        }
         return;
       }
 
-      console.log('Terminal received SSH config:', {
-        host: connectionConfig.host,
-        username: connectionConfig.username,
-        hasPassword: !!connectionConfig.password,
-        hasPrivateKey: !!connectionConfig.privateKey,
-        hasPassphrase: !!connectionConfig.passphrase,
+      console.log('Terminal using resolved SSH config:', {
+        host: resolvedConfig.host,
+        username: resolvedConfig.username,
+        hasPassword: !!resolvedConfig.password,
+        hasPrivateKey: !!resolvedConfig.privateKey,
+        hasPassphrase: !!resolvedConfig.passphrase,
       });
 
       // Check if password or privateKey is provided
-      const hasAuth = connectionConfig.password || connectionConfig.privateKey;
+      const hasAuth = resolvedConfig.password || resolvedConfig.privateKey;
 
       if (hasAuth) {
         // Use SSH library for direct connection with credentials
         setUseSshViaPty(false);
-        const backendConfig = toBackendSshConfig(connectionConfig);
+        const backendConfig = toBackendSshConfig(resolvedConfig);
         sshHook.connect(backendConfig, cols, rows);
       } else {
         // Use PTY with ssh command for interactive authentication
         setUseSshViaPty(true);
         const sshArgs = [
-          `${connectionConfig.username}@${connectionConfig.host}`,
+          `${resolvedConfig.username}@${resolvedConfig.host}`,
           '-p',
-          connectionConfig.port.toString(),
+          resolvedConfig.port.toString(),
         ];
         ptyHook.createPty(cols, rows, { shell: 'ssh', args: sshArgs });
       }
@@ -281,8 +373,8 @@ export function Terminal({
         ptyHook.closePty();
       } else if (isSshConnection) {
         // Check if we used PTY or SSH library
-        if (connectionConfig && isSSHConfig(connectionConfig)) {
-          const hasAuth = connectionConfig.password || connectionConfig.privateKey;
+        if (resolvedConfig && isSSHConfig(resolvedConfig)) {
+          const hasAuth = resolvedConfig.password || resolvedConfig.privateKey;
           if (hasAuth) {
             sshHook.disconnect();
           } else {
@@ -296,7 +388,8 @@ export function Terminal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isReady,
-    connectionConfig,
+    isResolvingCredentials,
+    resolvedConfig,
     isLocalConnection,
     isSshConnection,
     ptyHook.closePty,
