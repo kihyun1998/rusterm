@@ -39,10 +39,16 @@ function Send-IpcCommand {
         Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
         return $null
     } finally {
-        # 정리 (finally 블록에서 안전하게 정리)
-        if ($streamReader) { $streamReader.Dispose() }
-        if ($streamWriter) { $streamWriter.Dispose() }
-        if ($pipeClient) { $pipeClient.Dispose() }
+        # 정리 (finally 블록에서 안전하게 정리 - 에러 무시)
+        if ($streamReader) {
+            try { $streamReader.Dispose() } catch { }
+        }
+        if ($streamWriter) {
+            try { $streamWriter.Dispose() } catch { }
+        }
+        if ($pipeClient) {
+            try { $pipeClient.Dispose() } catch { }
+        }
     }
 }
 
