@@ -20,7 +20,6 @@ interface ConnectionProfileState {
   findOrCreateProfile: (profile: ConnectionProfile) => Promise<string>; // Returns profile ID
   updateProfile: (id: string, updates: Partial<ConnectionProfile>) => void;
   deleteProfile: (id: string) => Promise<void>;
-  toggleFavorite: (id: string) => void;
 
   // Recent connections
   addToRecent: (id: string) => void;
@@ -179,13 +178,7 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
         }));
       },
 
-      toggleFavorite: (id: string) => {
-        set((state) => ({
-          profiles: state.profiles.map((profile) =>
-            profile.id === id ? { ...profile, favorite: !profile.favorite } : profile
-          ),
-        }));
-      },
+      // toggleFavorite removed - favorite feature deprecated
 
       addToRecent: (id: string) => {
         set((state) => {
@@ -212,10 +205,10 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
       },
 
       getFavoriteProfiles: () => {
-        const { profiles } = get();
-        return profiles
-          .filter((profile) => profile.favorite)
-          .sort((a, b) => a.name.localeCompare(b.name)); // Sort by name
+        // Deprecated: Favorite feature removed
+        // Returning empty array for backward compatibility
+        // Will be removed in Phase 5
+        return [];
       },
 
       getAllProfiles: () => {
