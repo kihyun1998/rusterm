@@ -23,16 +23,14 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
   const addTab = useTabStore((state) => state.addTab);
   const tabs = useTabStore((state) => state.tabs);
 
-  const getAllProfiles = useConnectionProfileStore((state) => state.getAllProfiles);
+  // Subscribe to profiles array directly so component re-renders when profiles change
+  const allProfiles = useConnectionProfileStore((state) => state.getAllProfiles());
   const addToRecent = useConnectionProfileStore((state) => state.addToRecent);
   const getProfileById = useConnectionProfileStore((state) => state.getProfileById);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [editingProfile, setEditingProfile] = useState<StoredConnectionProfile | null>(null);
   const [deletingProfile, setDeletingProfile] = useState<StoredConnectionProfile | null>(null);
-
-  // Get all profiles (already sorted by lastUsed)
-  const allProfiles = getAllProfiles();
 
   // Filter profiles based on search query
   const filteredProfiles = useMemo(() => {
