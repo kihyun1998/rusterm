@@ -40,7 +40,8 @@ impl Drop for IpcServer {
     }
 }
 
-/// 서버 메인 루프
+/// 서버 메인 루프 (Unix)
+#[cfg(unix)]
 async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcError> {
     let listener = platform::create_listener().await?;
 
@@ -51,8 +52,7 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
                 println!("IPC server shutting down...");
                 break;
             }
-            // 연결 수락 (Unix)
-            #[cfg(unix)]
+            // 연결 수락
             result = platform::accept_connection(&listener) => {
                 match result {
                     Ok(stream) => {
@@ -63,12 +63,34 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
                     }
                 }
             }
-            // 연결 수락 (Windows - blocking이므로 spawn_blocking 필요)
-            #[cfg(windows)]
+        }
+    }
+
+    platform::cleanup_socket();
+    Ok(())
+}
+
+/// 서버 메인 루프 (Windows)
+#[cfg(windows)]
+async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcError> {
+    let listener = platform::create_listener().await?;
+
+    loop {
+        tokio::select! {
+            // 종료 신호 대기
+            _ = &mut shutdown_rx => {
+                println!("IPC server shutting down...");
+                break;
+            }
+            // 연결 수락 (blocking이므로 spawn_blocking 필요)
             result = tokio::task::spawn_blocking({
-                let listener_clone = listener.try_clone().map_err(|e| {
-                    IpcError::AcceptFailed(format!("Failed to clone listener: {}", e))
-                })?;
+                let listener_clone = match listener.try_clone() {
+                    Ok(l) => l,
+                    Err(e) => {
+                        eprintln!("Failed to clone listener: {}", e);
+                        continue;
+                    }
+                };
                 move || platform::accept_connection(&listener_clone)
             }) => {
                 match result {
