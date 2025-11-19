@@ -7,6 +7,7 @@ use tokio::sync::Mutex;
 use uuid::Uuid;
 
 /// SSH 세션 관리자
+#[derive(Clone)]
 pub struct SshManager {
     sessions: Arc<Mutex<HashMap<String, SshSession>>>,
 }

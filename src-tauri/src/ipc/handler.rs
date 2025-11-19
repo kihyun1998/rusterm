@@ -69,8 +69,8 @@ async fn handle_add_ssh_tab(
         "username": params.config.username.clone(),
     });
 
-    // SshManager 가져오기
-    let ssh_manager = app_handle.state::<SshManager>();
+    // SshManager 가져오기 (clone으로 소유권 확보)
+    let ssh_manager = app_handle.state::<SshManager>().inner().clone();
     let config = params.config.clone();
     let cols = params.cols;
     let rows = params.rows;
