@@ -79,6 +79,7 @@ function App() {
           onDemoClick={() => setShowDemo(true)}
           onShowSettings={() => setShowSettings(true)}
           onOpenConnectionPalette={openConnectionPalette}
+          onOpenSshDialog={openSshDialog}
         />
       </div>
 
