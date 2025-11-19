@@ -30,16 +30,19 @@ function Send-IpcCommand {
         $response = $streamReader.ReadLine()
         Write-Host "[RECV] $response" -ForegroundColor DarkGray
 
-        # 정리
-        $streamReader.Close()
-        $streamWriter.Close()
-        $pipeClient.Close()
+        # 응답 파싱
+        $jsonResponse = $response | ConvertFrom-Json
 
-        return $response | ConvertFrom-Json
+        return $jsonResponse
 
     } catch {
         Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
         return $null
+    } finally {
+        # 정리 (finally 블록에서 안전하게 정리)
+        if ($streamReader) { $streamReader.Dispose() }
+        if ($streamWriter) { $streamWriter.Dispose() }
+        if ($pipeClient) { $pipeClient.Dispose() }
     }
 }
 
