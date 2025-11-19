@@ -196,9 +196,9 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
               </div>
             </div>
 
-            {/* Connection Cards List */}
+            {/* Connection Cards Grid */}
             {filteredProfiles.length > 0 ? (
-              <div className="flex flex-col gap-3">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {filteredProfiles.map((profile) => (
                   <ConnectionCard
                     key={profile.id}

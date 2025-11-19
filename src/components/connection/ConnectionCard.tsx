@@ -65,47 +65,43 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
   const lastUsedLabel = getLastUsedLabel();
 
   return (
-    <Card className="hover:border-primary/50 transition-colors">
-      <div className="flex items-center gap-4 p-4">
-        {/* Left: Icon + Name + Details */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
-          <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-semibold truncate">{profile.name}</h3>
-            <p className="text-sm text-muted-foreground truncate">{connectionDetails}</p>
-          </div>
-        </div>
-
-        {/* Middle: Metadata (Type, Port, Auth, Last Used) */}
-        <div className="hidden md:flex items-center gap-3 text-xs text-muted-foreground shrink-0">
-          <Badge variant="secondary" className="shrink-0">
+    <Card className="hover:border-primary/50 transition-colors group cursor-pointer">
+      <div className="flex flex-col gap-2 p-3">
+        {/* Top Row: Icon + Name + Type Badge */}
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <h3 className="font-semibold text-sm truncate flex-1">{profile.name}</h3>
+          <Badge variant="secondary" className="text-xs shrink-0">
             {profile.type.toUpperCase()}
           </Badge>
-          {profile.type === 'ssh' && isSSHConfig(profile.config) && (
-            <>
-              <span>Port {profile.config.port}</span>
-              {authMethodLabel && (
-                <>
-                  <span>•</span>
-                  <span>{authMethodLabel}</span>
-                </>
-              )}
-            </>
-          )}
-          <span>•</span>
-          <span>{lastUsedLabel}</span>
         </div>
 
-        {/* Right: Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
-          <Button size="sm" onClick={() => onConnect(profile.id)}>
+        {/* Bottom Row: Connection details + Time */}
+        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground min-w-0">
+          <span className="truncate">{connectionDetails}</span>
+          <span className="shrink-0">{lastUsedLabel}</span>
+        </div>
+
+        {/* Hover Action Buttons - Show on hover */}
+        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button size="sm" className="flex-1 h-7 text-xs" onClick={() => onConnect(profile.id)}>
             Connect
           </Button>
-          <Button size="sm" variant="outline" onClick={() => onEdit(profile.id)}>
-            <Edit className="h-4 w-4" />
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 w-7 p-0"
+            onClick={() => onEdit(profile.id)}
+          >
+            <Edit className="h-3 w-3" />
           </Button>
-          <Button size="sm" variant="outline" onClick={() => onDelete(profile.id)}>
-            <Trash2 className="h-4 w-4" />
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 w-7 p-0"
+            onClick={() => onDelete(profile.id)}
+          >
+            <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>
