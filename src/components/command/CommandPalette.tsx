@@ -297,7 +297,7 @@ export function CommandPalette({
         {/* Render based on mode */}
         {mode === 'connection' ? (
           <>
-            {/* All Connections (sorted by lastUsed) */}
+            {/* All Connections (sorted alphabetically by name) */}
             {(() => {
               const allProfiles = getAllProfiles();
 

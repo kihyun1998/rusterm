@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { CONNECTION_ICONS } from '@/constants/connection-icons';
 import type { StoredConnectionProfile } from '@/types/connection';
 import { isSSHConfig, getAuthMethod } from '@/types/connection';
-import { formatDistanceToNow } from 'date-fns';
 
 interface ConnectionCardProps {
   profile: StoredConnectionProfile;
@@ -50,19 +49,8 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
     return null;
   };
 
-  // Format last used time
-  const getLastUsedLabel = () => {
-    if (!profile.lastUsed) return 'Never';
-    try {
-      return formatDistanceToNow(new Date(profile.lastUsed), { addSuffix: true });
-    } catch {
-      return 'Unknown';
-    }
-  };
-
   const connectionDetails = getConnectionDetails();
   const authMethodInfo = getAuthMethodInfo();
-  const lastUsedLabel = getLastUsedLabel();
 
   return (
     <Card className="py-2 gap-2 hover:border-primary/50 transition-colors group cursor-pointer max-w-md">
@@ -76,7 +64,7 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
           </Badge>
         </div>
 
-        {/* Bottom Row: Connection details + Auth Method + Time */}
+        {/* Bottom Row: Connection details + Auth Method */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
           <span className="truncate flex-1">{connectionDetails}</span>
           {authMethodInfo && (
@@ -85,7 +73,6 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
               <span className={authMethodInfo.color}>{authMethodInfo.label}</span>
             </div>
           )}
-          <span className="shrink-0">{lastUsedLabel}</span>
         </div>
 
         {/* Hover Action Buttons - Show on hover */}

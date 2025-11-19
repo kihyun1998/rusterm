@@ -215,7 +215,6 @@ export function SSHConnectionDialog({
           // Don't include credentials in the profile - will save to keyring separately
         },
         createdAt: Date.now(),
-        lastUsed: Date.now(),
       };
 
       // Use findOrCreateProfile for smart 5-condition deduplication

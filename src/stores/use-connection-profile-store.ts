@@ -73,7 +73,6 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
             const updates: Partial<ConnectionProfile> = {
               name: name || existing.name, // Keep existing name if not provided
               config,
-              lastUsed: Date.now(),
             };
 
             // Update profile in store
@@ -101,8 +100,6 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
             if (profile.id === id) {
               // Merge updates with existing profile
               const merged = { ...profile, ...updates } as ConnectionProfile;
-              // Update lastUsed timestamp
-              merged.lastUsed = Date.now();
               // Sanitize before storing
               return sanitizeProfile(merged);
             }
@@ -144,9 +141,6 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
             recentConnections: updated.slice(0, MAX_RECENT_CONNECTIONS),
           };
         });
-
-        // Update lastUsed timestamp
-        get().updateProfile(id, { lastUsed: Date.now() } as Partial<ConnectionProfile>);
       },
 
       getRecentProfiles: (limit = MAX_RECENT_CONNECTIONS) => {
@@ -166,15 +160,8 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
 
       getAllProfiles: () => {
         const { profiles } = get();
-        return profiles.sort((a, b) => {
-          // Sort by lastUsed (most recent first), then by name
-          if (a.lastUsed && b.lastUsed) {
-            return b.lastUsed - a.lastUsed;
-          }
-          if (a.lastUsed) return -1;
-          if (b.lastUsed) return 1;
-          return a.name.localeCompare(b.name);
-        });
+        // Sort by name alphabetically
+        return profiles.sort((a, b) => a.name.localeCompare(b.name));
       },
 
       getProfileById: (id: string) => {
@@ -184,18 +171,15 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
     }),
     {
       name: 'rusterm-connection-profiles', // localStorage key
-      version: 2, // Incremented for favorite removal and lastUsed required migration
+      version: 3, // Incremented for lastUsed removal
       migrate: (persistedState: any, version: number) => {
-        if (version < 2) {
-          // Migration from v1 to v2: Remove favorite field, ensure lastUsed is set
+        if (version < 3) {
+          // Migration to v3: Remove favorite and lastUsed fields
           return {
             ...persistedState,
             profiles: (persistedState.profiles || []).map((profile: any) => {
-              const { favorite, ...rest } = profile; // Remove favorite field
-              return {
-                ...rest,
-                lastUsed: profile.lastUsed || profile.createdAt || Date.now(), // Ensure lastUsed is set
-              };
+              const { favorite, lastUsed, ...rest } = profile; // Remove favorite and lastUsed fields
+              return rest;
             }),
           };
         }

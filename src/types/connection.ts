@@ -79,7 +79,6 @@ export interface ConnectionProfile {
   icon?: string; // Lucide icon name (optional)
   type: ConnectionType; // Connection type
   config: ConnectionConfig; // Type-specific configuration
-  lastUsed: number; // Last used timestamp (required - always updated on connection)
   tags?: string[]; // Tags for search/categorization (optional)
   createdAt: number; // Creation timestamp
 }
