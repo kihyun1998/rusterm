@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Keyboard, Settings, Terminal, Plus, Search } from 'lucide-react';
+import { Settings, Terminal, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTabStore } from '@/stores';
@@ -72,7 +72,7 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
     console.log('Connecting to profile:', profileId, profile.name);
 
     // Restore credentials from keyring if it's an SSH profile
-    let connectionConfig = profile.config;
+    let connectionConfig: any = profile.config;
 
     if (profile.type === 'ssh') {
       try {

@@ -60,7 +60,6 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
     }
   };
 
-  const authMethodLabel = getAuthMethodLabel();
   const connectionDetails = getConnectionDetails();
   const lastUsedLabel = getLastUsedLabel();
 

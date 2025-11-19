@@ -5,7 +5,6 @@ import {
   sanitizeProfile,
   isSSHConfig,
   getAuthMethod,
-  type AuthMethod,
 } from '@/types/connection';
 import { deleteAllCredentials } from '@/lib/keyring';
 

@@ -22,7 +22,6 @@ function App() {
   const loadSettings = useSettingsStore((state) => state.loadSettings);
   const settings = useSettingsStore((state) => state.settings);
   const addTab = useTabStore((state) => state.addTab);
-  const tabs = useTabStore((state) => state.tabs);
 
   // Load settings on app start
   useEffect(() => {

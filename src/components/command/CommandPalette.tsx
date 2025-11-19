@@ -219,7 +219,7 @@ export function CommandPalette({
     if (!profile) return;
 
     // Restore credentials from keyring if it's an SSH profile
-    let connectionConfig = profile.config;
+    let connectionConfig: any = profile.config;
 
     if (profile.type === 'ssh') {
       try {
