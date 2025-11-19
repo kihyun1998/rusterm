@@ -12,7 +12,6 @@ import {
   SunIcon,
   TextAlignJustifyIcon,
 } from '@radix-ui/react-icons';
-import { Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import {
@@ -72,11 +71,7 @@ export function CommandPalette({
   const activeTabId = useTabStore((state) => state.activeTabId);
 
   // Connection profile store
-  const profiles = useConnectionProfileStore((state) => state.profiles); // Subscribe to profiles for reactivity
-  const getRecentProfiles = useConnectionProfileStore((state) => state.getRecentProfiles);
-  const getFavoriteProfiles = useConnectionProfileStore((state) => state.getFavoriteProfiles);
   const getAllProfiles = useConnectionProfileStore((state) => state.getAllProfiles);
-  const toggleFavorite = useConnectionProfileStore((state) => state.toggleFavorite);
   const addToRecent = useConnectionProfileStore((state) => state.addToRecent);
   const getProfileById = useConnectionProfileStore((state) => state.getProfileById);
 
@@ -265,12 +260,6 @@ export function CommandPalette({
     setOpen(false);
   };
 
-  const handleToggleFavorite = (profileId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent CommandItem selection
-    toggleFavorite(profileId);
-    // Dialog stays open
-  };
-
   const handleCreateConnection = (type: ConnectionType) => {
     if (type === 'local') {
       // Create local terminal immediately
@@ -308,14 +297,15 @@ export function CommandPalette({
         {/* Render based on mode */}
         {mode === 'connection' ? (
           <>
-            {/* Recent Connections */}
+            {/* All Connections (sorted by lastUsed) */}
             {(() => {
-              const recentProfiles = getRecentProfiles(10);
-              if (recentProfiles.length === 0) return null;
+              const allProfiles = getAllProfiles();
+
+              if (allProfiles.length === 0) return null;
 
               return (
-                <CommandGroup heading="Recent Connections">
-                  {recentProfiles.map((profile) => {
+                <CommandGroup heading="All Connections">
+                  {allProfiles.map((profile) => {
                     const Icon = CONNECTION_ICONS[profile.type];
                     return (
                       <CommandItem
@@ -325,108 +315,13 @@ export function CommandPalette({
                       >
                         <Icon className="mr-2 h-4 w-4" />
                         <span className="flex-1">{profile.name}</span>
-                        <span className="text-xs text-muted-foreground mr-2">
+                        <span className="text-xs text-muted-foreground">
                           {profile.type.toUpperCase()}
                         </span>
-                        <button
-                          onClick={(e) => handleToggleFavorite(profile.id, e)}
-                          className="p-1 hover:bg-accent rounded-sm transition-colors"
-                          aria-label={profile.favorite ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                          <Star
-                            className={`h-3 w-3 ${profile.favorite ? 'fill-current text-yellow-500' : 'text-muted-foreground'}`}
-                          />
-                        </button>
                       </CommandItem>
                     );
                   })}
                 </CommandGroup>
-              );
-            })()}
-
-            {/* Favorites */}
-            {(() => {
-              const favoriteProfiles = getFavoriteProfiles();
-              if (favoriteProfiles.length === 0) return null;
-
-              return (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup heading="Favorites">
-                    {favoriteProfiles.map((profile) => {
-                      const Icon = CONNECTION_ICONS[profile.type];
-                      return (
-                        <CommandItem
-                          key={profile.id}
-                          onSelect={() => handleSelectProfile(profile.id)}
-                          keywords={[profile.name, profile.type]}
-                        >
-                          <Icon className="mr-2 h-4 w-4" />
-                          <span className="flex-1">{profile.name}</span>
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {profile.type.toUpperCase()}
-                          </span>
-                          <button
-                            onClick={(e) => handleToggleFavorite(profile.id, e)}
-                            className="p-1 hover:bg-accent rounded-sm transition-colors"
-                            aria-label="Remove from favorites"
-                          >
-                            <Star className="h-3 w-3 fill-current text-yellow-500" />
-                          </button>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </>
-              );
-            })()}
-
-            {/* All Profiles */}
-            {(() => {
-              const recentProfiles = getRecentProfiles(10);
-              const favoriteProfiles = getFavoriteProfiles();
-              const allProfiles = getAllProfiles();
-
-              // Filter out profiles already shown in Recent or Favorites
-              const recentIds = new Set(recentProfiles.map((p) => p.id));
-              const favoriteIds = new Set(favoriteProfiles.map((p) => p.id));
-              const otherProfiles = allProfiles.filter(
-                (p) => !recentIds.has(p.id) && !favoriteIds.has(p.id)
-              );
-
-              if (otherProfiles.length === 0) return null;
-
-              return (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup heading="All Profiles">
-                    {otherProfiles.map((profile) => {
-                      const Icon = CONNECTION_ICONS[profile.type];
-                      return (
-                        <CommandItem
-                          key={profile.id}
-                          onSelect={() => handleSelectProfile(profile.id)}
-                          keywords={[profile.name, profile.type]}
-                        >
-                          <Icon className="mr-2 h-4 w-4" />
-                          <span className="flex-1">{profile.name}</span>
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {profile.type.toUpperCase()}
-                          </span>
-                          <button
-                            onClick={(e) => handleToggleFavorite(profile.id, e)}
-                            className="p-1 hover:bg-accent rounded-sm transition-colors"
-                            aria-label={profile.favorite ? 'Remove from favorites' : 'Add to favorites'}
-                          >
-                            <Star
-                              className={`h-3 w-3 ${profile.favorite ? 'fill-current text-yellow-500' : 'text-muted-foreground'}`}
-                            />
-                          </button>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </>
               );
             })()}
 
