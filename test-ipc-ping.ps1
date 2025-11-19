@@ -62,11 +62,6 @@ try {
         Write-Host "[ERROR] No response received" -ForegroundColor Red
     }
 
-    # 정리
-    $streamReader.Close()
-    $streamWriter.Close()
-    $pipeClient.Close()
-
     Write-Host ""
     Write-Host "=== Test Completed ===" -ForegroundColor Green
 
@@ -91,8 +86,8 @@ try {
     exit 1
 
 } finally {
-    # 리소스 정리
-    if ($streamReader) { $streamReader.Dispose() }
-    if ($streamWriter) { $streamWriter.Dispose() }
-    if ($pipeClient) { $pipeClient.Dispose() }
+    # 리소스 정리 (에러 무시)
+    try { if ($streamReader) { $streamReader.Dispose() } } catch { }
+    try { if ($streamWriter) { $streamWriter.Dispose() } } catch { }
+    try { if ($pipeClient) { $pipeClient.Dispose() } } catch { }
 }
