@@ -1,10 +1,4 @@
-use interprocess::local_socket::{
-    prelude::*,
-    GenericNamespaced,
-    ListenerOptions,
-    ToNsName,
-};
-
+use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
 use crate::ipc::IpcError;
 
 /// Named Pipe 이름 생성
@@ -13,38 +7,51 @@ pub fn get_pipe_name() -> String {
     format!("rusterm-{}", username)
 }
 
-/// Named Pipe 리스너 생성
-pub async fn create_listener() -> Result<LocalSocketListener, IpcError> {
+/// Named Pipe 전체 경로 생성
+pub fn get_pipe_path() -> String {
     let pipe_name = get_pipe_name();
-
-    // Windows에서는 '@'로 시작하면 Named Pipe
-    let name = format!("@{}", pipe_name);
-
-    let ns_name = name
-        .to_ns_name::<GenericNamespaced>()
-        .map_err(|e| IpcError::BindFailed(format!("Invalid pipe name '{}': {}", pipe_name, e)))?;
-
-    let listener = ListenerOptions::new()
-        .name(ns_name)
-        .create_sync()
-        .map_err(|e| {
-            IpcError::BindFailed(format!("Failed to bind to pipe '{}': {}", pipe_name, e))
-        })?;
-
-    println!("IPC server listening on: \\\\.\\pipe\\{}", pipe_name);
-
-    Ok(listener)
+    format!(r"\\.\pipe\{}", pipe_name)
 }
 
-/// 연결 수락 (blocking)
-pub fn accept_connection(
-    listener: &LocalSocketListener,
-) -> Result<LocalSocketStream, IpcError> {
-    let stream = listener
-        .accept()
+/// Named Pipe 서버 생성
+pub async fn create_listener() -> Result<NamedPipeServer, IpcError> {
+    let pipe_path = get_pipe_path();
+
+    let server = ServerOptions::new()
+        .first_pipe_instance(true)
+        .create(&pipe_path)
+        .map_err(|e| {
+            IpcError::BindFailed(format!("Failed to create pipe '{}': {}", pipe_path, e))
+        })?;
+
+    println!("IPC server listening on: {}", pipe_path);
+
+    Ok(server)
+}
+
+/// 연결 수락 (async)
+pub async fn accept_connection(
+    server: &mut NamedPipeServer,
+) -> Result<(), IpcError> {
+    server
+        .connect()
+        .await
         .map_err(|e| IpcError::AcceptFailed(e.to_string()))?;
 
-    Ok(stream)
+    Ok(())
+}
+
+/// 다음 클라이언트를 위한 새 파이프 인스턴스 생성
+pub async fn create_next_instance() -> Result<NamedPipeServer, IpcError> {
+    let pipe_path = get_pipe_path();
+
+    let server = ServerOptions::new()
+        .create(&pipe_path)
+        .map_err(|e| {
+            IpcError::BindFailed(format!("Failed to create next pipe instance: {}", e))
+        })?;
+
+    Ok(server)
 }
 
 /// Cleanup (Windows는 프로세스 종료 시 자동 정리)

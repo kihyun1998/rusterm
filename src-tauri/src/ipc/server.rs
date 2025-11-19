@@ -73,12 +73,8 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
 /// 서버 메인 루프 (Windows)
 #[cfg(windows)]
 async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcError> {
-    use std::sync::Arc;
-    use interprocess::TryClone;
-
     println!("[DEBUG] run_server started (Windows)");
-    let listener = platform::create_listener().await?;
-    let listener = Arc::new(listener);
+    let mut server = platform::create_listener().await?;
 
     println!("[DEBUG] Entering accept loop...");
     loop {
@@ -89,26 +85,33 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
                 println!("IPC server shutting down...");
                 break;
             }
-            // 연결 수락 (blocking이므로 spawn_blocking 필요)
-            result = tokio::task::spawn_blocking({
-                let listener_ref = Arc::clone(&listener);
-                move || {
-                    println!("[DEBUG] spawn_blocking: calling accept_connection...");
-                    platform::accept_connection(&listener_ref)
-                }
-            }) => {
+            // 연결 수락 (이제 async!)
+            result = platform::accept_connection(&mut server) => {
                 match result {
-                    Ok(Ok(stream)) => {
+                    Ok(_) => {
                         println!("[DEBUG] Connection accepted! Spawning handler...");
-                        tokio::task::spawn_blocking(move || {
-                            handle_connection_windows(stream);
+
+                        // 현재 server를 핸들러로 넘기고, 다음 클라이언트를 위한 새 인스턴스 생성
+                        let current_server = server;
+
+                        tokio::spawn(async move {
+                            handle_connection_windows(current_server).await;
                         });
-                    }
-                    Ok(Err(e)) => {
-                        eprintln!("Failed to accept connection: {}", e);
+
+                        // 다음 클라이언트를 위한 새 파이프 인스턴스 생성
+                        match platform::create_next_instance().await {
+                            Ok(new_server) => {
+                                server = new_server;
+                                println!("[DEBUG] New pipe instance created for next client");
+                            }
+                            Err(e) => {
+                                eprintln!("Failed to create next pipe instance: {}", e);
+                                break;
+                            }
+                        }
                     }
                     Err(e) => {
-                        eprintln!("Task join error: {}", e);
+                        eprintln!("Failed to accept connection: {}", e);
                     }
                 }
             }
@@ -150,28 +153,24 @@ async fn handle_connection_unix(stream: tokio::net::UnixStream) {
     }
 }
 
-/// Windows 연결 처리 (blocking)
+/// Windows 연결 처리 (async)
 #[cfg(windows)]
-fn handle_connection_windows(stream: interprocess::local_socket::prelude::LocalSocketStream) {
-    use std::io::{BufRead, BufReader, Write};
-    use interprocess::TryClone;
+async fn handle_connection_windows(server: tokio::net::windows::named_pipe::NamedPipeServer) {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-    let mut reader = BufReader::new(stream.try_clone().unwrap());
-    let mut writer = stream;
+    let mut reader = BufReader::new(server);
     let mut line = String::new();
 
     loop {
         line.clear();
 
-        match reader.read_line(&mut line) {
+        match reader.read_line(&mut line).await {
             Ok(0) => break, // EOF
             Ok(_) => {
-                // blocking 환경에서 async 실행
-                let runtime = tokio::runtime::Runtime::new().unwrap();
-                let response = runtime.block_on(process_request(&line));
+                let response = process_request(&line).await;
                 let response_json = serde_json::to_string(&response).unwrap() + "\n";
 
-                if let Err(e) = writer.write_all(response_json.as_bytes()) {
+                if let Err(e) = reader.get_mut().write_all(response_json.as_bytes()).await {
                     eprintln!("Failed to write response: {}", e);
                     break;
                 }
