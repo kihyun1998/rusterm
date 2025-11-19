@@ -2,10 +2,13 @@ mod commands;
 mod pty;
 mod settings;
 mod ssh;
+mod ipc;
 
 use pty::PtyManager;
 use settings::SettingsManager;
 use ssh::SshManager;
+use ipc::IpcServer;
+use std::sync::{Arc, Mutex};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -19,12 +22,44 @@ pub fn run() {
     let settings_manager =
         SettingsManager::new().expect("Failed to initialize settings manager");
 
+    // IPC 서버 상태 관리
+    let ipc_server: Arc<Mutex<Option<IpcServer>>> = Arc::new(Mutex::new(None));
+    let ipc_server_clone = ipc_server.clone();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(PtyManager::new())
         .manage(SshManager::new())
         .manage(settings_manager)
+        .setup(move |_app| {
+            // IPC 서버 시작 (비동기 실행)
+            let ipc_clone = ipc_server_clone.clone();
+            tokio::spawn(async move {
+                match IpcServer::start().await {
+                    Ok(server) => {
+                        *ipc_clone.lock().unwrap() = Some(server);
+                        println!("IPC server started successfully");
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to start IPC server: {}", e);
+                    }
+                }
+            });
+
+            Ok(())
+        })
+        .on_window_event(move |_window, event| {
+            use tauri::WindowEvent;
+
+            if let WindowEvent::CloseRequested { .. } = event {
+                // 앱 종료 시 IPC 서버 종료
+                if let Some(mut server) = ipc_server.lock().unwrap().take() {
+                    server.shutdown();
+                    println!("IPC server stopped");
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             commands::pty_commands::create_pty,
