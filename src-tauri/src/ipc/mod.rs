@@ -4,5 +4,5 @@ mod handler;
 mod lifecycle;
 mod platform;
 
-pub use protocol::{IpcRequest, IpcResponse, IpcCommand, IpcError};
+pub use protocol::{IpcRequest, IpcResponse, IpcError};
 pub use server::IpcServer;

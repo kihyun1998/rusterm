@@ -1,6 +1,4 @@
-use interprocess::local_socket::{
-    LocalSocketListener, LocalSocketStream, NameTypeSupport,
-};
+use interprocess::local_socket::prelude::*;
 
 use crate::ipc::IpcError;
 

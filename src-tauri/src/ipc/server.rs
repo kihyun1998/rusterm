@@ -1,5 +1,5 @@
 use tokio::sync::oneshot;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
 use crate::ipc::{IpcError, handler, platform};
 
@@ -95,6 +95,8 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
 /// Unix 연결 처리 (async)
 #[cfg(unix)]
 async fn handle_connection_unix(stream: tokio::net::UnixStream) {
+    use tokio::io::BufReader;
+
     let (reader, mut writer) = stream.into_split();
     let mut reader = BufReader::new(reader);
     let mut line = String::new();
@@ -123,7 +125,7 @@ async fn handle_connection_unix(stream: tokio::net::UnixStream) {
 
 /// Windows 연결 처리 (blocking)
 #[cfg(windows)]
-fn handle_connection_windows(stream: interprocess::local_socket::LocalSocketStream) {
+fn handle_connection_windows(stream: interprocess::local_socket::prelude::LocalSocketStream) {
     use std::io::{BufRead, BufReader, Write};
 
     let mut reader = BufReader::new(stream.try_clone().unwrap());
