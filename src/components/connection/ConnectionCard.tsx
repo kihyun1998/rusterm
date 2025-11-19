@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CONNECTION_ICONS } from '@/constants/connection-icons';
 import type { StoredConnectionProfile } from '@/types/connection';
-import { getAuthMethod, isSSHConfig } from '@/types/connection';
+import { isSSHConfig } from '@/types/connection';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ConnectionCardProps {
@@ -22,24 +22,6 @@ interface ConnectionCardProps {
  */
 export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: ConnectionCardProps) {
   const Icon = CONNECTION_ICONS[profile.type];
-
-  // Get auth method label for SSH connections
-  const getAuthMethodLabel = () => {
-    if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
-      const authMethod = getAuthMethod(profile.config);
-      switch (authMethod) {
-        case 'password':
-          return 'Password';
-        case 'privateKey':
-          return 'Private Key';
-        case 'noAuth':
-          return 'Interactive';
-        default:
-          return 'Unknown';
-      }
-    }
-    return null;
-  };
 
   // Get connection details based on type
   const getConnectionDetails = () => {
