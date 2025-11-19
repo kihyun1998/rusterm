@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import { CommandPalette } from '@/components/command/CommandPalette';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
@@ -33,6 +34,39 @@ function App() {
       setTheme(settings.appTheme);
     }
   }, [settings?.appTheme, setTheme]);
+
+  // IPC event listeners for tab management
+  useEffect(() => {
+    // Listen for tab-created events from IPC
+    const unlistenTabCreated = listen('tab-created', (event: any) => {
+      const payload = event.payload;
+      console.log('[IPC] tab-created event received:', payload);
+
+      useTabStore.getState().addTab({
+        id: payload.tabId,
+        title: payload.title,
+        type: 'terminal',
+        closable: true,
+        ptyId: payload.ptyId ? parseInt(payload.ptyId) : undefined,
+        connectionType: payload.tabType === 'ssh' ? 'ssh' : 'local',
+        connectionProfileId: payload.sessionId,
+      });
+    });
+
+    // Listen for tab-closed events from IPC
+    const unlistenTabClosed = listen('tab-closed', (event: any) => {
+      const payload = event.payload;
+      console.log('[IPC] tab-closed event received:', payload);
+
+      useTabStore.getState().closeTab(payload.tabId);
+    });
+
+    // Cleanup
+    return () => {
+      unlistenTabCreated.then((fn) => fn());
+      unlistenTabClosed.then((fn) => fn());
+    };
+  }, []);
 
   // Global keyboard shortcuts
   useShortcuts({

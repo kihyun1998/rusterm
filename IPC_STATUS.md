@@ -11,10 +11,10 @@
 | Phase | 진행률 | 상태 |
 |-------|--------|------|
 | **Phase 1: IPC 인프라 구축** | 8/8 (100%) | ✅ **완료** |
-| **Phase 2: Tab 관리 API** | 5/5 (100%) | ✅ **완료** (백엔드) |
+| **Phase 2: Tab 관리 API** | 7/7 (100%) | ✅ **완료** |
 | **Phase 3: 테스트 및 문서화** | 0/5 (0%) | ⬜ 미착수 |
 | **Phase 4: 추가 기능** | 0/4 (0%) | ⬜ 미착수 |
-| **전체** | 13/22 (59%) | 🟡 **진행 중** |
+| **전체** | 15/24 (63%) | 🟡 **진행 중** |
 
 ---
 
@@ -84,7 +84,7 @@ src-tauri/src/ipc/
 
 ---
 
-## ✅ Phase 2: Tab 관리 API - **백엔드 완료**
+## ✅ Phase 2: Tab 관리 API - **완료**
 
 ### 완료된 작업
 
@@ -112,59 +112,24 @@ src-tauri/src/ipc/
 - 현재 빈 리스트 반환 (설계대로)
 - Phase 3에서 개선 예정
 
-### ⚠️ 미완료 항목 (Phase 2 완전 완료를 위해 필요)
+#### Task 2.6: 프론트엔드 이벤트 리스너 추가 ✓
+- `src/App.tsx`에 `tab-created` 이벤트 리스너 추가
+- `src/App.tsx`에 `tab-closed` 이벤트 리스너 추가
+- Tauri event API import 완료
+- useEffect cleanup 구현
 
-#### 1. Frontend 이벤트 리스너 추가 필요 ❌
-**위치**: `src/App.tsx` 또는 `src/components/layout/MainLayout.tsx`
+#### Task 2.7: IPC 테스트 스크립트 작성 ✓
+- **PowerShell 스크립트**: `test-ipc-add-tab.ps1` 생성
+- **Linux/macOS 스크립트**: `test-ipc.sh` 생성
+- 모든 IPC 커맨드 테스트 포함
+- 응답 검증 로직 포함
 
-**필요한 코드**:
-```typescript
-useEffect(() => {
-  // tab-created 이벤트 리스너
-  const unlistenTabCreated = listen('tab-created', (event: any) => {
-    const payload = event.payload;
-    useTabStore.getState().addTab({
-      id: payload.tabId,
-      title: payload.title,
-      type: 'terminal',
-      closable: true,
-      ptyId: payload.ptyId ? parseInt(payload.ptyId) : undefined,
-      connectionType: payload.tabType === 'ssh' ? 'ssh' : 'local',
-    });
-  });
+### 📝 주의: 실제 테스트는 아직 미실행
 
-  // tab-closed 이벤트 리스너
-  const unlistenTabClosed = listen('tab-closed', (event: any) => {
-    const payload = event.payload;
-    useTabStore.getState().closeTab(payload.tabId);
-  });
-
-  return () => {
-    unlistenTabCreated.then((fn) => fn());
-    unlistenTabClosed.then((fn) => fn());
-  };
-}, []);
-```
-
-#### 2. 테스트 스크립트 작성 필요 ❌
-
-**Linux/macOS 테스트 스크립트** (`test-ipc.sh`):
-```bash
-#!/bin/bash
-# Ping 테스트
-echo '{"command":"ping"}' | nc -U /tmp/rusterm-$(id -u).sock
-
-# Add local tab
-echo '{"command":"add_local_tab","params":{"cols":80,"rows":24}}' | \
-  nc -U /tmp/rusterm-$(id -u).sock
-
-# List tabs
-echo '{"command":"list_tabs"}' | nc -U /tmp/rusterm-$(id -u).sock
-```
-
-**Windows PowerShell 테스트 스크립트** (`test-ipc.ps1`):
-- IPC_PHASE2_PLAN.md의 Task 2.5에 전체 스크립트 있음
-- 아직 생성되지 않음
+Phase 2 구현은 완료되었지만, 다음 사항은 **실제 테스트 필요**:
+- ⚠️ UI에 IPC로 생성된 탭이 나타나는지 확인
+- ⚠️ IPC로 생성된 탭이 정상 작동하는지 확인
+- ⚠️ IPC로 탭 닫기가 정상 작동하는지 확인
 
 ---
 
@@ -193,40 +158,44 @@ echo '{"command":"list_tabs"}' | nc -U /tmp/rusterm-$(id -u).sock
 
 ## 🎯 다음 단계 권장사항
 
-### 우선순위 1: Phase 2 완전 완료
-1. **Frontend 이벤트 리스너 추가** (30분)
-   - `src/App.tsx`에 `tab-created`, `tab-closed` 리스너 추가
-   - 테스트: IPC로 탭 생성 후 UI에 반영되는지 확인
+### 우선순위 1: 실제 테스트 및 검증 ⭐
+1. **IPC 기능 통합 테스트** (1-2시간)
+   - RusTerm 앱 실행 (`pnpm tauri dev`)
+   - 테스트 스크립트 실행:
+     ```bash
+     # Linux/macOS
+     ./test-ipc.sh
 
-2. **기본 테스트 스크립트 작성** (1시간)
-   - Linux/macOS: `test-ipc.sh` 작성
-   - Windows: `test-ipc.ps1` 작성 (IPC_PHASE2_PLAN.md 참고)
-
-### 우선순위 2: 통합 테스트 및 버그 수정
-3. **실제 환경에서 테스트** (2시간)
-   - Linux에서 ping, add_local_tab, close_tab 테스트
-   - Windows에서 동일 테스트
+     # Windows
+     .\test-ipc-add-tab.ps1
+     ```
+   - UI에서 탭이 생성/삭제되는지 확인
+   - 터미널이 정상 작동하는지 확인
    - 발견된 버그 수정
 
-### 우선순위 3: 문서화
-4. **IPC 프로토콜 문서 작성** (2시간)
+### 우선순위 2: 문서화
+2. **IPC 프로토콜 문서 작성** (2시간)
    - `docs/IPC_PROTOCOL.md` 생성
    - 연결 방법, API 레퍼런스, 예제 코드 포함
 
-5. **README 업데이트** (30분)
+3. **README 업데이트** (30분)
    - IPC 기능 섹션 추가
    - Quick start 예제
+
+### 우선순위 3: 예제 클라이언트
+4. **Python 예제 클라이언트** (2-3시간)
+   - `examples/ipc-clients/python/rusterm_client.py`
+   - Auto-launch 기능
+
+5. **Node.js 예제 클라이언트** (2-3시간)
+   - `examples/ipc-clients/nodejs/rusterm-client.js`
+   - TypeScript 타입 정의
 
 ---
 
 ## 🐛 알려진 이슈
 
-### 이슈 1: Frontend 이벤트 리스너 미구현
-- **상태**: 미해결
-- **영향**: IPC로 생성한 탭이 UI에 나타나지 않음
-- **해결 방법**: App.tsx에 이벤트 리스너 추가 (위 코드 참고)
-
-### 이슈 2: list_tabs가 빈 리스트 반환
+### 이슈 1: list_tabs가 빈 리스트 반환
 - **상태**: 설계대로 (백엔드에서 탭 메타데이터 추적 안 함)
 - **영향**: 외부 앱이 현재 탭 목록 조회 불가
 - **해결 방법**: Phase 3에서 TabManager 추가 예정

@@ -722,6 +722,66 @@ echo '{"command":"list_tabs"}' | nc -U /tmp/rusterm-$(id -u).sock
 
 ---
 
+### Task 2.6: 프론트엔드 이벤트 리스너 추가
+
+**구현 내용:**
+- `src/App.tsx`에 IPC 이벤트 리스너 추가
+- `tab-created` 이벤트 처리 → Tab Store에 탭 추가
+- `tab-closed` 이벤트 처리 → Tab Store에서 탭 제거
+
+**완료 조건:**
+- [x] `listen('tab-created')` 이벤트 리스너 구현
+- [x] `listen('tab-closed')` 이벤트 리스너 구현
+- [x] Tauri event API import
+- [x] useEffect cleanup 구현
+
+**테스트 방법:**
+```bash
+# IPC로 탭 생성 후 UI 확인
+# 1. RusTerm 앱 실행
+# 2. 테스트 스크립트로 탭 생성
+./test-ipc.sh  # Linux/macOS
+# 또는
+.\test-ipc-add-tab.ps1  # Windows
+
+# 3. RusTerm UI에 새 탭이 나타나는지 확인
+# 4. 터미널이 정상 작동하는지 확인
+```
+
+---
+
+### Task 2.7: IPC 테스트 스크립트 작성
+
+**구현 내용:**
+- PowerShell 테스트 스크립트 (`test-ipc-add-tab.ps1`)
+- Linux/macOS 테스트 스크립트 (`test-ipc.sh`)
+- ping, add_local_tab, add_ssh_tab, close_tab, list_tabs 테스트
+
+**완료 조건:**
+- [x] `test-ipc-add-tab.ps1` 작성 (Windows)
+- [x] `test-ipc.sh` 작성 (Linux/macOS)
+- [x] 모든 IPC 커맨드 테스트 포함
+- [x] 응답 검증 로직 포함
+
+**테스트 방법:**
+```bash
+# Linux/macOS
+chmod +x test-ipc.sh
+./test-ipc.sh
+
+# Windows (PowerShell)
+.\test-ipc-add-tab.ps1
+```
+
+**예상 결과:**
+- Ping 성공
+- 로컬 탭 생성 성공
+- SSH 탭 생성 (SSH 서버 없으면 실패 예상)
+- List tabs (빈 리스트 반환)
+- 탭 닫기 성공
+
+---
+
 ## Phase 3: 테스트 및 문서화
 
 ### Task 3.1: 플랫폼별 통합 테스트
@@ -1122,6 +1182,8 @@ cargo flamegraph --bin rusterm
 - [x] Task 2.3: `add_ssh_tab` 구현
 - [x] Task 2.4: `close_tab` 구현
 - [x] Task 2.5: `list_tabs` 구현
+- [x] Task 2.6: 프론트엔드 이벤트 리스너 추가
+- [x] Task 2.7: IPC 테스트 스크립트 작성
 
 ### Phase 3: 테스트 및 문서화
 - [ ] Task 3.1: 플랫폼별 통합 테스트
