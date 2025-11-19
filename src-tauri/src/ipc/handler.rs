@@ -1,11 +1,11 @@
 use crate::ipc::protocol::{
     AddLocalTabParams, AddSshTabParams, CloseTabParams, IpcRequest, IpcResponse, ListTabsResponse,
-    PingResponse, TabInfo,
+    PingResponse,
 };
 use crate::ipc::events::{TabCreatedPayload, TabClosedPayload};
 use crate::pty::PtyManager;
 use crate::ssh::SshManager;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Emitter};
 
 /// IPC 요청 처리
 pub async fn handle_request(request: IpcRequest, app_handle: &AppHandle) -> IpcResponse {
