@@ -65,8 +65,8 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
   const lastUsedLabel = getLastUsedLabel();
 
   return (
-    <Card className="hover:border-primary/50 transition-colors group cursor-pointer max-w-md">
-      <div className="flex flex-col gap-2 p-3 py-2">
+    <Card className="py-2 gap-2 hover:border-primary/50 transition-colors group cursor-pointer max-w-md">
+      <div className="flex flex-col gap-2 px-3">
         {/* Top Row: Icon + Name + Type Badge */}
         <div className="flex items-center gap-2 min-w-0">
           <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
