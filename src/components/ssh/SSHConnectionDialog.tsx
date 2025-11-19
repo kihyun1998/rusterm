@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Server } from 'lucide-react';
 import {
   Dialog,
@@ -238,7 +238,7 @@ export function SSHConnectionDialog({
   /**
    * Reset form when dialog closes
    */
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormState({
       host: initialConfig?.host || '',
       port: initialConfig?.port || 22,
@@ -247,19 +247,18 @@ export function SSHConnectionDialog({
       password: '',
       privateKeyPath: initialConfig?.privateKey || '',
       passphrase: '',
-      saveAsProfile: false,
-      profileName: '',
+      profileName: initialConfig?.host || '', // Default to host address
     });
     setErrors({});
     setIsConnecting(false);
-  };
+  }, [initialConfig]);
 
   // Reset on close
   useEffect(() => {
     if (!open) {
       resetForm();
     }
-  }, [open]);
+  }, [open, resetForm]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
