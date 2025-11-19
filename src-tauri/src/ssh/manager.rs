@@ -100,6 +100,12 @@ impl SshManager {
 
         Ok(())
     }
+
+    /// 모든 SSH 세션 ID 목록 반환
+    pub async fn list_sessions(&self) -> Vec<String> {
+        let sessions = self.sessions.lock().await;
+        sessions.keys().cloned().collect()
+    }
 }
 
 impl Default for SshManager {

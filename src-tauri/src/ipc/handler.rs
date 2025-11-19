@@ -1,6 +1,6 @@
 use crate::ipc::protocol::{
     AddLocalTabParams, AddSshTabParams, CloseTabParams, IpcRequest, IpcResponse, ListTabsResponse,
-    PingResponse,
+    PingResponse, TabInfo,
 };
 use crate::ipc::events::{TabCreatedPayload, TabClosedPayload};
 use crate::pty::PtyManager;
@@ -210,12 +210,34 @@ async fn handle_close_tab(
 }
 
 /// list_tabs 커맨드 처리
-async fn handle_list_tabs(_app_handle: &AppHandle) -> IpcResponse {
-    // 현재는 백엔드에서 탭 목록을 관리하지 않으므로
-    // 프론트엔드 store에서 가져와야 함
-    // 임시로 빈 리스트 반환 (Phase 3에서 개선)
+async fn handle_list_tabs(app_handle: &AppHandle) -> IpcResponse {
+    let mut tabs = Vec::new();
 
-    let response = ListTabsResponse { tabs: vec![] };
+    // PTY 세션 목록 가져오기
+    let pty_manager = app_handle.state::<PtyManager>();
+    let pty_sessions = pty_manager.list_sessions().await;
+    for pty_id in pty_sessions {
+        tabs.push(TabInfo {
+            tab_id: pty_id.clone(),
+            tab_type: "local".to_string(),
+            title: format!("Terminal {}", &pty_id[..8]), // 짧은 ID 표시
+            active: false, // IPC에서는 active 상태를 알 수 없음
+        });
+    }
+
+    // SSH 세션 목록 가져오기
+    let ssh_manager = app_handle.state::<SshManager>();
+    let ssh_sessions = ssh_manager.list_sessions().await;
+    for session_id in ssh_sessions {
+        tabs.push(TabInfo {
+            tab_id: session_id.clone(),
+            tab_type: "ssh".to_string(),
+            title: format!("SSH {}", &session_id[..8]), // 짧은 ID 표시
+            active: false, // IPC에서는 active 상태를 알 수 없음
+        });
+    }
+
+    let response = ListTabsResponse { tabs };
 
     IpcResponse::success(response)
 }
