@@ -76,10 +76,13 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
     use std::sync::Arc;
     use interprocess::TryClone;
 
+    println!("[DEBUG] run_server started (Windows)");
     let listener = platform::create_listener().await?;
     let listener = Arc::new(listener);
 
+    println!("[DEBUG] Entering accept loop...");
     loop {
+        println!("[DEBUG] Waiting for connection...");
         tokio::select! {
             // 종료 신호 대기
             _ = &mut shutdown_rx => {
@@ -89,10 +92,14 @@ async fn run_server(mut shutdown_rx: oneshot::Receiver<()>) -> Result<(), IpcErr
             // 연결 수락 (blocking이므로 spawn_blocking 필요)
             result = tokio::task::spawn_blocking({
                 let listener_ref = Arc::clone(&listener);
-                move || platform::accept_connection(&listener_ref)
+                move || {
+                    println!("[DEBUG] spawn_blocking: calling accept_connection...");
+                    platform::accept_connection(&listener_ref)
+                }
             }) => {
                 match result {
                     Ok(Ok(stream)) => {
+                        println!("[DEBUG] Connection accepted! Spawning handler...");
                         tokio::task::spawn_blocking(move || {
                             handle_connection_windows(stream);
                         });
