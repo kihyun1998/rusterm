@@ -25,6 +25,7 @@ interface ConnectionProfileState {
   // Query helpers
   getRecentProfiles: (limit?: number) => StoredConnectionProfile[];
   getFavoriteProfiles: () => StoredConnectionProfile[];
+  getAllProfiles: () => StoredConnectionProfile[];
   getProfileById: (id: string) => StoredConnectionProfile | undefined;
 }
 
@@ -151,6 +152,19 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
         return profiles
           .filter((profile) => profile.favorite)
           .sort((a, b) => a.name.localeCompare(b.name)); // Sort by name
+      },
+
+      getAllProfiles: () => {
+        const { profiles } = get();
+        return profiles.sort((a, b) => {
+          // Sort by lastUsed (most recent first), then by name
+          if (a.lastUsed && b.lastUsed) {
+            return b.lastUsed - a.lastUsed;
+          }
+          if (a.lastUsed) return -1;
+          if (b.lastUsed) return 1;
+          return a.name.localeCompare(b.name);
+        });
       },
 
       getProfileById: (id: string) => {
