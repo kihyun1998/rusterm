@@ -80,6 +80,7 @@ export function MainLayout({
                   id={tab.id}
                   connectionType={tab.connectionType}
                   connectionConfig={tab.connectionConfig}
+                  connectionProfileId={tab.connectionProfileId}
                 />
               )}
             </div>
