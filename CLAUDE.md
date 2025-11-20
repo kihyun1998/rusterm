@@ -58,34 +58,48 @@ rusterm/
 │   │   │   └── CommandPalette.tsx
 │   │   ├── menu/                 # 컨텍스트 메뉴
 │   │   │   └── TerminalContextMenu.tsx
+│   │   ├── connection/           # 연결 프로필 관리
+│   │   │   ├── ConnectionCard.tsx
+│   │   │   ├── DeleteConfirmDialog.tsx
+│   │   │   └── EditProfileDialog.tsx
+│   │   ├── ssh/                  # SSH 연결
+│   │   │   └── SSHConnectionDialog.tsx
 │   │   └── home/                 # 홈 화면
 │   │       └── Home.tsx
 │   ├── hooks/                    # React 훅
 │   │   ├── use-theme.tsx
 │   │   ├── use-clipboard.ts
 │   │   ├── use-pty.ts
+│   │   ├── use-ssh.ts
 │   │   ├── use-shortcuts.ts
 │   │   └── use-window-controls.ts
 │   ├── stores/                   # Zustand 스토어
 │   │   ├── index.ts
+│   │   ├── use-connection-profile-store.ts
 │   │   ├── use-settings-store.ts
 │   │   └── use-tab-store.ts
 │   ├── types/                    # TypeScript 타입 정의
+│   │   ├── connection.ts
+│   │   ├── keyring.ts
 │   │   ├── pty.ts
 │   │   ├── settings.ts
+│   │   ├── ssh.ts
 │   │   ├── terminal.ts
 │   │   └── window.ts
 │   ├── pages/                    # 페이지 컴포넌트
 │   │   └── ComponentDemo.tsx
 │   ├── lib/                      # 유틸리티
 │   │   ├── utils.ts
+│   │   ├── keyring.ts
 │   │   ├── terminal-events.ts
 │   │   └── xterm-config.ts
 │   ├── constants/                # 상수 정의
+│   │   ├── connection-icons.ts
 │   │   └── terminal-themes.ts
 │   ├── assets/                   # 정적 리소스
 │   ├── config.ts                 # 앱 설정
 │   ├── globals.css               # 전역 스타일
+│   ├── vite-env.d.ts             # Vite 타입 정의
 │   ├── App.tsx                   # 메인 앱 컴포넌트
 │   └── main.tsx                  # 엔트리 포인트
 │
@@ -94,12 +108,30 @@ rusterm/
     │   ├── commands/             # Tauri 커맨드
     │   │   ├── mod.rs
     │   │   ├── pty_commands.rs   # PTY 관련 커맨드
+    │   │   ├── ssh_commands.rs   # SSH 관련 커맨드
+    │   │   ├── keyring_commands.rs  # 키링 관련 커맨드
     │   │   └── settings_commands.rs  # 설정 관련 커맨드
     │   ├── pty/                  # PTY (Pseudo-Terminal) 관리
     │   │   ├── mod.rs
     │   │   ├── manager.rs        # PTY 세션 관리자
     │   │   ├── session.rs        # PTY 세션
     │   │   └── types.rs          # 타입 정의
+    │   ├── ssh/                  # SSH 연결 관리
+    │   │   ├── mod.rs
+    │   │   ├── manager.rs        # SSH 세션 관리자
+    │   │   ├── session.rs        # SSH 세션
+    │   │   └── types.rs          # SSH 타입 정의
+    │   ├── ipc/                  # IPC (Inter-Process Communication)
+    │   │   ├── mod.rs
+    │   │   ├── events.rs         # 이벤트 정의
+    │   │   ├── handler.rs        # 이벤트 핸들러
+    │   │   ├── lifecycle.rs      # 생명주기 관리
+    │   │   ├── protocol.rs       # IPC 프로토콜
+    │   │   ├── server.rs         # IPC 서버
+    │   │   └── platform/         # 플랫폼별 구현
+    │   │       ├── mod.rs
+    │   │       ├── unix.rs       # Unix/Linux/macOS
+    │   │       └── windows.rs    # Windows
     │   ├── settings/             # 설정 관리
     │   │   ├── mod.rs
     │   │   ├── manager.rs        # 설정 관리자
@@ -115,15 +147,25 @@ rusterm/
 ### Frontend (React)
 
 1. **상태 관리 (Zustand)**
-   - 탭 관리, 터미널 세션, 테마, 설정 등
+   - 탭 관리, 터미널 세션, 테마, 설정, 연결 프로필 등
    - `src/stores/` 디렉토리에서 관리
+   - `use-tab-store.ts`: 탭 및 터미널 세션 관리
+   - `use-settings-store.ts`: 애플리케이션 설정 관리
+   - `use-connection-profile-store.ts`: SSH 연결 프로필 관리
 
 2. **터미널 컴포넌트**
    - xterm.js를 사용한 터미널 에뮬레이션
    - `src/components/terminal/Terminal.tsx`에서 구현
    - addon-fit, addon-web-links 사용
+   - 로컬 PTY 및 SSH 원격 연결 지원
 
-3. **UI 컴포넌트**
+3. **연결 관리**
+   - SSH 연결 프로필 생성 및 관리
+   - `src/components/connection/`에서 관리
+   - `src/components/ssh/`에서 SSH 연결 다이얼로그 제공
+   - 키링을 통한 안전한 비밀번호 저장
+
+4. **UI 컴포넌트**
    - Shadcn/ui 기반 (Radix UI + Tailwind CSS)
    - `src/components/ui/`에 위치
    - 다크모드 지원 (next-themes)
@@ -134,16 +176,29 @@ rusterm/
 1. **PTY 관리**
    - `portable-pty` 크레이트 사용
    - `src-tauri/src/pty/` 디렉토리에서 관리
-   - 세션 생성, I/O 처리, 프로세스 관리
+   - 로컬 터미널 세션 생성, I/O 처리, 프로세스 관리
 
-2. **Tauri 커맨드**
+2. **SSH 관리**
+   - SSH 원격 연결 지원
+   - `src-tauri/src/ssh/` 디렉토리에서 관리
+   - SSH 세션 생성, 인증, 원격 명령 실행
+
+3. **IPC (Inter-Process Communication)**
+   - 프로세스 간 통신 관리
+   - `src-tauri/src/ipc/` 디렉토리에서 관리
+   - 플랫폼별 구현 (Unix/Windows)
+   - 이벤트 기반 통신 프로토콜
+
+4. **Tauri 커맨드**
    - Frontend와 Backend 간 통신
    - `src-tauri/src/commands/`에서 정의
-   - PTY 생성, 입력 전송, 크기 조정 등
+   - PTY, SSH, 키링, 설정 관련 커맨드
 
-3. **의존성**
+5. **의존성**
    - tauri: 메인 프레임워크
-   - portable-pty: 터미널 에뮬레이션
+   - portable-pty: 로컬 터미널 에뮬레이션
+   - ssh2: SSH 연결 지원
+   - keyring: 안전한 비밀번호 저장
    - serde/serde_json: 직렬화
    - uuid: 세션 ID 생성
    - tokio: 비동기 처리
@@ -187,22 +242,40 @@ pnpm tauri build
 - `src/components/settings/SettingsDialog.tsx`: 설정 다이얼로그 (Cmd/Ctrl+,)
 - `src/components/settings/TerminalPreview.tsx`: 터미널 미리보기 컴포넌트
 - `src/components/home/Home.tsx`: 홈 화면 컴포넌트
+- `src/components/connection/ConnectionCard.tsx`: 연결 프로필 카드 컴포넌트
+- `src/components/connection/EditProfileDialog.tsx`: 프로필 편집 다이얼로그
+- `src/components/connection/DeleteConfirmDialog.tsx`: 삭제 확인 다이얼로그
+- `src/components/ssh/SSHConnectionDialog.tsx`: SSH 연결 다이얼로그
 - `src/stores/use-tab-store.ts`: 탭 상태 관리 스토어
 - `src/stores/use-settings-store.ts`: 설정 상태 관리 스토어
+- `src/stores/use-connection-profile-store.ts`: 연결 프로필 상태 관리 스토어
 - `src/hooks/use-pty.ts`: PTY 관련 커스텀 훅
+- `src/hooks/use-ssh.ts`: SSH 연결 관련 커스텀 훅
 - `src/hooks/use-shortcuts.ts`: 단축키 관련 커스텀 훅
 - `src/hooks/use-clipboard.ts`: 클립보드 관련 커스텀 훅
 - `src/hooks/use-window-controls.ts`: 윈도우 제어 커스텀 훅
 - `src/lib/xterm-config.ts`: xterm.js 설정 유틸리티
 - `src/lib/terminal-events.ts`: 터미널 이벤트 처리 유틸리티
+- `src/lib/keyring.ts`: 키링 (비밀번호 관리) 유틸리티
 - `src/constants/terminal-themes.ts`: 터미널 테마 정의
+- `src/constants/connection-icons.ts`: 연결 아이콘 정의
 
 **Backend:**
 - `src-tauri/src/main.rs`: Tauri 애플리케이션 엔트리 포인트
 - `src-tauri/src/commands/pty_commands.rs`: PTY 관련 Tauri 커맨드
+- `src-tauri/src/commands/ssh_commands.rs`: SSH 연결 관련 Tauri 커맨드
+- `src-tauri/src/commands/keyring_commands.rs`: 키링 관련 Tauri 커맨드
 - `src-tauri/src/commands/settings_commands.rs`: 설정 관련 Tauri 커맨드
 - `src-tauri/src/pty/manager.rs`: PTY 세션 관리자
 - `src-tauri/src/pty/session.rs`: 개별 PTY 세션 구현
+- `src-tauri/src/ssh/manager.rs`: SSH 세션 관리자
+- `src-tauri/src/ssh/session.rs`: 개별 SSH 세션 구현
+- `src-tauri/src/ssh/types.rs`: SSH 타입 정의
+- `src-tauri/src/ipc/server.rs`: IPC 서버 구현
+- `src-tauri/src/ipc/handler.rs`: IPC 이벤트 핸들러
+- `src-tauri/src/ipc/protocol.rs`: IPC 프로토콜 정의
+- `src-tauri/src/ipc/platform/unix.rs`: Unix/Linux/macOS 플랫폼 구현
+- `src-tauri/src/ipc/platform/windows.rs`: Windows 플랫폼 구현
 - `src-tauri/src/settings/manager.rs`: 설정 관리자
 - `src-tauri/src/settings/types.rs`: 설정 타입 정의
 
