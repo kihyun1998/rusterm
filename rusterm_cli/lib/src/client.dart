@@ -62,14 +62,9 @@ class RustermIpcClient {
 
   /// Local 탭 추가
   Future<CreateLocalTabResponse> addLocalTab({
-    int cols = 80,
-    int rows = 24,
     String? cwd,
   }) async {
-    final params = <String, dynamic>{
-      'cols': cols,
-      'rows': rows,
-    };
+    final params = <String, dynamic>{};
 
     if (cwd != null) {
       params['cwd'] = cwd;
