@@ -132,15 +132,15 @@ async fn handle_add_local_tab(
     // PtyManager 가져오기
     let pty_manager = app_handle.state::<PtyManager>();
 
-    // PTY 세션 생성
+    // PTY 세션 생성 (기본 터미널 크기: 80x24)
     match pty_manager
         .create_session(
             None,  // shell: None (use default)
             None,  // args: None
             params.cwd,
             None,  // env: None
-            params.cols,
-            params.rows,
+            80,    // cols: default 80
+            24,    // rows: default 24
             app_handle.clone(),
         )
         .await
