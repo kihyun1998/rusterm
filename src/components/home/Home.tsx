@@ -13,13 +13,14 @@ import { isSSHConfig } from '@/types/connection';
 interface HomeProps {
   onShowSettings?: () => void;
   onOpenSshDialog?: () => void;
+  onOpenSftpDialog?: () => void;
 }
 
 /**
  * Home component
  * Displays the welcome screen with quick actions and connection management
  */
-export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
+export function Home({ onShowSettings, onOpenSshDialog, onOpenSftpDialog }: HomeProps) {
   const addTab = useTabStore((state) => state.addTab);
   const tabs = useTabStore((state) => state.tabs);
 

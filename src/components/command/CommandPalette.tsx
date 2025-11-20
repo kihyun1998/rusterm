@@ -41,6 +41,7 @@ interface CommandPaletteProps {
   onShowDemo?: () => void;
   onShowSettings?: () => void;
   onOpenSshDialog?: () => void;
+  onOpenSftpDialog?: () => void;
 }
 
 export function CommandPalette({
@@ -50,6 +51,7 @@ export function CommandPalette({
   onShowDemo,
   onShowSettings,
   onOpenSshDialog,
+  onOpenSftpDialog,
 }: CommandPaletteProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -259,8 +261,14 @@ export function CommandPalette({
         onOpenSshDialog();
       }
       setOpen(false);
+    } else if (type === 'sftp') {
+      // Open SFTP connection dialog
+      if (onOpenSftpDialog) {
+        onOpenSftpDialog();
+      }
+      setOpen(false);
     } else {
-      // TODO: Open connection dialog for other types (telnet, rdp, sftp)
+      // TODO: Open connection dialog for other types (telnet, rdp)
       console.log(`TODO: Open ${type} connection dialog`);
       setOpen(false);
     }

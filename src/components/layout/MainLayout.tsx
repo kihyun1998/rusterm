@@ -13,6 +13,7 @@ interface MainLayoutProps {
   onShowSettings?: () => void;
   onOpenConnectionPalette?: () => void;
   onOpenSshDialog?: () => void;
+  onOpenSftpDialog?: () => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export function MainLayout({
   onShowSettings,
   onOpenConnectionPalette,
   onOpenSshDialog,
+  onOpenSftpDialog,
 }: MainLayoutProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
@@ -93,7 +95,7 @@ export function MainLayout({
               }}
             >
               {tab.type === 'home' ? (
-                <Home onShowSettings={onShowSettings} onOpenSshDialog={onOpenSshDialog} />
+                <Home onShowSettings={onShowSettings} onOpenSshDialog={onOpenSshDialog} onOpenSftpDialog={onOpenSftpDialog} />
               ) : (
                 <Terminal
                   id={tab.id}
