@@ -9,7 +9,7 @@ import { usePty } from '@/hooks/use-pty';
 import { useSsh } from '@/hooks/use-ssh';
 import { listenTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 import { getTerminalConfig } from '@/lib/xterm-config';
-import { useSettingsStore } from '@/stores';
+import { useSettingsStore, useTabStore } from '@/stores';
 import type { ConnectionConfig, ConnectionType } from '@/types/connection';
 import { isSSHConfig } from '@/types/connection';
 import { type SshConnectionState, toBackendSshConfig } from '@/types/ssh';
@@ -346,6 +346,11 @@ export function Terminal({
     // Handle user input
     xterm.onData((data) => {
       writeInputRef.current(data);
+    });
+
+    // Handle dynamic title changes from terminal (e.g., shell PS1 prompt)
+    xterm.onTitleChange((title) => {
+      useTabStore.getState().updateTab(id, { title });
     });
 
     isInitializedRef.current = true;
