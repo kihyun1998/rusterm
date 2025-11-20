@@ -40,7 +40,8 @@ export function MainLayout({
   // Update OS window title when active tab changes
   useEffect(() => {
     const updateWindowTitle = async () => {
-      const title = activeTab?.title || 'rusterm';
+      // For Home tab, always show 'rusterm', for terminal tabs show dynamic title
+      const title = activeTab?.type === 'home' ? 'rusterm' : activeTab?.title || 'rusterm';
       console.log('[MainLayout] Updating window title to:', title);
       const window = getCurrentWindow();
       await window.setTitle(title);
@@ -50,7 +51,7 @@ export function MainLayout({
     updateWindowTitle().catch((err) => {
       console.error('[MainLayout] Failed to update window title:', err);
     });
-  }, [activeTab?.title]);
+  }, [activeTab?.title, activeTab?.type]);
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -60,7 +61,7 @@ export function MainLayout({
         onDemoClick={onDemoClick}
         isTerminalActive={isTerminalActive}
         terminalTheme={terminalTheme}
-        title={activeTab?.title}
+        title={activeTab?.type === 'home' ? 'rusterm' : activeTab?.title}
       />
 
       {/* Tab bar */}
