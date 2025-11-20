@@ -41,11 +41,15 @@ export function MainLayout({
   useEffect(() => {
     const updateWindowTitle = async () => {
       const title = activeTab?.title || 'rusterm';
+      console.log('[MainLayout] Updating window title to:', title);
       const window = getCurrentWindow();
       await window.setTitle(title);
+      console.log('[MainLayout] Window title updated successfully');
     };
 
-    updateWindowTitle();
+    updateWindowTitle().catch((err) => {
+      console.error('[MainLayout] Failed to update window title:', err);
+    });
   }, [activeTab?.title]);
 
   return (
