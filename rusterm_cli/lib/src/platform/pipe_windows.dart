@@ -66,6 +66,9 @@ typedef WriteFileDart = int Function(
 typedef CloseHandleNative = Int32 Function(IntPtr hObject);
 typedef CloseHandleDart = int Function(int hObject);
 
+typedef GetLastErrorNative = Uint32 Function();
+typedef GetLastErrorDart = int Function();
+
 /// Windows Named Pipe IPC 연결
 class WindowsNamedPipeConnection {
   int? _handle;
@@ -75,6 +78,7 @@ class WindowsNamedPipeConnection {
   late final ReadFileDart _readFile;
   late final WriteFileDart _writeFile;
   late final CloseHandleDart _closeHandle;
+  late final GetLastErrorDart _getLastError;
 
   WindowsNamedPipeConnection(this.pipeName) {
     // kernel32.dll 로드
@@ -89,6 +93,8 @@ class WindowsNamedPipeConnection {
         _kernel32.lookupFunction<WriteFileNative, WriteFileDart>('WriteFile');
     _closeHandle = _kernel32
         .lookupFunction<CloseHandleNative, CloseHandleDart>('CloseHandle');
+    _getLastError = _kernel32
+        .lookupFunction<GetLastErrorNative, GetLastErrorDart>('GetLastError');
   }
 
   /// Named Pipe 연결
@@ -107,10 +113,31 @@ class WindowsNamedPipeConnection {
       );
 
       if (_handle == INVALID_HANDLE_VALUE || _handle == 0) {
-        throw Exception('Failed to connect to Named Pipe: $pipeName');
+        final errorCode = _getLastError();
+        final errorMsg = _getErrorMessage(errorCode);
+        throw Exception(
+            'Failed to connect to Named Pipe: $pipeName\nError code: $errorCode - $errorMsg');
       }
     } finally {
       malloc.free(pipeNamePtr);
+    }
+  }
+
+  /// Windows 에러 코드를 사람이 읽을 수 있는 메시지로 변환
+  String _getErrorMessage(int errorCode) {
+    switch (errorCode) {
+      case 2:
+        return 'ERROR_FILE_NOT_FOUND - The pipe does not exist (Is RusTerm running?)';
+      case 5:
+        return 'ERROR_ACCESS_DENIED - Access denied';
+      case 231:
+        return 'ERROR_PIPE_BUSY - All pipe instances are busy';
+      case 232:
+        return 'ERROR_NO_DATA - The pipe is being closed';
+      case 233:
+        return 'ERROR_PIPE_NOT_CONNECTED - No process on other end of pipe';
+      default:
+        return 'Unknown error';
     }
   }
 
