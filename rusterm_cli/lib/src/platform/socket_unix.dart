@@ -1,5 +1,6 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 /// Unix Domain Socket IPC 연결 (Linux/macOS)
 class UnixSocketConnection {

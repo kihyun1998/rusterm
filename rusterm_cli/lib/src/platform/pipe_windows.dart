@@ -1,6 +1,6 @@
-import 'dart:ffi';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:ffi';
+
 import 'package:ffi/ffi.dart';
 
 // Windows API 상수
@@ -83,9 +83,12 @@ class WindowsNamedPipeConnection {
     // API 함수 로드
     _createFile = _kernel32
         .lookupFunction<CreateFileNative, CreateFileDart>('CreateFileW');
-    _readFile = _kernel32.lookupFunction<ReadFileNative, ReadFileDart>('ReadFile');
-    _writeFile = _kernel32.lookupFunction<WriteFileNative, WriteFileDart>('WriteFile');
-    _closeHandle = _kernel32.lookupFunction<CloseHandleNative, CloseHandleDart>('CloseHandle');
+    _readFile =
+        _kernel32.lookupFunction<ReadFileNative, ReadFileDart>('ReadFile');
+    _writeFile =
+        _kernel32.lookupFunction<WriteFileNative, WriteFileDart>('WriteFile');
+    _closeHandle = _kernel32
+        .lookupFunction<CloseHandleNative, CloseHandleDart>('CloseHandle');
   }
 
   /// Named Pipe 연결
