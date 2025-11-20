@@ -33,8 +33,8 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
 
   // Get auth method info for SSH connections
   const getAuthMethodInfo = () => {
-    if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
-      const authMethod = getAuthMethod(profile.config);
+    if (profile.type === 'ssh') {
+      const authMethod = getAuthMethod(profile);
       switch (authMethod) {
         case 'password':
           return { icon: Lock, label: 'Password', color: 'text-blue-500' };

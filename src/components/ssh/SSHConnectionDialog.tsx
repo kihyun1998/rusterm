@@ -200,6 +200,7 @@ export function SSHConnectionDialog({
           username: formState.username,
           // Don't include credentials in the profile - will save to keyring separately
         },
+        savedAuthType: formState.authMethod, // Save auth type for UI display
         createdAt: Date.now(),
       };
 

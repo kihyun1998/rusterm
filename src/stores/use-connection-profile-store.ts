@@ -122,17 +122,22 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
     }),
     {
       name: 'rusterm-connection-profiles', // localStorage key
-      version: 3, // Incremented for lastUsed removal
+      version: 4, // Incremented for savedAuthType addition
       migrate: (persistedState: any, version: number) => {
         if (version < 3) {
           // Migration to v3: Remove favorite and lastUsed fields
-          return {
+          persistedState = {
             ...persistedState,
             profiles: (persistedState.profiles || []).map((profile: any) => {
               const { favorite, lastUsed, ...rest } = profile; // Remove favorite and lastUsed fields
               return rest;
             }),
           };
+        }
+        if (version < 4) {
+          // Migration to v4: Add savedAuthType field (optional, defaults to undefined)
+          // No changes needed - savedAuthType is optional and will be undefined for old profiles
+          // This will display as "Interactive" in the UI until the user reconnects
         }
         return persistedState;
       },
