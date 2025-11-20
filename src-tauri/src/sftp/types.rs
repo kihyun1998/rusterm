@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-// AuthMethod는 SSH 타입 재사용
-use crate::ssh::types::AuthMethod;
+// AuthMethod는 SSH 타입 재사용 (public re-export를 통해)
+use crate::ssh::AuthMethod;
 
 /// SFTP 연결 설정
 #[derive(Debug, Clone, Deserialize, Serialize)]

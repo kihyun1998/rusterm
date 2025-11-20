@@ -75,13 +75,16 @@ impl SftpManager {
         let session = self.get_session(session_id).await?;
         let path = path.to_string();
 
-        let result = tokio::task::spawn_blocking(move || session.list_directory(&path))
+        let (result, session) = tokio::task::spawn_blocking(move || {
+            let result = session.list_directory(&path);
+            (result, session)
+        })
             .await
-            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))??;
+            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))?;
 
         self.return_session(session_id.to_string(), session).await;
 
-        Ok(result)
+        Ok(result?)
     }
 
     /// 파일 업로드
@@ -95,13 +98,16 @@ impl SftpManager {
         let local_path = local_path.to_string();
         let remote_path = remote_path.to_string();
 
-        tokio::task::spawn_blocking(move || session.upload_file(&local_path, &remote_path))
+        let (result, session) = tokio::task::spawn_blocking(move || {
+            let result = session.upload_file(&local_path, &remote_path);
+            (result, session)
+        })
             .await
-            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))??;
+            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))?;
 
         self.return_session(session_id.to_string(), session).await;
 
-        Ok(())
+        Ok(result?)
     }
 
     /// 파일 다운로드
@@ -115,13 +121,16 @@ impl SftpManager {
         let remote_path = remote_path.to_string();
         let local_path = local_path.to_string();
 
-        tokio::task::spawn_blocking(move || session.download_file(&remote_path, &local_path))
+        let (result, session) = tokio::task::spawn_blocking(move || {
+            let result = session.download_file(&remote_path, &local_path);
+            (result, session)
+        })
             .await
-            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))??;
+            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))?;
 
         self.return_session(session_id.to_string(), session).await;
 
-        Ok(())
+        Ok(result?)
     }
 
     /// 디렉토리 생성
@@ -133,13 +142,16 @@ impl SftpManager {
         let session = self.get_session(session_id).await?;
         let path = path.to_string();
 
-        tokio::task::spawn_blocking(move || session.create_directory(&path))
+        let (result, session) = tokio::task::spawn_blocking(move || {
+            let result = session.create_directory(&path);
+            (result, session)
+        })
             .await
-            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))??;
+            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))?;
 
         self.return_session(session_id.to_string(), session).await;
 
-        Ok(())
+        Ok(result?)
     }
 
     /// 파일/디렉토리 삭제
@@ -152,13 +164,16 @@ impl SftpManager {
         let session = self.get_session(session_id).await?;
         let path = path.to_string();
 
-        tokio::task::spawn_blocking(move || session.delete_path(&path, is_dir))
+        let (result, session) = tokio::task::spawn_blocking(move || {
+            let result = session.delete_path(&path, is_dir);
+            (result, session)
+        })
             .await
-            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))??;
+            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))?;
 
         self.return_session(session_id.to_string(), session).await;
 
-        Ok(())
+        Ok(result?)
     }
 
     /// 파일/디렉토리 이름 변경
@@ -172,13 +187,16 @@ impl SftpManager {
         let old_path = old_path.to_string();
         let new_path = new_path.to_string();
 
-        tokio::task::spawn_blocking(move || session.rename_path(&old_path, &new_path))
+        let (result, session) = tokio::task::spawn_blocking(move || {
+            let result = session.rename_path(&old_path, &new_path);
+            (result, session)
+        })
             .await
-            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))??;
+            .map_err(|e| SftpError::FileOperationFailed(format!("Task join error: {}", e)))?;
 
         self.return_session(session_id.to_string(), session).await;
 
-        Ok(())
+        Ok(result?)
     }
 
     /// 세션 종료

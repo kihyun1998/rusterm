@@ -3,4 +3,4 @@ mod session;
 mod types;
 
 pub use manager::SftpManager;
-pub use types::{CreateSftpResponse, FileEntry, SftpConfig, SftpError};
+pub use types::{CreateSftpResponse, FileEntry, SftpConfig};

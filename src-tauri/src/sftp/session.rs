@@ -1,5 +1,5 @@
 use super::types::{FileEntry, SftpConfig, SftpError};
-use crate::ssh::types::AuthMethod;
+use crate::ssh::AuthMethod;
 use ssh2::{Session, Sftp};
 use std::io::{Read, Write};
 use std::net::TcpStream;
