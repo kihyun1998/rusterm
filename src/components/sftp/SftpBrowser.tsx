@@ -1,6 +1,6 @@
 import { AlertCircle, Loader2, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { RemoteFilePanel } from './RemoteFilePanel';
+import { DualPanelLayout } from './DualPanelLayout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useSftp } from '@/hooks/use-sftp';
@@ -246,8 +246,8 @@ export function SftpBrowser({ id, connectionProfileId }: SftpBrowserProps) {
           </div>
         </div>
 
-        {/* Remote file panel */}
-        <RemoteFilePanel
+        {/* Dual panel layout (local + remote) */}
+        <DualPanelLayout
           fileList={sftp.fileList}
           currentPath={sftp.currentPath}
           isLoading={sftp.isLoading}

@@ -91,6 +91,14 @@ pub fn run() {
             commands::sftp_commands::sftp_delete_path,
             commands::sftp_commands::sftp_rename_path,
             commands::sftp_commands::close_sftp_session,
+            // Local FS commands
+            commands::fs_commands::get_local_home_directory,
+            commands::fs_commands::list_local_directory,
+            commands::fs_commands::get_local_file_info,
+            commands::fs_commands::create_local_directory,
+            commands::fs_commands::delete_local_path,
+            commands::fs_commands::rename_local_path,
+            commands::fs_commands::local_path_exists,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
