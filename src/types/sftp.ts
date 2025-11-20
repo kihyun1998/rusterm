@@ -64,3 +64,34 @@ export interface FileTransfer {
   error?: string;
   startTime: number;
 }
+
+/**
+ * SFTP connection state
+ */
+export type SftpConnectionState = 'disconnected' | 'connecting' | 'connected' | 'failed';
+
+/**
+ * Convert SFTPConfig (from connection.ts) to backend SftpConfig format
+ */
+export function toBackendSftpConfig(
+  config: import('@/types/connection').SFTPConfig
+): SftpConfig {
+  let authMethod: SftpAuthMethod | undefined;
+
+  if (config.password) {
+    authMethod = { type: 'password', password: config.password };
+  } else if (config.privateKey) {
+    authMethod = {
+      type: 'privateKey',
+      path: config.privateKey,
+      passphrase: config.passphrase,
+    };
+  }
+
+  return {
+    host: config.host,
+    port: config.port,
+    username: config.username,
+    authMethod,
+  };
+}
