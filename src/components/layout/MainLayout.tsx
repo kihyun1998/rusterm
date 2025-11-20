@@ -1,3 +1,5 @@
+import { appWindow } from '@tauri-apps/api/window';
+import { useEffect } from 'react';
 import { Home } from '@/components/home/Home';
 import { Terminal } from '@/components/terminal/Terminal';
 import { getThemeById } from '@/constants/terminal-themes';
@@ -34,6 +36,16 @@ export function MainLayout({
 
   // Get terminal theme from ID
   const terminalTheme = terminalThemeId ? getThemeById(terminalThemeId)?.theme : undefined;
+
+  // Update OS window title when active tab changes
+  useEffect(() => {
+    const updateWindowTitle = async () => {
+      const title = activeTab?.title || 'rusterm';
+      await appWindow.setTitle(title);
+    };
+
+    updateWindowTitle();
+  }, [activeTab?.title]);
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
