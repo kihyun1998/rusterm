@@ -5,9 +5,7 @@ import App from './App';
 import './globals.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <ThemeProvider defaultTheme="light">
-      <App />
-    </ThemeProvider>
-  </React.StrictMode>
+  <ThemeProvider defaultTheme="light">
+    <App />
+  </ThemeProvider>
 );
