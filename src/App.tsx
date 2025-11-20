@@ -94,15 +94,11 @@ function App() {
       return;
     }
 
-    // Extract connection details for tab title
-    const sshConfig = isSSHConfig(profile.config) ? profile.config : null;
-    const title = sshConfig ? `${sshConfig.username}@${sshConfig.host}` : profile.name;
-
-    // Create new SSH tab
+    // Create new SSH tab with profile name as title
     const newTabId = crypto.randomUUID();
     addTab({
       id: newTabId,
-      title,
+      title: profile.name,
       type: 'terminal',
       closable: true,
       connectionType: 'ssh',
