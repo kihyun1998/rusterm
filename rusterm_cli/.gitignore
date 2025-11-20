@@ -1,0 +1,14 @@
+# Dart
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Compiled binaries
+rusterm_cli
+rusterm_cli.exe

@@ -1,5 +1,4 @@
 use tokio::sync::oneshot;
-use tokio::io::AsyncBufReadExt;
 use tauri::AppHandle;
 
 use crate::ipc::{IpcError, handler, platform};
