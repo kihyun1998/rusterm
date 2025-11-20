@@ -8,6 +8,7 @@ interface TitleBarProps {
   onDemoClick?: () => void;
   isTerminalActive?: boolean;
   terminalTheme?: TerminalTheme;
+  title?: string;
 }
 
 /**
@@ -19,6 +20,7 @@ export function TitleBar({
   onDemoClick,
   isTerminalActive,
   terminalTheme,
+  title,
 }: TitleBarProps) {
   const { toggleMaximize, platform } = useWindowControls();
 
@@ -68,7 +70,7 @@ export function TitleBar({
           data-tauri-drag-region
           className={`text-sm font-medium truncate ${isTerminalActive ? '' : 'text-foreground'}`}
         >
-          rusterm
+          {title || 'rusterm'}
         </span>
       </div>
 

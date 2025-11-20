@@ -43,6 +43,7 @@ export function MainLayout({
         onDemoClick={onDemoClick}
         isTerminalActive={isTerminalActive}
         terminalTheme={terminalTheme}
+        title={activeTab?.title}
       />
 
       {/* Tab bar */}
