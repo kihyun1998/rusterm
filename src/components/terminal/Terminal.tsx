@@ -103,18 +103,28 @@ export function Terminal({
           if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
             try {
               const { getCredential } = await import('@/lib/keyring');
-              const [password, privateKey, passphrase] = await Promise.all([
-                getCredential(connectionProfileId, 'ssh', 'password'),
-                getCredential(connectionProfileId, 'ssh', 'privatekey'),
-                getCredential(connectionProfileId, 'ssh', 'passphrase'),
-              ]);
 
-              console.log('Terminal: Restored credentials from keyring', {
-                profileId: connectionProfileId,
-                hasPassword: !!password,
-                hasPrivateKey: !!privateKey,
-                hasPassphrase: !!passphrase,
-              });
+              let password: string | null = null;
+              let privateKey: string | null = null;
+              let passphrase: string | null = null;
+
+              // Restore only the credentials that were saved (based on savedAuthType)
+              if (profile.savedAuthType === 'password') {
+                password = await getCredential(connectionProfileId, 'ssh', 'password');
+                console.log('Terminal: Restored password credential');
+              } else if (profile.savedAuthType === 'privateKey') {
+                privateKey = await getCredential(connectionProfileId, 'ssh', 'privatekey');
+                console.log('Terminal: Restored privateKey credential');
+              } else if (profile.savedAuthType === 'passphrase') {
+                [privateKey, passphrase] = await Promise.all([
+                  getCredential(connectionProfileId, 'ssh', 'privatekey'),
+                  getCredential(connectionProfileId, 'ssh', 'passphrase'),
+                ]);
+                console.log('Terminal: Restored privateKey + passphrase credentials');
+              } else {
+                // interactive - no credentials to restore
+                console.log('Terminal: Interactive auth - no credentials to restore');
+              }
 
               config = {
                 ...profile.config,

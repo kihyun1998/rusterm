@@ -136,8 +136,9 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
         }
         if (version < 4) {
           // Migration to v4: Add savedAuthType field (optional, defaults to undefined)
-          // No changes needed - savedAuthType is optional and will be undefined for old profiles
-          // This will display as "Interactive" in the UI until the user reconnects
+          // Old profiles without savedAuthType will display as "Interactive"
+          // savedAuthType values: 'password', 'privateKey', 'passphrase', 'interactive'
+          // No changes needed - savedAuthType is optional
         }
         return persistedState;
       },

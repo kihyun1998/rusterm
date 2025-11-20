@@ -62,9 +62,19 @@ export type AuthMethod = 'password' | 'privateKey' | 'noAuth';
  * Get authentication method from connection profile
  * Used for UI display in ConnectionCard
  */
-export function getAuthMethod(profile: { type: ConnectionType; savedAuthType?: 'password' | 'privateKey' }): AuthMethod {
+export function getAuthMethod(profile: {
+  type: ConnectionType;
+  savedAuthType?: 'password' | 'privateKey' | 'passphrase' | 'interactive'
+}): AuthMethod {
   if (profile.type === 'ssh') {
-    return profile.savedAuthType || 'noAuth';
+    // Both passphrase and privateKey display as "Private Key" in UI
+    if (profile.savedAuthType === 'passphrase' || profile.savedAuthType === 'privateKey') {
+      return 'privateKey';
+    }
+    if (profile.savedAuthType === 'password') {
+      return 'password';
+    }
+    return 'noAuth'; // interactive or undefined
   }
   return 'noAuth';
 }
@@ -76,7 +86,7 @@ export interface ConnectionProfile {
   icon?: string; // Lucide icon name (optional)
   type: ConnectionType; // Connection type
   config: ConnectionConfig; // Type-specific configuration
-  savedAuthType?: 'password' | 'privateKey'; // Auth type saved in keyring (for UI display)
+  savedAuthType?: 'password' | 'privateKey' | 'passphrase' | 'interactive'; // Auth type saved in keyring (for UI display)
   tags?: string[]; // Tags for search/categorization (optional)
   createdAt: number; // Creation timestamp
 }

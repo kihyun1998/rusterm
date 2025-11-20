@@ -200,7 +200,19 @@ export function SSHConnectionDialog({
           username: formState.username,
           // Don't include credentials in the profile - will save to keyring separately
         },
-        savedAuthType: formState.authMethod, // Save auth type for UI display
+        savedAuthType: (() => {
+          if (formState.authMethod === 'password' && formState.password) {
+            return 'password';
+          } else if (formState.authMethod === 'privateKey' && formState.privateKeyPath) {
+            if (formState.passphrase) {
+              return 'passphrase'; // privateKey + passphrase
+            } else {
+              return 'privateKey'; // privateKey only
+            }
+          } else {
+            return 'interactive'; // no credentials
+          }
+        })(),
         createdAt: Date.now(),
       };
 
