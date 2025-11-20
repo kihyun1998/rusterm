@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { getUniqueProfileName } from '@/lib/utils';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
 import type { ConnectionProfile, SSHConfig } from '@/types/connection';
 
@@ -93,6 +94,7 @@ export function SSHConnectionDialog({
 
   // Store
   const addProfile = useConnectionProfileStore((state) => state.addProfile);
+  const getAllProfiles = useConnectionProfileStore((state) => state.getAllProfiles);
 
   /**
    * Handle field change
@@ -190,9 +192,12 @@ export function SSHConnectionDialog({
 
     try {
       // 1. Auto-save profile (always create new profile)
+      const baseName = formState.profileName.trim() || formState.host; // Default to host if empty
+      const uniqueName = getUniqueProfileName(baseName, getAllProfiles());
+
       const newProfile: ConnectionProfile = {
         id: crypto.randomUUID(),
-        name: formState.profileName.trim() || formState.host, // Default to host if empty
+        name: uniqueName,
         type: 'ssh',
         config: {
           host: formState.host,
