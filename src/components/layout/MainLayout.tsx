@@ -1,3 +1,5 @@
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useEffect } from 'react';
 import { Home } from '@/components/home/Home';
 import { Terminal } from '@/components/terminal/Terminal';
 import { getThemeById } from '@/constants/terminal-themes';
@@ -35,6 +37,22 @@ export function MainLayout({
   // Get terminal theme from ID
   const terminalTheme = terminalThemeId ? getThemeById(terminalThemeId)?.theme : undefined;
 
+  // Update OS window title when active tab changes
+  useEffect(() => {
+    const updateWindowTitle = async () => {
+      // For Home tab, always show 'rusterm', for terminal tabs show dynamic title
+      const title = activeTab?.type === 'home' ? 'rusterm' : activeTab?.title || 'rusterm';
+      console.log('[MainLayout] Updating window title to:', title);
+      const window = getCurrentWindow();
+      await window.setTitle(title);
+      console.log('[MainLayout] Window title updated successfully');
+    };
+
+    updateWindowTitle().catch((err) => {
+      console.error('[MainLayout] Failed to update window title:', err);
+    });
+  }, [activeTab?.title, activeTab?.type]);
+
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       {/* Title bar */}
@@ -43,6 +61,7 @@ export function MainLayout({
         onDemoClick={onDemoClick}
         isTerminalActive={isTerminalActive}
         terminalTheme={terminalTheme}
+        title={activeTab?.type === 'home' ? 'rusterm' : activeTab?.title}
       />
 
       {/* Tab bar */}

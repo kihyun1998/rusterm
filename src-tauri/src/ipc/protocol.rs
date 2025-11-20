@@ -74,8 +74,6 @@ pub struct AddSshTabParams {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddLocalTabParams {
-    pub cols: u16,
-    pub rows: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cwd: Option<String>,
 }
@@ -178,8 +176,6 @@ mod tests {
         let json = r#"{
             "command": "add_local_tab",
             "params": {
-                "cols": 80,
-                "rows": 24,
                 "cwd": "/home/user"
             }
         }"#;

@@ -59,17 +59,24 @@ export type ConnectionConfig = LocalConfig | SSHConfig | TelnetConfig | RDPConfi
 export type AuthMethod = 'password' | 'privateKey' | 'noAuth';
 
 /**
- * Get authentication method from SSH config
+ * Get authentication method from connection profile
  * Used for UI display in ConnectionCard
  */
-export function getAuthMethod(config: SSHConfig): AuthMethod {
-  if (config.password) {
-    return 'password';
-  } else if (config.privateKey) {
-    return 'privateKey';
-  } else {
-    return 'noAuth'; // Interactive authentication
+export function getAuthMethod(profile: {
+  type: ConnectionType;
+  savedAuthType?: 'password' | 'privateKey' | 'passphrase' | 'interactive'
+}): AuthMethod {
+  if (profile.type === 'ssh') {
+    // Both passphrase and privateKey display as "Private Key" in UI
+    if (profile.savedAuthType === 'passphrase' || profile.savedAuthType === 'privateKey') {
+      return 'privateKey';
+    }
+    if (profile.savedAuthType === 'password') {
+      return 'password';
+    }
+    return 'noAuth'; // interactive or undefined
   }
+  return 'noAuth';
 }
 
 // Connection profile for saved connections
@@ -79,6 +86,7 @@ export interface ConnectionProfile {
   icon?: string; // Lucide icon name (optional)
   type: ConnectionType; // Connection type
   config: ConnectionConfig; // Type-specific configuration
+  savedAuthType?: 'password' | 'privateKey' | 'passphrase' | 'interactive'; // Auth type saved in keyring (for UI display)
   tags?: string[]; // Tags for search/categorization (optional)
   createdAt: number; // Creation timestamp
 }

@@ -10,8 +10,6 @@ void main(List<String> arguments) async {
   parser.addCommand('ping', ArgParser()..addFlag('help', abbr: 'h', negatable: false));
 
   final addLocalParser = ArgParser()
-    ..addOption('cols', abbr: 'c', defaultsTo: '80', help: 'Terminal columns')
-    ..addOption('rows', abbr: 'r', defaultsTo: '24', help: 'Terminal rows')
     ..addOption('cwd', help: 'Working directory')
     ..addFlag('help', abbr: 'h', negatable: false);
   parser.addCommand('add-local', addLocalParser);
@@ -131,14 +129,10 @@ Future<void> handlePing(RustermIpcClient client) async {
 }
 
 Future<void> handleAddLocal(RustermIpcClient client, ArgResults results) async {
-  final cols = int.parse(results['cols'] as String);
-  final rows = int.parse(results['rows'] as String);
   final cwd = results['cwd'] as String?;
 
   print('Adding local terminal tab...');
   final response = await client.addLocalTab(
-    cols: cols,
-    rows: rows,
     cwd: cwd,
   );
   print('✓ Local tab created: $response');

@@ -9,7 +9,7 @@ import { usePty } from '@/hooks/use-pty';
 import { useSsh } from '@/hooks/use-ssh';
 import { listenTerminalEvent, TERMINAL_EVENTS } from '@/lib/terminal-events';
 import { getTerminalConfig } from '@/lib/xterm-config';
-import { useSettingsStore } from '@/stores';
+import { useSettingsStore, useTabStore } from '@/stores';
 import type { ConnectionConfig, ConnectionType } from '@/types/connection';
 import { isSSHConfig } from '@/types/connection';
 import { type SshConnectionState, toBackendSshConfig } from '@/types/ssh';
@@ -103,18 +103,28 @@ export function Terminal({
           if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
             try {
               const { getCredential } = await import('@/lib/keyring');
-              const [password, privateKey, passphrase] = await Promise.all([
-                getCredential(connectionProfileId, 'ssh', 'password'),
-                getCredential(connectionProfileId, 'ssh', 'privatekey'),
-                getCredential(connectionProfileId, 'ssh', 'passphrase'),
-              ]);
 
-              console.log('Terminal: Restored credentials from keyring', {
-                profileId: connectionProfileId,
-                hasPassword: !!password,
-                hasPrivateKey: !!privateKey,
-                hasPassphrase: !!passphrase,
-              });
+              let password: string | null = null;
+              let privateKey: string | null = null;
+              let passphrase: string | null = null;
+
+              // Restore only the credentials that were saved (based on savedAuthType)
+              if (profile.savedAuthType === 'password') {
+                password = await getCredential(connectionProfileId, 'ssh', 'password');
+                console.log('Terminal: Restored password credential');
+              } else if (profile.savedAuthType === 'privateKey') {
+                privateKey = await getCredential(connectionProfileId, 'ssh', 'privatekey');
+                console.log('Terminal: Restored privateKey credential');
+              } else if (profile.savedAuthType === 'passphrase') {
+                [privateKey, passphrase] = await Promise.all([
+                  getCredential(connectionProfileId, 'ssh', 'privatekey'),
+                  getCredential(connectionProfileId, 'ssh', 'passphrase'),
+                ]);
+                console.log('Terminal: Restored privateKey + passphrase credentials');
+              } else {
+                // interactive - no credentials to restore
+                console.log('Terminal: Interactive auth - no credentials to restore');
+              }
 
               config = {
                 ...profile.config,
@@ -336,6 +346,11 @@ export function Terminal({
     // Handle user input
     xterm.onData((data) => {
       writeInputRef.current(data);
+    });
+
+    // Handle dynamic title changes from terminal (e.g., shell PS1 prompt)
+    xterm.onTitleChange((title) => {
+      useTabStore.getState().updateTab(id, { title });
     });
 
     isInitializedRef.current = true;
