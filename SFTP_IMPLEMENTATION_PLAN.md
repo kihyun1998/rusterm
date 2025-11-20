@@ -1,8 +1,8 @@
 # SFTP 완벽 구현 기획서
 
 > **작성일**: 2025-11-20
-> **버전**: 2.0 (코드베이스 분석 기반)
-> **상태**: 구현 준비 완료
+> **버전**: 2.1 (Phase 1-2 완료)
+> **상태**: Phase 1-2 완료, Phase 3 진행 준비
 
 ---
 
@@ -62,15 +62,30 @@
 
 ### 1.2 SFTP 구현 현황
 
-**❌ 존재하지 않는 파일들:**
-- Frontend: SftpConnectionDialog, use-sftp, SftpBrowser
-- Backend: sftp_commands.rs, sftp/manager.rs, sftp/session.rs
+**✅ Phase 1 완료 (Backend Infrastructure):**
+- `src-tauri/src/sftp/types.rs` (65 lines): SFTP types (SftpConfig, FileEntry, AuthMethod)
+- `src-tauri/src/sftp/session.rs` (208 lines): SftpSession 구현
+- `src-tauri/src/sftp/manager.rs` (205 lines): SftpManager 세션 관리
+- `src-tauri/src/commands/sftp_commands.rs` (109 lines): 8개 Tauri 커맨드
+- `src-tauri/src/lib.rs`: SFTP 모듈 및 커맨드 등록 완료
+
+**✅ Phase 2 완료 (Frontend Credential Management):**
+- `src/types/sftp.ts` (68 lines): Frontend SFTP types
+- `src/components/sftp/SftpConnectionDialog.tsx` (456 lines): SFTP 연결 다이얼로그
+- `src/App.tsx`: SftpConnectionDialog 통합, 탭 생성 처리
+- `src/stores/use-tab-store.ts`: TabType에 'sftp' 추가
+- `src/components/layout/MainLayout.tsx`: onOpenSftpDialog 지원
+- `src/components/home/Home.tsx`: onOpenSftpDialog 지원
+- `src/components/command/CommandPalette.tsx`: SFTP 연결 메뉴 지원
+
+**❌ 아직 구현 안된 파일들:**
+- Frontend: use-sftp.ts, SftpBrowser.tsx, RemoteFilePanel.tsx, LocalFilePanel.tsx
+- Backend: fs_commands.rs (local file system)
 - IPC: add_sftp_tab 커맨드
 
 **✅ 이미 준비된 것들:**
 - `connection.ts` (L46-53): `SFTPConfig` 타입 정의 완료
 - `keyring.ts` (L16): `rusterm-sftp` service 지원
-- `use-tab-store.ts` (L5): `TabType` ('home' | 'terminal')
 - `App.tsx` (L38-69): IPC 이벤트 리스너 (tab-created, tab-closed)
 
 ---
