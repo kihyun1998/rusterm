@@ -1,4 +1,4 @@
-import { appWindow } from '@tauri-apps/api/window';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect } from 'react';
 import { Home } from '@/components/home/Home';
 import { Terminal } from '@/components/terminal/Terminal';
@@ -41,7 +41,8 @@ export function MainLayout({
   useEffect(() => {
     const updateWindowTitle = async () => {
       const title = activeTab?.title || 'rusterm';
-      await appWindow.setTitle(title);
+      const window = getCurrentWindow();
+      await window.setTitle(title);
     };
 
     updateWindowTitle();
