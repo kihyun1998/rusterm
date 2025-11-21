@@ -48,10 +48,15 @@ export function useLocalFs(): UseLocalFsReturn {
       setIsLoading(true);
       setError(null);
 
+      console.log('[useLocalFs] listDirectory called with path:', path);
+
       const entries = await invoke<FileEntry[]>('list_local_directory', { path });
       setFiles(entries);
       setCurrentPath(path);
       currentPathRef.current = path; // Update ref
+
+      console.log('[useLocalFs] Updated currentPathRef to:', path);
+
       setSelectedFiles(new Set());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -93,12 +98,19 @@ export function useLocalFs(): UseLocalFsReturn {
   const navigateUp = useCallback(async () => {
     const path = currentPathRef.current;
 
-    if (!path) return;
+    console.log('[useLocalFs] navigateUp called, currentPathRef:', path);
+
+    if (!path) {
+      console.warn('[useLocalFs] navigateUp: currentPathRef is empty');
+      return;
+    }
 
     // Get parent directory path
     const parts = path.split('/').filter(Boolean);
     parts.pop();
     const parentPath = parts.length > 0 ? '/' + parts.join('/') : '/';
+
+    console.log('[useLocalFs] navigateUp: from', path, 'to', parentPath);
 
     await listDirectory(parentPath);
   }, [listDirectory]);
@@ -107,20 +119,22 @@ export function useLocalFs(): UseLocalFsReturn {
    * Refresh current directory
    */
   const refresh = useCallback(async () => {
-    if (currentPath) {
-      await listDirectory(currentPath);
+    const path = currentPathRef.current;
+    if (path) {
+      await listDirectory(path);
     }
-  }, [currentPath, listDirectory]);
+  }, [listDirectory]);
 
   /**
    * Create a new directory
    */
   const createDirectory = useCallback(async (name: string) => {
-    if (!currentPath) return;
+    const path = currentPathRef.current;
+    if (!path) return;
 
     try {
       setError(null);
-      const newPath = `${currentPath}/${name}`.replace(/\/+/g, '/');
+      const newPath = `${path}/${name}`.replace(/\/+/g, '/');
 
       await invoke('create_local_directory', { path: newPath });
       await refresh();
@@ -130,7 +144,7 @@ export function useLocalFs(): UseLocalFsReturn {
       console.error('[useLocalFs] Failed to create directory:', errorMessage);
       throw err;
     }
-  }, [currentPath, refresh]);
+  }, [refresh]);
 
   /**
    * Delete a file or directory

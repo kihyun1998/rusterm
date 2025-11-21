@@ -30,7 +30,11 @@ impl SftpManager {
 
         let (session, initial_path) = tokio::task::spawn_blocking(move || {
             let session = SftpSession::new(session_id_clone, config_clone)?;
-            let home_path = session.get_home_directory()?;
+            // Try to get home directory, fallback to "/" if it fails
+            let home_path = session.get_home_directory().unwrap_or_else(|e| {
+                eprintln!("Failed to get home directory, using '/': {}", e);
+                "/".to_string()
+            });
             Ok::<_, SftpError>((session, home_path))
         })
         .await
