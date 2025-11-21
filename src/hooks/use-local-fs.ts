@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FileEntry } from '@/types/sftp';
 
 interface UseLocalFsReturn {
@@ -37,6 +37,9 @@ export function useLocalFs(): UseLocalFsReturn {
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
+  // Use ref to track current path for consistent access
+  const currentPathRef = useRef<string>('');
+
   /**
    * List directory contents
    */
@@ -48,6 +51,7 @@ export function useLocalFs(): UseLocalFsReturn {
       const entries = await invoke<FileEntry[]>('list_local_directory', { path });
       setFiles(entries);
       setCurrentPath(path);
+      currentPathRef.current = path; // Update ref
       setSelectedFiles(new Set());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -87,15 +91,17 @@ export function useLocalFs(): UseLocalFsReturn {
    * Navigate to parent directory
    */
   const navigateUp = useCallback(async () => {
-    if (!currentPath) return;
+    const path = currentPathRef.current;
+
+    if (!path) return;
 
     // Get parent directory path
-    const parts = currentPath.split('/').filter(Boolean);
+    const parts = path.split('/').filter(Boolean);
     parts.pop();
     const parentPath = parts.length > 0 ? '/' + parts.join('/') : '/';
 
     await listDirectory(parentPath);
-  }, [currentPath, listDirectory]);
+  }, [listDirectory]);
 
   /**
    * Refresh current directory

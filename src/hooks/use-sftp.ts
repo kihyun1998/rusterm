@@ -79,8 +79,22 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
       setStatus('connected');
       onConnectionChangeRef.current?.('connected');
 
-      // Load initial directory
-      await listDirectory(response.initialPath);
+      // Load initial directory inline to avoid timing issues
+      setIsLoading(true);
+      try {
+        const files = await invoke<FileEntry[]>('sftp_list_directory', {
+          sessionId: response.sessionId,
+          path: response.initialPath,
+        });
+        setFileList(files);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error('Failed to load initial directory:', errorMessage);
+        setError(errorMessage);
+        onErrorRef.current?.(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(errorMessage);
