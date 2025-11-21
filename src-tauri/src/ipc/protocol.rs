@@ -42,6 +42,17 @@ impl IpcResponse {
     }
 }
 
+/// IPC 커맨드 enum (타입 안전한 커맨드 처리)
+#[derive(Debug, Deserialize)]
+#[serde(tag = "command", rename_all = "snake_case")]
+pub enum IpcCommand {
+    Ping,
+    AddSshTab { params: AddSshTabParams },
+    AddLocalTab { params: AddLocalTabParams },
+    CloseTab { params: CloseTabParams },
+    ListTabs,
+}
+
 /// Ping 응답 데이터
 #[derive(Debug, Serialize)]
 pub struct PingResponse {
@@ -134,11 +145,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ping_request_deserialization() {
+    fn test_ping_command_deserialization() {
         let json = r#"{"command":"ping"}"#;
-        let req: IpcRequest = serde_json::from_str(json).unwrap();
-        assert_eq!(req.command, "ping");
-        assert!(req.params.is_none());
+        let cmd: IpcCommand = serde_json::from_str(json).unwrap();
+        assert!(matches!(cmd, IpcCommand::Ping));
     }
 
     #[test]
@@ -161,14 +171,45 @@ mod tests {
     }
 
     #[test]
-    fn test_add_local_tab_request() {
+    fn test_add_local_tab_command() {
         let json = r#"{
             "command": "add_local_tab",
             "params": {
                 "cwd": "/home/user"
             }
         }"#;
-        let req: IpcRequest = serde_json::from_str(json).unwrap();
-        assert_eq!(req.command, "add_local_tab");
+        let cmd: IpcCommand = serde_json::from_str(json).unwrap();
+        match cmd {
+            IpcCommand::AddLocalTab { params } => {
+                assert_eq!(params.cwd, Some("/home/user".to_string()));
+            }
+            _ => panic!("Expected AddLocalTab command"),
+        }
+    }
+
+    #[test]
+    fn test_add_ssh_tab_command() {
+        let json = r#"{
+            "command": "add_ssh_tab",
+            "params": {
+                "config": {
+                    "host": "example.com",
+                    "port": 22,
+                    "username": "user"
+                },
+                "cols": 80,
+                "rows": 24
+            }
+        }"#;
+        let cmd: IpcCommand = serde_json::from_str(json).unwrap();
+        match cmd {
+            IpcCommand::AddSshTab { params } => {
+                assert_eq!(params.config.host, "example.com");
+                assert_eq!(params.config.port, 22);
+                assert_eq!(params.cols, 80);
+                assert_eq!(params.rows, 24);
+            }
+            _ => panic!("Expected AddSshTab command"),
+        }
     }
 }

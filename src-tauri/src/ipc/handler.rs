@@ -1,5 +1,5 @@
 use crate::ipc::protocol::{
-    AddLocalTabParams, AddSshTabParams, CloseTabParams, IpcRequest, IpcResponse, ListTabsResponse,
+    AddLocalTabParams, AddSshTabParams, CloseTabParams, IpcCommand, IpcResponse, ListTabsResponse,
     PingResponse, TabInfo,
 };
 use crate::ipc::events::{TabCreatedPayload, TabClosedPayload};
@@ -8,15 +8,14 @@ use crate::ssh::{SshManager, SshOutputEvent};
 use tauri::{AppHandle, Manager, Emitter};
 use uuid::Uuid;
 
-/// IPC 요청 처리
-pub async fn handle_request(request: IpcRequest, app_handle: &AppHandle) -> IpcResponse {
-    match request.command.as_str() {
-        "ping" => handle_ping().await,
-        "add_ssh_tab" => handle_add_ssh_tab(request.params, app_handle).await,
-        "add_local_tab" => handle_add_local_tab(request.params, app_handle).await,
-        "close_tab" => handle_close_tab(request.params, app_handle).await,
-        "list_tabs" => handle_list_tabs(app_handle).await,
-        _ => IpcResponse::error(format!("Unknown command: {}", request.command)),
+/// IPC 요청 처리 (타입 안전한 enum 기반)
+pub async fn handle_request(command: IpcCommand, app_handle: &AppHandle) -> IpcResponse {
+    match command {
+        IpcCommand::Ping => handle_ping().await,
+        IpcCommand::AddSshTab { params } => handle_add_ssh_tab(params, app_handle).await,
+        IpcCommand::AddLocalTab { params } => handle_add_local_tab(params, app_handle).await,
+        IpcCommand::CloseTab { params } => handle_close_tab(params, app_handle).await,
+        IpcCommand::ListTabs => handle_list_tabs(app_handle).await,
     }
 }
 
@@ -33,18 +32,9 @@ async fn handle_ping() -> IpcResponse {
 /// add_ssh_tab 커맨드 처리
 /// Option B: 탭을 먼저 생성하고, SSH 연결 실패 시 탭 내부에 에러 표시
 async fn handle_add_ssh_tab(
-    params: Option<serde_json::Value>,
+    params: AddSshTabParams,
     app_handle: &AppHandle,
 ) -> IpcResponse {
-    // 파라미터 파싱
-    let params: AddSshTabParams = match params {
-        Some(p) => match serde_json::from_value(p) {
-            Ok(params) => params,
-            Err(e) => return IpcResponse::error(format!("Invalid params: {}", e)),
-        },
-        None => return IpcResponse::error("Missing params for add_ssh_tab"),
-    };
-
     // 세션 ID 미리 생성
     let session_id = Uuid::new_v4().to_string();
 
@@ -117,18 +107,9 @@ async fn handle_add_ssh_tab(
 
 /// add_local_tab 커맨드 처리
 async fn handle_add_local_tab(
-    params: Option<serde_json::Value>,
+    params: AddLocalTabParams,
     app_handle: &AppHandle,
 ) -> IpcResponse {
-    // 파라미터 파싱
-    let params: AddLocalTabParams = match params {
-        Some(p) => match serde_json::from_value(p) {
-            Ok(params) => params,
-            Err(e) => return IpcResponse::error(format!("Invalid params: {}", e)),
-        },
-        None => return IpcResponse::error("Missing params for add_local_tab"),
-    };
-
     // PtyManager 가져오기
     let pty_manager = app_handle.state::<PtyManager>();
 
@@ -167,18 +148,9 @@ async fn handle_add_local_tab(
 
 /// close_tab 커맨드 처리
 async fn handle_close_tab(
-    params: Option<serde_json::Value>,
+    params: CloseTabParams,
     app_handle: &AppHandle,
 ) -> IpcResponse {
-    // 파라미터 파싱
-    let params: CloseTabParams = match params {
-        Some(p) => match serde_json::from_value(p) {
-            Ok(params) => params,
-            Err(e) => return IpcResponse::error(format!("Invalid params: {}", e)),
-        },
-        None => return IpcResponse::error("Missing params for close_tab"),
-    };
-
     let tab_id = &params.tab_id;
 
     // PTY 세션 종료 시도
