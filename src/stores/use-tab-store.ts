@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { ConnectionConfig, ConnectionType } from '@/types/connection';
+import type { ConnectionType } from '@/types/connection';
 
 export type TabType = 'home' | 'terminal';
 

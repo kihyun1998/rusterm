@@ -10,7 +10,6 @@ import { useTheme } from '@/hooks/use-theme';
 import ComponentDemo from '@/pages/ComponentDemo';
 import { useSettingsStore, useTabStore } from '@/stores';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
-import { isSSHConfig } from '@/types/connection';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
@@ -47,7 +46,7 @@ function App() {
         title: payload.title,
         type: 'terminal',
         closable: true,
-        ptyId: payload.ptyId ? parseInt(payload.ptyId) : undefined,
+        ptyId: payload.ptyId ? parseInt(payload.ptyId, 10) : undefined,
         connectionType: payload.tabType === 'ssh' ? 'ssh' : 'local',
         connectionProfileId: payload.sessionId,
       });

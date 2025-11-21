@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { deleteAllCredentials } from '@/lib/keyring';
 import type { ConnectionProfile, StoredConnectionProfile } from '@/types/connection';
-import { isSSHConfig, sanitizeProfile } from '@/types/connection';
+import { sanitizeProfile } from '@/types/connection';
 
 interface ConnectionProfileState {
   profiles: StoredConnectionProfile[];

@@ -12,7 +12,7 @@ import {
   SunIcon,
   TextAlignJustifyIcon,
 } from '@radix-ui/react-icons';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   CommandDialog,
@@ -55,13 +55,16 @@ export function CommandPalette({
 
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const setOpen = (value: boolean) => {
-    if (onOpenChange) {
-      onOpenChange(value);
-    } else {
-      setInternalOpen(value);
-    }
-  };
+  const setOpen = useCallback(
+    (value: boolean) => {
+      if (onOpenChange) {
+        onOpenChange(value);
+      } else {
+        setInternalOpen(value);
+      }
+    },
+    [onOpenChange]
+  );
 
   // Tab management store
   const addTab = useTabStore((state) => state.addTab);

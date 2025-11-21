@@ -159,7 +159,7 @@ export function Terminal({
     };
 
     resolveCredentials();
-  }, [connectionProfileId]);
+  }, [connectionProfileId, isSshConnection]);
 
   // PTY connection management (for local terminals)
   const ptyHook = usePty({
@@ -368,7 +368,7 @@ export function Terminal({
       fitAddonRef.current = null;
       isInitializedRef.current = false;
     };
-  }, [settings]); // No dependencies - only run once
+  }, [settings, id]); // No dependencies - only run once
 
   // Create session when terminal is ready (PTY or SSH)
   useEffect(() => {
