@@ -12,14 +12,14 @@ import { isSSHConfig } from '@/types/connection';
 
 interface HomeProps {
   onShowSettings?: () => void;
-  onOpenSshDialog?: () => void;
+  onOpenNewSession?: () => void;
 }
 
 /**
  * Home component
  * Displays the welcome screen with quick actions and connection management
  */
-export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
+export function Home({ onShowSettings, onOpenNewSession }: HomeProps) {
   const addTab = useTabStore((state) => state.addTab);
   const tabs = useTabStore((state) => state.tabs);
 
@@ -119,15 +119,15 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
             variant="outline"
             size="lg"
             onClick={() => {
-              if (onOpenSshDialog) {
-                onOpenSshDialog();
+              if (onOpenNewSession) {
+                onOpenNewSession();
               }
             }}
             className="h-24 flex flex-col gap-2"
           >
             <Plus className="w-6 h-6" />
-            <span>New Connection</span>
-            <span className="text-xs text-muted-foreground">SSH</span>
+            <span>New Session</span>
+            <span className="text-xs text-muted-foreground">Local / SSH</span>
           </Button>
 
           <Button

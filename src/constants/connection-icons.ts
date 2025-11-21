@@ -1,4 +1,4 @@
-import { Lock, type LucideIcon, Monitor } from 'lucide-react';
+import { type LucideIcon, Monitor, Plus } from 'lucide-react';
 import type { ConnectionType } from '@/types/connection';
 
 /**
@@ -7,7 +7,7 @@ import type { ConnectionType } from '@/types/connection';
  */
 export const CONNECTION_ICONS: Record<ConnectionType, LucideIcon> = {
   local: Monitor,
-  ssh: Lock,
+  ssh: Plus,
 } as const;
 
 /**
@@ -16,7 +16,7 @@ export const CONNECTION_ICONS: Record<ConnectionType, LucideIcon> = {
  */
 export const CONNECTION_LABELS: Record<ConnectionType, string> = {
   local: 'Local Terminal',
-  ssh: 'SSH',
+  ssh: 'New Connection',
 } as const;
 
 /**
