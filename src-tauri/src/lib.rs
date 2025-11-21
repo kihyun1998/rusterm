@@ -2,11 +2,13 @@ mod commands;
 mod fs;
 mod pty;
 mod settings;
+mod sftp;
 mod ssh;
 mod ipc;
 
 use pty::PtyManager;
 use settings::SettingsManager;
+use sftp::SftpManager;
 use ssh::SshManager;
 use ipc::IpcServer;
 use std::sync::{Arc, Mutex};
@@ -26,6 +28,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(PtyManager::new())
         .manage(SshManager::new())
+        .manage(SftpManager::new())
         .manage(settings_manager)
         .setup(move |app| {
             // IPC 서버 시작 (비동기 실행)
@@ -81,6 +84,18 @@ pub fn run() {
             commands::fs_commands::delete_local_file,
             commands::fs_commands::delete_local_directory,
             commands::fs_commands::rename_local_item,
+            // SFTP commands
+            commands::sftp_commands::create_sftp_session,
+            commands::sftp_commands::close_sftp_session,
+            commands::sftp_commands::get_remote_home_dir,
+            commands::sftp_commands::list_remote_directory,
+            commands::sftp_commands::create_remote_directory,
+            commands::sftp_commands::delete_remote_file,
+            commands::sftp_commands::delete_remote_directory,
+            commands::sftp_commands::rename_remote_item,
+            commands::sftp_commands::download_file,
+            commands::sftp_commands::upload_file,
+            commands::sftp_commands::get_remote_file_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
