@@ -16,24 +16,13 @@ interface TabBarProps {
 export function TabBar({ isTerminalActive, terminalTheme, onOpenConnectionPalette }: TabBarProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
-  const addTab = useTabStore((state) => state.addTab);
   const setActiveTab = useTabStore((state) => state.setActiveTab);
   const closeTab = useTabStore((state) => state.closeTab);
 
   const handleNewTab = () => {
+    // Always open connection palette when clicking + button
     if (onOpenConnectionPalette) {
-      // Open connection selection palette
       onOpenConnectionPalette();
-    } else {
-      // Fallback: create local terminal immediately
-      const newTabId = crypto.randomUUID();
-      const terminalCount = tabs.filter((t) => t.type === 'terminal').length;
-      addTab({
-        id: newTabId,
-        title: `Terminal ${terminalCount + 1}`,
-        type: 'terminal',
-        closable: true,
-      });
     }
   };
 

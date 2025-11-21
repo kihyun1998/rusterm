@@ -1,5 +1,9 @@
 # RusTerm - Claude AI Development Guide
 
+## IMPORTANT
+
+- TypeScript를 쓰고 있는데 절대 any 타입을 쓰지 마
+
 ## 프로젝트 개요
 
 RusTerm은 Tauri 2 기반의 크로스 플랫폼 터미널 에뮬레이터입니다.

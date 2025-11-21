@@ -1,4 +1,4 @@
-import { Edit, Key, Lock, Trash2, UserCircle } from 'lucide-react';
+import { Edit, HelpCircle, Key, Lock, Trash2, UserCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,7 +20,8 @@ interface ConnectionCardProps {
  * Shows auth method, last used time, and connection details
  */
 export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: ConnectionCardProps) {
-  const Icon = CONNECTION_ICONS[profile.type];
+  // Fallback to HelpCircle icon for unsupported/legacy connection types
+  const Icon = CONNECTION_ICONS[profile.type] || HelpCircle;
 
   // Get connection details based on type
   const getConnectionDetails = () => {

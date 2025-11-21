@@ -1,21 +1,21 @@
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 import { CommandPalette } from '@/components/command/CommandPalette';
+import { NewSessionDialog } from '@/components/connection/NewSessionDialog';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
-import { SSHConnectionDialog } from '@/components/ssh/SSHConnectionDialog';
 import { isDevelopment } from '@/config';
 import { useShortcuts } from '@/hooks/use-shortcuts';
 import { useTheme } from '@/hooks/use-theme';
 import ComponentDemo from '@/pages/ComponentDemo';
 import { useSettingsStore, useTabStore } from '@/stores';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
+import type { TabClosedPayload, TabCreatedPayload } from '@/types/ipc';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [sshDialogOpen, setSshDialogOpen] = useState(false);
-  const [commandPaletteMode, setCommandPaletteMode] = useState<'command' | 'connection'>('command');
+  const [newSessionDialogOpen, setNewSessionDialogOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { setTheme } = useTheme();
   const loadSettings = useSettingsStore((state) => state.loadSettings);
@@ -37,7 +37,7 @@ function App() {
   // IPC event listeners for tab management
   useEffect(() => {
     // Listen for tab-created events from IPC
-    const unlistenTabCreated = listen('tab-created', (event: any) => {
+    const unlistenTabCreated = listen<TabCreatedPayload>('tab-created', (event) => {
       const payload = event.payload;
       console.log('[IPC] tab-created event received:', payload);
 
@@ -53,7 +53,7 @@ function App() {
     });
 
     // Listen for tab-closed events from IPC
-    const unlistenTabClosed = listen('tab-closed', (event: any) => {
+    const unlistenTabClosed = listen<TabClosedPayload>('tab-closed', (event) => {
       const payload = event.payload;
       console.log('[IPC] tab-closed event received:', payload);
 
@@ -72,19 +72,26 @@ function App() {
     onOpenSettings: () => setShowSettings(true),
   });
 
-  // Open connection selection Command Palette
-  const openConnectionPalette = () => {
-    setCommandPaletteMode('connection');
-    setCommandPaletteOpen(true);
+  // Open new session dialog
+  const openNewSessionDialog = () => {
+    setNewSessionDialogOpen(true);
   };
 
-  // Open SSH connection dialog
-  const openSshDialog = () => {
-    setSshDialogOpen(true);
+  // Handle local terminal creation
+  const handleCreateLocal = () => {
+    const terminalCount = useTabStore.getState().tabs.filter((t) => t.type === 'terminal').length;
+    const newTabId = crypto.randomUUID();
+    addTab({
+      id: newTabId,
+      title: `Terminal ${terminalCount + 1}`,
+      type: 'terminal',
+      closable: true,
+      connectionType: 'local',
+    });
   };
 
   // Handle SSH connection from dialog
-  const handleSshConnect = (profileId: string) => {
+  const handleCreateSSH = (profileId: string) => {
     // Get profile to extract connection info for tab title
     const profile = useConnectionProfileStore.getState().getProfileById(profileId);
 
@@ -117,32 +124,24 @@ function App() {
           showDemoButton={isDevelopment}
           onDemoClick={() => setShowDemo(true)}
           onShowSettings={() => setShowSettings(true)}
-          onOpenConnectionPalette={openConnectionPalette}
-          onOpenSshDialog={openSshDialog}
+          onOpenConnectionPalette={openNewSessionDialog}
+          onOpenNewSession={openNewSessionDialog}
         />
       </div>
 
       {/* Global Command Palette */}
       <CommandPalette
-        mode={commandPaletteMode}
         open={commandPaletteOpen}
-        onOpenChange={(open) => {
-          setCommandPaletteOpen(open);
-          // Reset mode to 'command' when closing
-          if (!open) {
-            setCommandPaletteMode('command');
-          }
-        }}
-        onShowDemo={() => setShowDemo(true)}
-        onShowSettings={() => setShowSettings(true)}
-        onOpenSshDialog={openSshDialog}
+        onOpenChange={setCommandPaletteOpen}
+        onOpenNewSession={openNewSessionDialog}
       />
 
-      {/* SSH Connection Dialog */}
-      <SSHConnectionDialog
-        open={sshDialogOpen}
-        onOpenChange={setSshDialogOpen}
-        onConnect={handleSshConnect}
+      {/* New Session Dialog */}
+      <NewSessionDialog
+        open={newSessionDialogOpen}
+        onOpenChange={setNewSessionDialogOpen}
+        onCreateLocal={handleCreateLocal}
+        onCreateSSH={handleCreateSSH}
       />
 
       {/* Settings Dialog */}

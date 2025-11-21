@@ -189,15 +189,15 @@ async fn handle_connection_windows(server: tokio::net::windows::named_pipe::Name
 
 /// 요청 처리 (공통)
 async fn process_request(line: &str, app_handle: &AppHandle) -> crate::ipc::IpcResponse {
-    use crate::ipc::{IpcRequest, IpcResponse};
+    use crate::ipc::{IpcCommand, IpcResponse};
 
     let line = line.trim();
     if line.is_empty() {
         return IpcResponse::error("Empty request");
     }
 
-    match serde_json::from_str::<IpcRequest>(line) {
-        Ok(request) => handler::handle_request(request, app_handle).await,
+    match serde_json::from_str::<IpcCommand>(line) {
+        Ok(command) => handler::handle_request(command, app_handle).await,
         Err(e) => IpcResponse::error(format!("Invalid JSON: {}", e)),
     }
 }
