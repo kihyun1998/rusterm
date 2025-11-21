@@ -118,6 +118,7 @@ export function LocalFilePanel({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
+    console.log('[LocalFilePanel] DragOver (container level)');
     setIsDragOver(true);
   };
 
@@ -187,14 +188,11 @@ export function LocalFilePanel({
     }
   };
 
-  // Handle drag over rows (allow drop on folders only)
+  // Handle drag over rows (prevent default to allow drop)
   const handleRowDragOver = (e: React.DragEvent, file: FileEntry) => {
-    if (file.isDir) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.dataTransfer.dropEffect = 'copy';
-      console.log('[LocalFilePanel] DragOver folder:', file.name);
-    }
+    e.preventDefault(); // Always prevent default to allow drop
+    e.dataTransfer.dropEffect = 'copy';
+    console.log('[LocalFilePanel] DragOver row:', file.name, file.isDir ? '(folder)' : '(file)');
   };
 
   return (
