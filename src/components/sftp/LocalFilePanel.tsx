@@ -45,8 +45,6 @@ function formatDate(timestamp: number): string {
 }
 
 interface LocalFilePanelProps {
-  selectedFiles?: string[];
-  onSelectFiles?: (paths: string[]) => void;
   onDownload?: (remotePath: string, localPath: string) => Promise<void>;
 }
 
@@ -55,8 +53,6 @@ interface LocalFilePanelProps {
  * Displays local file system with navigation
  */
 export function LocalFilePanel({
-  selectedFiles = [],
-  onSelectFiles,
   onDownload,
 }: LocalFilePanelProps = {}) {
   const {
@@ -65,24 +61,18 @@ export function LocalFilePanel({
     isLoading,
     navigateToDirectory,
     navigateUp,
+    selectedFiles,
+    toggleSelection,
   } = useLocalFs();
 
   const hasParent = currentPath !== '/' && currentPath !== '';
   const [isDragging, setIsDragging] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
-  // Single-click: Select file (toggle)
+  // Single-click: Select file or folder (toggle)
   const handleFileClick = (file: FileEntry) => {
     if (isDragging) return; // Ignore click during drag
-    if (file.isDir) return; // Folders are not selectable
-
-    if (!onSelectFiles) return;
-
-    // Toggle selection
-    if (selectedFiles.includes(file.path)) {
-      onSelectFiles(selectedFiles.filter(p => p !== file.path));
-    } else {
-      onSelectFiles([...selectedFiles, file.path]);
-    }
+    toggleSelection(file.path);
   };
 
   // Double-click: Navigate to directory
@@ -95,11 +85,6 @@ export function LocalFilePanel({
 
   // Drag & Drop handlers
   const handleDragStart = (e: React.DragEvent, file: FileEntry) => {
-    if (file.isDir) {
-      e.preventDefault(); // Folders cannot be dragged (not supported yet)
-      return;
-    }
-
     setIsDragging(true);
     e.dataTransfer.effectAllowed = 'copy';
     e.dataTransfer.setData(
@@ -109,8 +94,19 @@ export function LocalFilePanel({
         path: file.path,
         name: file.name,
         size: file.size,
+        isDir: file.isDir,
       })
     );
+
+    // Create custom drag image
+    const dragImage = document.createElement('div');
+    dragImage.className = 'px-3 py-2 bg-background border rounded-md shadow-lg text-sm font-medium';
+    dragImage.textContent = file.name;
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-9999px';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   const handleDragEnd = () => {
@@ -121,10 +117,16 @@ export function LocalFilePanel({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
+    setIsDragOver(false);
 
     if (!onDownload) {
       console.warn('onDownload callback not provided');
@@ -157,8 +159,9 @@ export function LocalFilePanel({
 
       {/* File list */}
       <div
-        className="flex-1 overflow-auto sftp-file-list"
+        className={`flex-1 overflow-auto sftp-file-list transition-all ${isDragOver ? 'ring-2 ring-primary ring-inset' : ''}`}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {isLoading ? (
@@ -204,16 +207,16 @@ export function LocalFilePanel({
                   </TableRow>
                 ) : (
                   files.map((file) => {
-                    const isSelected = selectedFiles.includes(file.path);
+                    const isSelected = selectedFiles.has(file.path);
                     return (
                       <TableRow
                         key={file.path}
                         className={`
                           ${file.isDir ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}
-                          ${isSelected && !file.isDir ? 'bg-blue-100 dark:bg-blue-950' : ''}
+                          ${isSelected ? 'bg-accent/50' : ''}
                           hover:bg-muted/50
                         `}
-                        draggable={!file.isDir}
+                        draggable={true}
                         onDragStart={(e) => handleDragStart(e, file)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleFileClick(file)}
@@ -279,9 +282,9 @@ export function LocalFilePanel({
             <span>
               {files.length}개 항목 ({files.filter((f) => f.isDir).length}개 폴더,{' '}
               {files.filter((f) => !f.isDir).length}개 파일)
-              {selectedFiles.length > 0 && (
-                <span className="ml-2 text-blue-600 font-medium">
-                  • {selectedFiles.length}개 선택됨
+              {selectedFiles.size > 0 && (
+                <span className="ml-2 text-primary font-medium">
+                  • {selectedFiles.size}개 선택됨
                 </span>
               )}
             </span>

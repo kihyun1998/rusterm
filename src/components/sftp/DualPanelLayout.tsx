@@ -15,6 +15,10 @@ interface DualPanelLayoutProps {
   // File transfer callbacks
   onUpload?: (localPath: string, remotePath: string) => Promise<void>;
   onDownload?: (remotePath: string, localPath: string) => Promise<void>;
+
+  // Remote file selection
+  remoteSelectedFiles?: string[];
+  onRemoteSelectFiles?: (paths: string[]) => void;
 }
 
 /**
@@ -31,6 +35,8 @@ export function DualPanelLayout({
   onRenameFile,
   onUpload,
   onDownload,
+  remoteSelectedFiles,
+  onRemoteSelectFiles,
 }: DualPanelLayoutProps) {
   return (
     <div className="flex h-full">
@@ -52,6 +58,8 @@ export function DualPanelLayout({
           onDeleteFile={onDeleteFile}
           onRenameFile={onRenameFile}
           onUpload={onUpload}
+          selectedFiles={remoteSelectedFiles}
+          onSelectFiles={onRemoteSelectFiles}
         />
       </div>
     </div>

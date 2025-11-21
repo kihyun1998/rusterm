@@ -38,6 +38,9 @@ export function SftpBrowser({ id, connectionProfileId }: SftpBrowserProps) {
   // Transfer store
   const { addTransfer, updateTransfer } = useTransferStore();
 
+  // Remote file selection state
+  const [remoteSelectedFiles, setRemoteSelectedFiles] = useState<string[]>([]);
+
   // Resolve credentials from keyring
   useEffect(() => {
     const resolveCredentials = async () => {
@@ -312,6 +315,8 @@ export function SftpBrowser({ id, connectionProfileId }: SftpBrowserProps) {
             onRenameFile={sftp.renameFile}
             onUpload={handleUpload}
             onDownload={handleDownload}
+            remoteSelectedFiles={remoteSelectedFiles}
+            onRemoteSelectFiles={setRemoteSelectedFiles}
           />
         </div>
 
