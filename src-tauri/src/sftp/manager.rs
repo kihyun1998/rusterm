@@ -28,14 +28,13 @@ impl SftpManager {
         let session_id_clone = session_id.clone();
         let config_clone = config.clone();
 
-        let session = tokio::task::spawn_blocking(move || {
-            SftpSession::new(session_id_clone, config_clone)
+        let (session, initial_path) = tokio::task::spawn_blocking(move || {
+            let session = SftpSession::new(session_id_clone, config_clone)?;
+            let home_path = session.get_home_directory()?;
+            Ok::<_, SftpError>((session, home_path))
         })
         .await
         .map_err(|e| SftpError::ConnectionFailed(format!("Task join error: {}", e)))??;
-
-        // Get initial directory (home directory)
-        let initial_path = "/".to_string();
 
         let response = CreateSftpResponse {
             session_id: session_id.clone(),
