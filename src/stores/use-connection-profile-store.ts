@@ -122,7 +122,7 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
     }),
     {
       name: 'rusterm-connection-profiles', // localStorage key
-      version: 4, // Incremented for savedAuthType addition
+      version: 5, // Incremented for removing unsupported connection types
       migrate: (persistedState: any, version: number) => {
         if (version < 3) {
           // Migration to v3: Remove favorite and lastUsed fields
@@ -139,6 +139,21 @@ export const useConnectionProfileStore = create<ConnectionProfileState>()(
           // Old profiles without savedAuthType will display as "Interactive"
           // savedAuthType values: 'password', 'privateKey', 'passphrase', 'interactive'
           // No changes needed - savedAuthType is optional
+        }
+        if (version < 5) {
+          // Migration to v5: Remove unsupported connection types (telnet, rdp, sftp)
+          // Only keep 'local' and 'ssh' connections
+          const validTypes = ['local', 'ssh'];
+          persistedState = {
+            ...persistedState,
+            profiles: (persistedState.profiles || []).filter((profile: any) =>
+              validTypes.includes(profile.type)
+            ),
+            // Also clean up recent connections that reference removed profiles
+            recentConnections: (persistedState.recentConnections || []).filter((id: string) =>
+              (persistedState.profiles || []).some((p: any) => p.id === id && validTypes.includes(p.type))
+            ),
+          };
         }
         return persistedState;
       },
