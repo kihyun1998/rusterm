@@ -1,4 +1,5 @@
 import { ArrowUp, File, Folder, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -81,9 +82,11 @@ export function RemoteFilePanel({
   // Ensure currentPath is never undefined
   const safePath = currentPath || '/';
   const hasParent = safePath !== '/' && safePath !== '';
+  const [isDragging, setIsDragging] = useState(false);
 
   // Single-click: Select file (toggle)
   const handleFileClick = (file: FileEntry) => {
+    if (isDragging) return; // Ignore click during drag
     if (file.isDir) return; // Folders are not selectable
 
     if (!onSelectFiles) return;
@@ -98,6 +101,7 @@ export function RemoteFilePanel({
 
   // Double-click: Navigate to directory
   const handleFileDoubleClick = async (file: FileEntry) => {
+    if (isDragging) return; // Ignore double-click during drag
     if (file.isDir) {
       await onChangeDirectory(file.path);
     }
@@ -115,6 +119,7 @@ export function RemoteFilePanel({
       return;
     }
 
+    setIsDragging(true);
     e.dataTransfer.effectAllowed = 'copy';
     e.dataTransfer.setData(
       'text/plain',
@@ -125,6 +130,11 @@ export function RemoteFilePanel({
         size: file.size,
       })
     );
+  };
+
+  const handleDragEnd = () => {
+    // Reset dragging state after a short delay to prevent click events
+    setTimeout(() => setIsDragging(false), 50);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -218,12 +228,13 @@ export function RemoteFilePanel({
                       <TableRow
                         key={file.path}
                         className={`
-                          ${file.isDir ? 'cursor-pointer' : 'cursor-pointer'}
+                          ${file.isDir ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}
                           ${isSelected && !file.isDir ? 'bg-blue-100 dark:bg-blue-950' : ''}
                           hover:bg-muted/50
                         `}
                         draggable={!file.isDir}
                         onDragStart={(e) => handleDragStart(e, file)}
+                        onDragEnd={handleDragEnd}
                         onClick={() => handleFileClick(file)}
                         onDoubleClick={() => handleFileDoubleClick(file)}
                       >
