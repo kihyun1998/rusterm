@@ -100,7 +100,7 @@ export function RemoteFilePanel({
       </div>
 
       {/* File list */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto sftp-file-list">
         {isLoading ? (
           <div className="p-4 space-y-2">
             <Skeleton className="h-10 w-full" />
