@@ -24,6 +24,7 @@ pub enum AuthMethod {
 
 /// SSH 세션 생성 응답
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateSshResponse {
     pub session_id: String,
     pub host: String,
@@ -58,6 +59,7 @@ pub struct ResizeSshRequest {
 
 /// SSH 출력 이벤트 페이로드
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SshOutputEvent {
     pub session_id: String,
     pub data: String,
@@ -65,6 +67,7 @@ pub struct SshOutputEvent {
 
 /// SSH 연결 종료 이벤트 페이로드
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SshExitEvent {
     pub session_id: String,
     pub reason: String,

@@ -233,16 +233,11 @@ export function SftpBrowser({ id, connectionProfileId }: SftpBrowserProps) {
       <div className="h-full flex flex-col">
         {/* Connection info header */}
         <div className="border-b px-4 py-2 bg-muted/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              <span className="text-sm font-medium">
-                {resolvedConfig?.username}@{resolvedConfig?.host}
-              </span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={sftp.disconnect}>
-              연결 해제
-            </Button>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-green-500"></div>
+            <span className="text-sm font-medium">
+              {resolvedConfig?.username}@{resolvedConfig?.host}
+            </span>
           </div>
         </div>
 

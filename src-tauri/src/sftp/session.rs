@@ -202,6 +202,17 @@ impl SftpSession {
             .map_err(|e| SftpError::FileOperationFailed(e.to_string()))
     }
 
+    /// Get remote home directory
+    pub fn get_home_directory(&self) -> Result<String, SftpError> {
+        // Use realpath(".") to get the default/home directory
+        let home_path = self
+            .sftp
+            .realpath(Path::new("."))
+            .map_err(|e| SftpError::FileOperationFailed(format!("Failed to get home directory: {}", e)))?;
+
+        Ok(home_path.to_string_lossy().to_string())
+    }
+
     pub fn session_id(&self) -> &str {
         &self.session_id
     }

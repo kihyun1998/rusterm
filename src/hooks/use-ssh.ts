@@ -72,14 +72,14 @@ export function useSsh(options: UseSshOptions = {}): UseSshReturn {
         rows,
       });
 
-      setSessionId(response.session_id);
-      sessionIdRef.current = response.session_id;
+      setSessionId(response.sessionId);
+      sessionIdRef.current = response.sessionId;
       setStatus('connected');
       onStateChangeRef.current?.('connected');
 
       // Set up output event listener
       const outputUnlisten = await listen<SshOutputEvent>(
-        `ssh://output/${response.session_id}`,
+        `ssh://output/${response.sessionId}`,
         (event) => {
           if (onOutputRef.current) {
             onOutputRef.current(event.payload.data);
@@ -90,7 +90,7 @@ export function useSsh(options: UseSshOptions = {}): UseSshReturn {
 
       // Set up exit event listener
       const exitUnlisten = await listen<SshExitEvent>(
-        `ssh://exit/${response.session_id}`,
+        `ssh://exit/${response.sessionId}`,
         (event) => {
           setStatus('disconnected');
           onStateChangeRef.current?.('disconnected');
