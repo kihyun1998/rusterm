@@ -112,6 +112,28 @@ function App() {
     });
   };
 
+  // Handle SFTP connection from dialog
+  const handleCreateSFTP = (profileId: string) => {
+    // Get profile to extract connection info for tab title
+    const profile = useConnectionProfileStore.getState().getProfileById(profileId);
+
+    if (!profile) {
+      console.error('Profile not found:', profileId);
+      return;
+    }
+
+    // Create new SFTP tab with profile name as title
+    const newTabId = crypto.randomUUID();
+    addTab({
+      id: newTabId,
+      title: profile.name,
+      type: 'sftp',
+      closable: true,
+      connectionType: 'sftp',
+      connectionProfileId: profileId, // SFTP browser will restore credentials from keyring
+    });
+  };
+
   // Show demo page in development mode
   if (isDevelopment && showDemo) {
     return <ComponentDemo onBack={() => setShowDemo(false)} />;
@@ -142,6 +164,7 @@ function App() {
         onOpenChange={setNewSessionDialogOpen}
         onCreateLocal={handleCreateLocal}
         onCreateSSH={handleCreateSSH}
+        onCreateSFTP={handleCreateSFTP}
       />
 
       {/* Settings Dialog */}
