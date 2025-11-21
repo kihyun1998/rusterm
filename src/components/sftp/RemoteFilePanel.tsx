@@ -1,5 +1,4 @@
 import { ArrowUp, File, Folder, Loader2 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -83,41 +82,31 @@ export function RemoteFilePanel({
   const safePath = currentPath || '/';
   const hasParent = safePath !== '/' && safePath !== '';
 
-  const handleFileClick = async (file: FileEntry) => {
+  // Single-click: Select file (toggle)
+  const handleFileClick = (file: FileEntry) => {
+    if (file.isDir) return; // Folders are not selectable
+
+    if (!onSelectFiles) return;
+
+    // Toggle selection
+    if (selectedFiles.includes(file.path)) {
+      onSelectFiles(selectedFiles.filter(p => p !== file.path));
+    } else {
+      onSelectFiles([...selectedFiles, file.path]);
+    }
+  };
+
+  // Double-click: Navigate to directory
+  const handleFileDoubleClick = async (file: FileEntry) => {
     if (file.isDir) {
       await onChangeDirectory(file.path);
     }
-    // Single-click on files - no action yet (download/edit in future phases)
   };
 
-  const handleParentClick = async () => {
+  const handleParentDoubleClick = async () => {
     const parentPath = getParentPath(safePath);
     await onChangeDirectory(parentPath);
   };
-
-  const handleSelectFile = (filePath: string, checked: boolean) => {
-    if (!onSelectFiles) return;
-
-    if (checked) {
-      onSelectFiles([...selectedFiles, filePath]);
-    } else {
-      onSelectFiles(selectedFiles.filter(p => p !== filePath));
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (!onSelectFiles) return;
-
-    if (checked) {
-      const allFilePaths = fileList.filter(f => !f.isDir).map(f => f.path);
-      onSelectFiles(allFilePaths);
-    } else {
-      onSelectFiles([]);
-    }
-  };
-
-  const allFilesSelected = fileList.filter(f => !f.isDir).length > 0 &&
-    fileList.filter(f => !f.isDir).every(f => selectedFiles.includes(f.path));
 
   // Drag & Drop handlers
   const handleDragStart = (e: React.DragEvent, file: FileEntry) => {
@@ -193,14 +182,6 @@ export function RemoteFilePanel({
             <Table>
               <TableHeader>
                 <TableRow>
-                  {onSelectFiles && (
-                    <TableHead className="w-[40px]">
-                      <Checkbox
-                        checked={allFilesSelected}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
-                  )}
                   <TableHead className="w-[40px]"></TableHead>
                   <TableHead>이름</TableHead>
                   <TableHead className="w-[100px]">크기</TableHead>
@@ -212,9 +193,8 @@ export function RemoteFilePanel({
                 {hasParent && (
                   <TableRow
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={handleParentClick}
+                    onDoubleClick={handleParentDoubleClick}
                   >
-                    {onSelectFiles && <TableCell></TableCell>}
                     <TableCell>
                       <ArrowUp className="h-4 w-4 text-muted-foreground" />
                     </TableCell>
@@ -227,41 +207,34 @@ export function RemoteFilePanel({
                 {/* Files and directories */}
                 {fileList.length === 0 && !hasParent ? (
                   <TableRow>
-                    <TableCell colSpan={onSelectFiles ? 5 : 4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       디렉토리가 비어있습니다
                     </TableCell>
                   </TableRow>
                 ) : (
-                  fileList.map((file) => (
-                    <TableRow
-                      key={file.path}
-                      className={file.isDir ? 'cursor-pointer hover:bg-muted/50' : 'cursor-grab active:cursor-grabbing'}
-                      draggable={!file.isDir}
-                      onDragStart={(e) => handleDragStart(e, file)}
-                    >
-                      {onSelectFiles && (
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          {!file.isDir && (
-                            <Checkbox
-                              checked={selectedFiles.includes(file.path)}
-                              onCheckedChange={(checked) =>
-                                handleSelectFile(file.path, checked as boolean)
-                              }
-                            />
+                  fileList.map((file) => {
+                    const isSelected = selectedFiles.includes(file.path);
+                    return (
+                      <TableRow
+                        key={file.path}
+                        className={`
+                          ${file.isDir ? 'cursor-pointer' : 'cursor-pointer'}
+                          ${isSelected && !file.isDir ? 'bg-blue-100 dark:bg-blue-950' : ''}
+                          hover:bg-muted/50
+                        `}
+                        draggable={!file.isDir}
+                        onDragStart={(e) => handleDragStart(e, file)}
+                        onClick={() => handleFileClick(file)}
+                        onDoubleClick={() => handleFileDoubleClick(file)}
+                      >
+                        <TableCell>
+                          {file.isDir ? (
+                            <Folder className="h-4 w-4 text-blue-500" />
+                          ) : (
+                            <File className="h-4 w-4 text-muted-foreground" />
                           )}
                         </TableCell>
-                      )}
-                      <TableCell onClick={() => handleFileClick(file)}>
-                        {file.isDir ? (
-                          <Folder className="h-4 w-4 text-blue-500" />
-                        ) : (
-                          <File className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </TableCell>
-                      <TableCell
-                        className={file.isDir ? 'font-medium' : ''}
-                        onClick={() => handleFileClick(file)}
-                      >
+                        <TableCell className={file.isDir ? 'font-medium' : ''}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="truncate max-w-[300px]">
@@ -272,39 +245,34 @@ export function RemoteFilePanel({
                             <p>{file.name}</p>
                           </TooltipContent>
                         </Tooltip>
-                      </TableCell>
-                      <TableCell
-                        className="text-xs text-muted-foreground"
-                        onClick={() => handleFileClick(file)}
-                      >
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="truncate">
-                              {file.isDir ? '' : formatFileSize(file.size)}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{file.isDir ? '' : formatFileSize(file.size)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell
-                        className="text-xs text-muted-foreground"
-                        onClick={() => handleFileClick(file)}
-                      >
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="truncate">
-                              {formatDate(file.modified)}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{formatDate(file.modified)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="truncate">
+                                {file.isDir ? '' : formatFileSize(file.size)}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{file.isDir ? '' : formatFileSize(file.size)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="truncate">
+                                {formatDate(file.modified)}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{formatDate(file.modified)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
