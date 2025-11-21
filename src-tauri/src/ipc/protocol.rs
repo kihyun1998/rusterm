@@ -2,16 +2,6 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use crate::ssh::SshConfig;
 
-/// IPC 요청 구조
-#[derive(Debug, Deserialize)]
-pub struct IpcRequest {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub token: Option<String>,
-    pub command: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub params: Option<serde_json::Value>,
-}
-
 /// IPC 응답 구조
 #[derive(Debug, Serialize)]
 pub struct IpcResponse {
