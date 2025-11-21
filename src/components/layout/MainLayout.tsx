@@ -1,6 +1,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect } from 'react';
 import { Home } from '@/components/home/Home';
+import { SftpBrowser } from '@/components/sftp/SftpBrowser';
 import { Terminal } from '@/components/terminal/Terminal';
 import { getThemeById } from '@/constants/terminal-themes';
 import { useSettingsStore, useTabStore } from '@/stores';
@@ -13,6 +14,7 @@ interface MainLayoutProps {
   onShowSettings?: () => void;
   onOpenConnectionPalette?: () => void;
   onOpenSshDialog?: () => void;
+  onOpenSftpDialog?: () => void;
 }
 
 /**
@@ -25,6 +27,7 @@ export function MainLayout({
   onShowSettings,
   onOpenConnectionPalette,
   onOpenSshDialog,
+  onOpenSftpDialog,
 }: MainLayoutProps) {
   const tabs = useTabStore((state) => state.tabs);
   const activeTabId = useTabStore((state) => state.activeTabId);
@@ -93,7 +96,13 @@ export function MainLayout({
               }}
             >
               {tab.type === 'home' ? (
-                <Home onShowSettings={onShowSettings} onOpenSshDialog={onOpenSshDialog} />
+                <Home
+                  onShowSettings={onShowSettings}
+                  onOpenSshDialog={onOpenSshDialog}
+                  onOpenSftpDialog={onOpenSftpDialog}
+                />
+              ) : tab.type === 'sftp' ? (
+                <SftpBrowser id={tab.id} connectionProfileId={tab.connectionProfileId!} />
               ) : (
                 <Terminal
                   id={tab.id}

@@ -13,13 +13,14 @@ import { isSSHConfig } from '@/types/connection';
 interface HomeProps {
   onShowSettings?: () => void;
   onOpenSshDialog?: () => void;
+  onOpenSftpDialog?: () => void;
 }
 
 /**
  * Home component
  * Displays the welcome screen with quick actions and connection management
  */
-export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
+export function Home({ onShowSettings, onOpenSshDialog, onOpenSftpDialog }: HomeProps) {
   const addTab = useTabStore((state) => state.addTab);
   const tabs = useTabStore((state) => state.tabs);
 
@@ -75,13 +76,18 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
     console.log('Connecting to profile:', profileId, profile.name);
 
     const newTabId = crypto.randomUUID();
+
+    // SFTP는 'sftp' 탭 타입, SSH/기타는 'terminal' 탭 타입
+    const tabType = profile.type === 'sftp' ? 'sftp' : 'terminal';
+    const tabTitle = profile.type === 'sftp' ? `SFTP: ${profile.name}` : profile.name;
+
     addTab({
       id: newTabId,
-      title: profile.name,
-      type: 'terminal',
+      title: tabTitle,
+      type: tabType,
       closable: true,
       connectionType: profile.type,
-      connectionProfileId: profileId, // Terminal will restore credentials from keyring
+      connectionProfileId: profileId, // SftpBrowser or Terminal will restore credentials from keyring
     });
 
     // Add to recent connections

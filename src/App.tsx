@@ -4,18 +4,19 @@ import { CommandPalette } from '@/components/command/CommandPalette';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { SSHConnectionDialog } from '@/components/ssh/SSHConnectionDialog';
+import { SftpConnectionDialog } from '@/components/sftp/SftpConnectionDialog';
 import { isDevelopment } from '@/config';
 import { useShortcuts } from '@/hooks/use-shortcuts';
 import { useTheme } from '@/hooks/use-theme';
 import ComponentDemo from '@/pages/ComponentDemo';
 import { useSettingsStore, useTabStore } from '@/stores';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
-import { isSSHConfig } from '@/types/connection';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sshDialogOpen, setSshDialogOpen] = useState(false);
+  const [sftpDialogOpen, setSftpDialogOpen] = useState(false);
   const [commandPaletteMode, setCommandPaletteMode] = useState<'command' | 'connection'>('command');
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { setTheme } = useTheme();
@@ -84,6 +85,11 @@ function App() {
     setSshDialogOpen(true);
   };
 
+  // Open SFTP connection dialog
+  const openSftpDialog = () => {
+    setSftpDialogOpen(true);
+  };
+
   // Handle SSH connection from dialog
   const handleSshConnect = (profileId: string) => {
     // Get profile to extract connection info for tab title
@@ -106,6 +112,28 @@ function App() {
     });
   };
 
+  // Handle SFTP connection from dialog
+  const handleSftpConnect = (profileId: string) => {
+    // Get profile to extract connection info for tab title
+    const profile = useConnectionProfileStore.getState().getProfileById(profileId);
+
+    if (!profile) {
+      console.error('Profile not found:', profileId);
+      return;
+    }
+
+    // Create new SFTP tab with profile name as title
+    const newTabId = crypto.randomUUID();
+    addTab({
+      id: newTabId,
+      title: `SFTP: ${profile.name}`,
+      type: 'sftp',
+      closable: true,
+      connectionType: 'sftp',
+      connectionProfileId: profileId, // SftpBrowser will restore credentials from keyring
+    });
+  };
+
   // Show demo page in development mode
   if (isDevelopment && showDemo) {
     return <ComponentDemo onBack={() => setShowDemo(false)} />;
@@ -120,6 +148,7 @@ function App() {
           onShowSettings={() => setShowSettings(true)}
           onOpenConnectionPalette={openConnectionPalette}
           onOpenSshDialog={openSshDialog}
+          onOpenSftpDialog={openSftpDialog}
         />
       </div>
 
@@ -137,6 +166,7 @@ function App() {
         onShowDemo={() => setShowDemo(true)}
         onShowSettings={() => setShowSettings(true)}
         onOpenSshDialog={openSshDialog}
+        onOpenSftpDialog={openSftpDialog}
       />
 
       {/* SSH Connection Dialog */}
@@ -144,6 +174,13 @@ function App() {
         open={sshDialogOpen}
         onOpenChange={setSshDialogOpen}
         onConnect={handleSshConnect}
+      />
+
+      {/* SFTP Connection Dialog */}
+      <SftpConnectionDialog
+        open={sftpDialogOpen}
+        onOpenChange={setSftpDialogOpen}
+        onConnect={handleSftpConnect}
       />
 
       {/* Settings Dialog */}

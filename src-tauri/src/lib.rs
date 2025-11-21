@@ -2,11 +2,13 @@ mod commands;
 mod pty;
 mod settings;
 mod ssh;
+mod sftp;
 mod ipc;
 
 use pty::PtyManager;
 use settings::SettingsManager;
 use ssh::SshManager;
+use sftp::SftpManager;
 use ipc::IpcServer;
 use std::sync::{Arc, Mutex};
 
@@ -31,6 +33,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(PtyManager::new())
         .manage(SshManager::new())
+        .manage(SftpManager::new())
         .manage(settings_manager)
         .setup(move |app| {
             // IPC 서버 시작 (비동기 실행)
@@ -79,6 +82,23 @@ pub fn run() {
             commands::ssh_commands::write_to_ssh,
             commands::ssh_commands::resize_ssh_session,
             commands::ssh_commands::close_ssh_session,
+            // SFTP commands
+            commands::sftp_commands::create_sftp_session,
+            commands::sftp_commands::sftp_list_directory,
+            commands::sftp_commands::sftp_upload_file,
+            commands::sftp_commands::sftp_download_file,
+            commands::sftp_commands::sftp_create_directory,
+            commands::sftp_commands::sftp_delete_path,
+            commands::sftp_commands::sftp_rename_path,
+            commands::sftp_commands::close_sftp_session,
+            // Local FS commands
+            commands::fs_commands::get_local_home_directory,
+            commands::fs_commands::list_local_directory,
+            commands::fs_commands::get_local_file_info,
+            commands::fs_commands::create_local_directory,
+            commands::fs_commands::delete_local_path,
+            commands::fs_commands::rename_local_path,
+            commands::fs_commands::local_path_exists,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

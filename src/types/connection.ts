@@ -109,7 +109,13 @@ export function isRDPConfig(config: ConnectionConfig): config is RDPConfig {
 }
 
 export function isSFTPConfig(config: ConnectionConfig): config is SFTPConfig {
-  return 'host' in config && 'username' in config && 'privateKey' in config;
+  return (
+    'host' in config &&
+    'username' in config &&
+    !('domain' in config) &&
+    !('strictHostKeyChecking' in config) &&
+    !('keepAlive' in config)
+  );
 }
 
 // Stored connection config types (sensitive information excluded)
