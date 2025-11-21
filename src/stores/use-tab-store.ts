@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import type { ConnectionType } from '@/types/connection';
 
-export type TabType = 'home' | 'terminal';
+export type TabType = 'home' | 'terminal' | 'sftp';
 
 export interface Tab {
   id: string;

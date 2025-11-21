@@ -1,4 +1,4 @@
-import { type LucideIcon, Monitor, Plus } from 'lucide-react';
+import { type LucideIcon, FolderOpen, Monitor, Plus } from 'lucide-react';
 import type { ConnectionType } from '@/types/connection';
 
 /**
@@ -8,6 +8,7 @@ import type { ConnectionType } from '@/types/connection';
 export const CONNECTION_ICONS: Record<ConnectionType, LucideIcon> = {
   local: Monitor,
   ssh: Plus,
+  sftp: FolderOpen,
 } as const;
 
 /**
@@ -17,6 +18,7 @@ export const CONNECTION_ICONS: Record<ConnectionType, LucideIcon> = {
 export const CONNECTION_LABELS: Record<ConnectionType, string> = {
   local: 'Local Terminal',
   ssh: 'New Connection',
+  sftp: 'SFTP',
 } as const;
 
 /**
