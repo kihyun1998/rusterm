@@ -17,6 +17,7 @@ pub struct SftpConfig {
 
 /// SFTP 세션 생성 응답
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateSftpResponse {
     pub session_id: String,
     pub host: String,
