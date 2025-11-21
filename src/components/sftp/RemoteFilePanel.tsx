@@ -48,8 +48,8 @@ function formatDate(timestamp: number): string {
 /**
  * Get parent directory path
  */
-function getParentPath(path: string): string {
-  if (path === '/' || path === '') return '/';
+function getParentPath(path: string | undefined): string {
+  if (!path || path === '/' || path === '') return '/';
   const parts = path.split('/').filter(Boolean);
   parts.pop();
   return '/' + parts.join('/');
@@ -65,7 +65,9 @@ export function RemoteFilePanel({
   isLoading,
   onChangeDirectory,
 }: RemoteFilePanelProps) {
-  const hasParent = currentPath !== '/' && currentPath !== '';
+  // Ensure currentPath is never undefined
+  const safePath = currentPath || '/';
+  const hasParent = safePath !== '/' && safePath !== '';
 
   const handleFileClick = async (file: FileEntry) => {
     if (file.isDir) {
@@ -75,7 +77,7 @@ export function RemoteFilePanel({
   };
 
   const handleParentClick = async () => {
-    const parentPath = getParentPath(currentPath);
+    const parentPath = getParentPath(safePath);
     await onChangeDirectory(parentPath);
   };
 
@@ -87,7 +89,7 @@ export function RemoteFilePanel({
           <Folder className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">원격 파일</span>
         </div>
-        <div className="text-xs text-muted-foreground mt-1 font-mono">{currentPath}</div>
+        <div className="text-xs text-muted-foreground mt-1 font-mono">{safePath}</div>
       </div>
 
       {/* File list */}
