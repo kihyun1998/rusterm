@@ -262,10 +262,6 @@ export function CommandPalette({
         onOpenSshDialog();
       }
       setOpen(false);
-    } else {
-      // TODO: Open connection dialog for other types (telnet, rdp, sftp)
-      console.log(`TODO: Open ${type} connection dialog`);
-      setOpen(false);
     }
   };
 

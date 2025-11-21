@@ -53,18 +53,6 @@ export type SshConnectionState =
   | 'failed' // Connection/authentication failed
   | 'error'; // Runtime error
 
-/**
- * SSH session metadata (for frontend state)
- */
-export interface SshSessionMetadata {
-  sessionId: string;
-  host: string;
-  username: string;
-  state: SshConnectionState;
-  connectedAt?: number;
-  error?: string;
-}
-
 // ============================================================================
 // SSH Output/Exit Events (from Backend)
 // ============================================================================
@@ -85,26 +73,6 @@ export interface SshOutputEvent {
 export interface SshExitEvent {
   session_id: string;
   reason: string;
-}
-
-// ============================================================================
-// Type Guards
-// ============================================================================
-
-/**
- * Type guard for password authentication
- */
-export function isPasswordAuth(auth: AuthMethod): auth is { type: 'password'; password: string } {
-  return auth.type === 'password';
-}
-
-/**
- * Type guard for private key authentication
- */
-export function isPrivateKeyAuth(
-  auth: AuthMethod
-): auth is { type: 'privateKey'; path: string; passphrase?: string } {
-  return auth.type === 'privateKey';
 }
 
 // ============================================================================
@@ -141,34 +109,4 @@ export function toBackendSshConfig(uiConfig: import('./connection').SSHConfig): 
     username: uiConfig.username,
     authMethod,
   };
-}
-
-/**
- * Convert Backend SshConfig to UI SSHConfig (for profile editing)
- *
- * @param backendConfig - SshConfig from backend
- * @returns SSHConfig for connection.ts (flat structure)
- */
-export function toUiSshConfig(backendConfig: SshConfig): import('./connection').SSHConfig {
-  const base = {
-    host: backendConfig.host,
-    port: backendConfig.port,
-    username: backendConfig.username,
-  };
-
-  if (!backendConfig.authMethod) {
-    // No auth method - keyboard-interactive
-    return base;
-  } else if (isPasswordAuth(backendConfig.authMethod)) {
-    return {
-      ...base,
-      password: backendConfig.authMethod.password,
-    };
-  } else {
-    return {
-      ...base,
-      privateKey: backendConfig.authMethod.path,
-      passphrase: backendConfig.authMethod.passphrase,
-    };
-  }
 }

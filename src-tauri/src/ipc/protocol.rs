@@ -42,17 +42,6 @@ impl IpcResponse {
     }
 }
 
-/// IPC 커맨드 enum
-#[derive(Debug, Deserialize)]
-#[serde(tag = "command", rename_all = "snake_case")]
-pub enum IpcCommand {
-    Ping,
-    AddSshTab { params: AddSshTabParams },
-    AddLocalTab { params: AddLocalTabParams },
-    CloseTab { params: CloseTabParams },
-    ListTabs,
-}
-
 /// Ping 응답 데이터
 #[derive(Debug, Serialize)]
 pub struct PingResponse {

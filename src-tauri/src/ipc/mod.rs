@@ -1,7 +1,6 @@
 mod protocol;
 mod server;
 mod handler;
-mod lifecycle;
 mod platform;
 mod events;
 

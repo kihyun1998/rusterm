@@ -127,7 +127,7 @@ export function Home({ onShowSettings, onOpenSshDialog }: HomeProps) {
           >
             <Plus className="w-6 h-6" />
             <span>New Connection</span>
-            <span className="text-xs text-muted-foreground">SSH, Telnet, etc.</span>
+            <span className="text-xs text-muted-foreground">SSH</span>
           </Button>
 
           <Button

@@ -1,4 +1,4 @@
-import { FolderTree, Lock, type LucideIcon, Monitor, MonitorPlay, Radio } from 'lucide-react';
+import { Lock, type LucideIcon, Monitor } from 'lucide-react';
 import type { ConnectionType } from '@/types/connection';
 
 /**
@@ -8,9 +8,6 @@ import type { ConnectionType } from '@/types/connection';
 export const CONNECTION_ICONS: Record<ConnectionType, LucideIcon> = {
   local: Monitor,
   ssh: Lock,
-  telnet: Radio,
-  rdp: MonitorPlay,
-  sftp: FolderTree,
 } as const;
 
 /**
@@ -20,9 +17,6 @@ export const CONNECTION_ICONS: Record<ConnectionType, LucideIcon> = {
 export const CONNECTION_LABELS: Record<ConnectionType, string> = {
   local: 'Local Terminal',
   ssh: 'SSH',
-  telnet: 'Telnet',
-  rdp: 'RDP',
-  sftp: 'SFTP',
 } as const;
 
 /**

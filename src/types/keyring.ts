@@ -11,9 +11,6 @@ import type { ConnectionType } from './connection';
  */
 export type KeyringService =
   | 'rusterm-ssh'
-  | 'rusterm-telnet'
-  | 'rusterm-rdp'
-  | 'rusterm-sftp'
   | 'rusterm-local';
 
 /**
