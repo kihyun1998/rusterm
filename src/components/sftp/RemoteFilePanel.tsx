@@ -157,7 +157,7 @@ export function RemoteFilePanel({
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    console.log('[RemoteFilePanel] Drop event triggered');
+    console.log('[RemoteFilePanel] Drop event triggered (on empty area)');
 
     if (!onUpload) {
       console.warn('[RemoteFilePanel] onUpload callback not provided');
@@ -181,6 +181,47 @@ export function RemoteFilePanel({
       }
     } catch (err) {
       console.error('[RemoteFilePanel] Drop failed:', err);
+    }
+  };
+
+  // Drop on folder (upload to that folder)
+  const handleDropOnFolder = async (e: React.DragEvent, targetFolder: FileEntry) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[RemoteFilePanel] Drop on folder:', targetFolder.name);
+
+    if (!onUpload) {
+      console.warn('[RemoteFilePanel] onUpload callback not provided');
+      return;
+    }
+
+    try {
+      const rawData = e.dataTransfer.getData('text/plain');
+      console.log('[RemoteFilePanel] Raw drop data:', rawData);
+      const data = JSON.parse(rawData);
+      console.log('[RemoteFilePanel] Parsed drop data:', data);
+
+      if (data.type === 'local') {
+        // Upload to target folder
+        const remotePath = `${targetFolder.path}/${data.name}`;
+        console.log('[RemoteFilePanel] Uploading to folder:', data.path, '→', remotePath);
+        await onUpload(data.path, remotePath);
+        console.log('[RemoteFilePanel] Upload complete');
+      } else {
+        console.log('[RemoteFilePanel] Not a local file, ignoring');
+      }
+    } catch (err) {
+      console.error('[RemoteFilePanel] Drop on folder failed:', err);
+    }
+  };
+
+  // Handle drag over rows (allow drop on folders only)
+  const handleRowDragOver = (e: React.DragEvent, file: FileEntry) => {
+    if (file.isDir) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'copy';
+      console.log('[RemoteFilePanel] DragOver folder:', file.name);
     }
   };
 
@@ -257,6 +298,8 @@ export function RemoteFilePanel({
                         draggable={true}
                         onDragStart={(e) => handleDragStart(e, file)}
                         onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleRowDragOver(e, file)}
+                        onDrop={file.isDir ? (e) => handleDropOnFolder(e, file) : undefined}
                         onClick={() => handleFileClick(file)}
                         onDoubleClick={() => handleFileDoubleClick(file)}
                       >

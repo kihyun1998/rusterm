@@ -129,7 +129,7 @@ export function LocalFilePanel({
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    console.log('[LocalFilePanel] Drop event triggered');
+    console.log('[LocalFilePanel] Drop event triggered (on empty area)');
 
     if (!onDownload) {
       console.warn('[LocalFilePanel] onDownload callback not provided');
@@ -153,6 +153,47 @@ export function LocalFilePanel({
       }
     } catch (err) {
       console.error('[LocalFilePanel] Drop failed:', err);
+    }
+  };
+
+  // Drop on folder (download to that folder)
+  const handleDropOnFolder = async (e: React.DragEvent, targetFolder: FileEntry) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[LocalFilePanel] Drop on folder:', targetFolder.name);
+
+    if (!onDownload) {
+      console.warn('[LocalFilePanel] onDownload callback not provided');
+      return;
+    }
+
+    try {
+      const rawData = e.dataTransfer.getData('text/plain');
+      console.log('[LocalFilePanel] Raw drop data:', rawData);
+      const data = JSON.parse(rawData);
+      console.log('[LocalFilePanel] Parsed drop data:', data);
+
+      if (data.type === 'remote') {
+        // Download to target folder
+        const localPath = `${targetFolder.path}/${data.name}`;
+        console.log('[LocalFilePanel] Downloading to folder:', data.path, '→', localPath);
+        await onDownload(data.path, localPath);
+        console.log('[LocalFilePanel] Download complete');
+      } else {
+        console.log('[LocalFilePanel] Not a remote file, ignoring');
+      }
+    } catch (err) {
+      console.error('[LocalFilePanel] Drop on folder failed:', err);
+    }
+  };
+
+  // Handle drag over rows (allow drop on folders only)
+  const handleRowDragOver = (e: React.DragEvent, file: FileEntry) => {
+    if (file.isDir) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'copy';
+      console.log('[LocalFilePanel] DragOver folder:', file.name);
     }
   };
 
@@ -229,6 +270,8 @@ export function LocalFilePanel({
                         draggable={true}
                         onDragStart={(e) => handleDragStart(e, file)}
                         onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleRowDragOver(e, file)}
+                        onDrop={file.isDir ? (e) => handleDropOnFolder(e, file) : undefined}
                         onClick={() => handleFileClick(file)}
                         onDoubleClick={() => handleFileDoubleClick(file)}
                       >
