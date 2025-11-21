@@ -9,9 +9,7 @@ import type { ConnectionType } from './connection';
 /**
  * Keyring service types for different connection types
  */
-export type KeyringService =
-  | 'rusterm-ssh'
-  | 'rusterm-local';
+export type KeyringService = 'rusterm-ssh' | 'rusterm-local';
 
 /**
  * Credential types that can be stored in keyring

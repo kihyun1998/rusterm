@@ -1,4 +1,4 @@
-import { Edit, Key, Lock, Trash2, UserCircle, HelpCircle } from 'lucide-react';
+import { Edit, HelpCircle, Key, Lock, Trash2, UserCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
