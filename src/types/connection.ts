@@ -2,11 +2,11 @@
  * Connection Types
  *
  * Types for managing different connection types in terminal tabs
- * Supports local and SSH connections
+ * Supports local, SSH, and SFTP connections
  */
 
 // Connection type enum
-export type ConnectionType = 'local' | 'ssh';
+export type ConnectionType = 'local' | 'ssh' | 'sftp';
 
 // Local terminal configuration
 export interface LocalConfig {
@@ -27,8 +27,18 @@ export interface SSHConfig {
   keepAlive?: boolean; // Keep connection alive (default: true)
 }
 
+// SFTP connection configuration
+export interface SFTPConfig {
+  host: string; // Hostname or IP address
+  port: number; // SFTP port (default: 22)
+  username: string; // SFTP username
+  password?: string; // Password authentication (optional)
+  privateKey?: string; // Private key path or content (optional)
+  passphrase?: string; // Passphrase for private key (optional)
+}
+
 // Union type for all connection configurations
-export type ConnectionConfig = LocalConfig | SSHConfig;
+export type ConnectionConfig = LocalConfig | SSHConfig | SFTPConfig;
 
 // Auth method types for UI display
 export type AuthMethod = 'password' | 'privateKey' | 'noAuth';
@@ -41,7 +51,7 @@ export function getAuthMethod(profile: {
   type: ConnectionType;
   savedAuthType?: 'password' | 'privateKey' | 'passphrase' | 'interactive';
 }): AuthMethod {
-  if (profile.type === 'ssh') {
+  if (profile.type === 'ssh' || profile.type === 'sftp') {
     // Both passphrase and privateKey display as "Private Key" in UI
     if (profile.savedAuthType === 'passphrase' || profile.savedAuthType === 'privateKey') {
       return 'privateKey';
@@ -72,16 +82,22 @@ export function isLocalConfig(config: ConnectionConfig): config is LocalConfig {
 }
 
 export function isSSHConfig(config: ConnectionConfig): config is SSHConfig {
-  return 'host' in config && 'username' in config;
+  return 'host' in config && 'username' in config && 'strictHostKeyChecking' in config;
+}
+
+export function isSFTPConfig(config: ConnectionConfig): config is SFTPConfig {
+  return 'host' in config && 'username' in config && !('strictHostKeyChecking' in config);
 }
 
 // Stored connection config types (sensitive information excluded)
 export type StoredSSHConfig = Omit<SSHConfig, 'password' | 'privateKey' | 'passphrase'>;
+export type StoredSFTPConfig = Omit<SFTPConfig, 'password' | 'privateKey' | 'passphrase'>;
 
 // Union type for stored connection configurations (no sensitive data)
 export type StoredConnectionConfig =
   | LocalConfig // No sensitive information
-  | StoredSSHConfig;
+  | StoredSSHConfig
+  | StoredSFTPConfig;
 
 // Stored connection profile (sensitive information excluded)
 export type StoredConnectionProfile = Omit<ConnectionProfile, 'config'> & {
@@ -97,6 +113,9 @@ export function sanitizeProfile(profile: ConnectionProfile): StoredConnectionPro
   if (isSSHConfig(config)) {
     const { password, privateKey, passphrase, ...sshRest } = config;
     sanitizedConfig = sshRest as StoredSSHConfig;
+  } else if (isSFTPConfig(config)) {
+    const { password, privateKey, passphrase, ...sftpRest } = config;
+    sanitizedConfig = sftpRest as StoredSFTPConfig;
   } else {
     // LocalConfig - no sensitive information
     sanitizedConfig = config as StoredConnectionConfig;
