@@ -240,7 +240,7 @@ export function RemoteFilePanel({
                       <TableRow
                         key={file.path}
                         className={`
-                          ${file.isDir ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}
+                          cursor-grab active:cursor-grabbing
                           ${isSelected ? 'bg-accent/50' : ''}
                           hover:bg-muted/50
                         `}
