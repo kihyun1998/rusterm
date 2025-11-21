@@ -82,8 +82,13 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
       // Load initial directory inline to avoid timing issues
       setIsLoading(true);
       try {
-        const files = await invoke<FileEntry[]>('sftp_list_directory', {
+        console.log('[useSftp] Loading initial directory:', {
           sessionId: response.sessionId,
+          path: response.initialPath,
+        });
+
+        const files = await invoke<FileEntry[]>('sftp_list_directory', {
+          session_id: response.sessionId, // Use snake_case for Rust
           path: response.initialPath,
         });
         setFileList(files);
@@ -117,7 +122,7 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
     setIsLoading(true);
     try {
       const files = await invoke<FileEntry[]>('sftp_list_directory', {
-        sessionId: sessionIdRef.current,
+        session_id: sessionIdRef.current,
         path,
       });
 
@@ -154,7 +159,7 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
 
     try {
       await invoke('sftp_create_directory', {
-        sessionId: sessionIdRef.current,
+        session_id: sessionIdRef.current,
         path,
       });
 
@@ -180,9 +185,9 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
 
       try {
         await invoke('sftp_delete_path', {
-          sessionId: sessionIdRef.current,
+          session_id: sessionIdRef.current,
           path,
-          isDir,
+          is_dir: isDir,
         });
 
         // Refresh current directory
@@ -209,9 +214,9 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
 
       try {
         await invoke('sftp_rename_path', {
-          sessionId: sessionIdRef.current,
-          oldPath,
-          newPath,
+          session_id: sessionIdRef.current,
+          old_path: oldPath,
+          new_path: newPath,
         });
 
         // Refresh current directory
@@ -237,7 +242,7 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
     try {
       // Close SFTP session
       await invoke('close_sftp_session', {
-        sessionId: sessionIdRef.current,
+        session_id: sessionIdRef.current,
       });
 
       setSessionId(null);
@@ -259,7 +264,7 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
       if (sessionIdRef.current) {
         // Disconnect without waiting
         invoke('close_sftp_session', {
-          sessionId: sessionIdRef.current,
+          session_id: sessionIdRef.current,
         }).catch(console.error);
       }
     };

@@ -105,10 +105,32 @@ export function useLocalFs(): UseLocalFsReturn {
       return;
     }
 
+    // Detect path separator (Windows uses backslash, Unix uses forward slash)
+    const isWindowsPath = path.includes('\\');
+    const separator = isWindowsPath ? '\\' : '/';
+
     // Get parent directory path
-    const parts = path.split('/').filter(Boolean);
+    const parts = path.split(separator).filter(Boolean);
+
+    // Remove last part (current directory)
     parts.pop();
-    const parentPath = parts.length > 0 ? '/' + parts.join('/') : '/';
+
+    // Calculate parent path
+    let parentPath: string;
+    if (parts.length === 0) {
+      // Already at root
+      parentPath = isWindowsPath ? path : '/';
+    } else if (isWindowsPath && parts.length === 1 && parts[0].endsWith(':')) {
+      // Windows drive root (e.g., "C:")
+      parentPath = parts[0] + separator;
+    } else {
+      // Normal parent directory
+      parentPath = parts.join(separator);
+      // Add leading separator for Unix paths
+      if (!isWindowsPath && !parentPath.startsWith('/')) {
+        parentPath = '/' + parentPath;
+      }
+    }
 
     console.log('[useLocalFs] navigateUp: from', path, 'to', parentPath);
 
