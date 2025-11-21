@@ -12,7 +12,12 @@ import { getTerminalConfig } from '@/lib/xterm-config';
 import { useSettingsStore, useTabStore } from '@/stores';
 import type { ConnectionConfig, ConnectionType } from '@/types/connection';
 import { isSSHConfig } from '@/types/connection';
-import { type SshConnectionState, toBackendSshConfig } from '@/types/ssh';
+import {
+  type SshConnectionState,
+  type SshExitEvent,
+  type SshOutputEvent,
+  toBackendSshConfig,
+} from '@/types/ssh';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -244,7 +249,7 @@ export function Terminal({
       const { listen } = await import('@tauri-apps/api/event');
 
       // Output event listener
-      const unlistenOutput = await listen(`ssh://output/${sessionId}`, (event: any) => {
+      const unlistenOutput = await listen<SshOutputEvent>(`ssh://output/${sessionId}`, (event) => {
         const data = event.payload.data;
         if (terminal) {
           terminal.write(data);
@@ -252,7 +257,7 @@ export function Terminal({
       });
 
       // Exit event listener
-      const unlistenExit = await listen(`ssh://exit/${sessionId}`, (event: any) => {
+      const unlistenExit = await listen<SshExitEvent>(`ssh://exit/${sessionId}`, (event) => {
         const reason = event.payload.reason || 'Connection closed';
         if (terminal) {
           terminal.write(`\r\n\x1b[1;33m[SSH connection closed: ${reason}]\x1b[0m\r\n`);
