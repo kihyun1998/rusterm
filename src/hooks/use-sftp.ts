@@ -27,6 +27,8 @@ interface UseSftpReturn {
   createDirectory: (path: string) => Promise<void>;
   deleteFile: (path: string, isDir: boolean) => Promise<void>;
   renameFile: (oldPath: string, newPath: string) => Promise<void>;
+  uploadFile: (localPath: string, remotePath: string) => Promise<void>;
+  downloadFile: (remotePath: string, localPath: string) => Promise<void>;
   disconnect: () => Promise<void>;
 }
 
@@ -232,6 +234,62 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
   );
 
   /**
+   * Upload file (local → remote)
+   */
+  const uploadFile = useCallback(
+    async (localPath: string, remotePath: string) => {
+      if (!sessionIdRef.current) {
+        console.warn('Cannot upload file: not connected');
+        return;
+      }
+
+      try {
+        await invoke('sftp_upload_file', {
+          sessionId: sessionIdRef.current,
+          localPath,
+          remotePath,
+        });
+
+        // Refresh remote directory after upload
+        await listDirectory(currentPath);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(errorMessage);
+        onErrorRef.current?.(errorMessage);
+        console.error('Failed to upload file:', err);
+        throw err; // Re-throw for caller to handle
+      }
+    },
+    [currentPath, listDirectory]
+  );
+
+  /**
+   * Download file (remote → local)
+   */
+  const downloadFile = useCallback(async (remotePath: string, localPath: string) => {
+    if (!sessionIdRef.current) {
+      console.warn('Cannot download file: not connected');
+      return;
+    }
+
+    try {
+      await invoke('sftp_download_file', {
+        sessionId: sessionIdRef.current,
+        remotePath,
+        localPath,
+      });
+
+      // Note: Local directory refresh is handled by useLocalFs hook
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
+      onErrorRef.current?.(errorMessage);
+      console.error('Failed to download file:', err);
+      throw err; // Re-throw for caller to handle
+    }
+  }, []);
+
+  /**
    * Disconnect SFTP session
    */
   const disconnect = useCallback(async () => {
@@ -283,6 +341,8 @@ export function useSftp(options: UseSftpOptions = {}): UseSftpReturn {
     createDirectory,
     deleteFile,
     renameFile,
+    uploadFile,
+    downloadFile,
     disconnect,
   };
 }

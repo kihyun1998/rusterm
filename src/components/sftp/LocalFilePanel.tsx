@@ -1,4 +1,6 @@
 import { ArrowUp, File, Folder, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -43,11 +45,21 @@ function formatDate(timestamp: number): string {
   });
 }
 
+interface LocalFilePanelProps {
+  selectedFiles?: string[];
+  onSelectFiles?: (paths: string[]) => void;
+  onDownload?: (remotePath: string, localPath: string) => Promise<void>;
+}
+
 /**
  * LocalFilePanel component
  * Displays local file system with navigation
  */
-export function LocalFilePanel() {
+export function LocalFilePanel({
+  selectedFiles = [],
+  onSelectFiles,
+  onDownload,
+}: LocalFilePanelProps = {}) {
   const {
     currentPath,
     files,
@@ -65,6 +77,75 @@ export function LocalFilePanel() {
     // Single-click on files - no action yet (upload in future phases)
   };
 
+  const handleSelectFile = (filePath: string, checked: boolean) => {
+    if (!onSelectFiles) return;
+
+    if (checked) {
+      onSelectFiles([...selectedFiles, filePath]);
+    } else {
+      onSelectFiles(selectedFiles.filter(p => p !== filePath));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (!onSelectFiles) return;
+
+    if (checked) {
+      const allFilePaths = files.filter(f => !f.isDir).map(f => f.path);
+      onSelectFiles(allFilePaths);
+    } else {
+      onSelectFiles([]);
+    }
+  };
+
+  const allFilesSelected = files.filter(f => !f.isDir).length > 0 &&
+    files.filter(f => !f.isDir).every(f => selectedFiles.includes(f.path));
+
+  // Drag & Drop handlers
+  const handleDragStart = (e: React.DragEvent, file: FileEntry) => {
+    if (file.isDir) {
+      e.preventDefault(); // Folders cannot be dragged (not supported yet)
+      return;
+    }
+
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData(
+      'text/plain',
+      JSON.stringify({
+        type: 'local',
+        path: file.path,
+        name: file.name,
+        size: file.size,
+      })
+    );
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+
+    if (!onDownload) {
+      console.warn('onDownload callback not provided');
+      return;
+    }
+
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+
+      if (data.type === 'remote') {
+        // Remote file dropped → Download to local
+        const localPath = `${currentPath}/${data.name}`;
+        await onDownload(data.path, localPath);
+      }
+    } catch (err) {
+      console.error('Drop failed:', err);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -77,7 +158,11 @@ export function LocalFilePanel() {
       </div>
 
       {/* File list */}
-      <div className="flex-1 overflow-auto sftp-file-list">
+      <div
+        className="flex-1 overflow-auto sftp-file-list"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         {isLoading ? (
           <div className="p-4 space-y-2">
             <Skeleton className="h-10 w-full" />
@@ -90,6 +175,14 @@ export function LocalFilePanel() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  {onSelectFiles && (
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={allFilesSelected}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="w-[40px]"></TableHead>
                   <TableHead>이름</TableHead>
                   <TableHead className="w-[100px]">크기</TableHead>
@@ -103,6 +196,7 @@ export function LocalFilePanel() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={navigateUp}
                   >
+                    {onSelectFiles && <TableCell></TableCell>}
                     <TableCell>
                       <ArrowUp className="h-4 w-4 text-muted-foreground" />
                     </TableCell>
@@ -115,7 +209,7 @@ export function LocalFilePanel() {
                 {/* Files and directories */}
                 {files.length === 0 && !hasParent ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={onSelectFiles ? 5 : 4} className="text-center text-muted-foreground py-8">
                       디렉토리가 비어있습니다
                     </TableCell>
                   </TableRow>
@@ -123,17 +217,33 @@ export function LocalFilePanel() {
                   files.map((file) => (
                     <TableRow
                       key={file.path}
-                      className={file.isDir ? 'cursor-pointer hover:bg-muted/50' : ''}
-                      onClick={() => handleFileClick(file)}
+                      className={file.isDir ? 'cursor-pointer hover:bg-muted/50' : 'cursor-grab active:cursor-grabbing'}
+                      draggable={!file.isDir}
+                      onDragStart={(e) => handleDragStart(e, file)}
                     >
-                      <TableCell>
+                      {onSelectFiles && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {!file.isDir && (
+                            <Checkbox
+                              checked={selectedFiles.includes(file.path)}
+                              onCheckedChange={(checked) =>
+                                handleSelectFile(file.path, checked as boolean)
+                              }
+                            />
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell onClick={() => handleFileClick(file)}>
                         {file.isDir ? (
                           <Folder className="h-4 w-4 text-blue-500" />
                         ) : (
                           <File className="h-4 w-4 text-muted-foreground" />
                         )}
                       </TableCell>
-                      <TableCell className={file.isDir ? 'font-medium' : ''}>
+                      <TableCell
+                        className={file.isDir ? 'font-medium' : ''}
+                        onClick={() => handleFileClick(file)}
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="truncate max-w-[300px]">
@@ -145,7 +255,10 @@ export function LocalFilePanel() {
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell
+                        className="text-xs text-muted-foreground"
+                        onClick={() => handleFileClick(file)}
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="truncate">
@@ -157,7 +270,10 @@ export function LocalFilePanel() {
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell
+                        className="text-xs text-muted-foreground"
+                        onClick={() => handleFileClick(file)}
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="truncate">
@@ -185,6 +301,11 @@ export function LocalFilePanel() {
             <span>
               {files.length}개 항목 ({files.filter((f) => f.isDir).length}개 폴더,{' '}
               {files.filter((f) => !f.isDir).length}개 파일)
+              {selectedFiles.length > 0 && (
+                <span className="ml-2 text-blue-600 font-medium">
+                  • {selectedFiles.length}개 선택됨
+                </span>
+              )}
             </span>
             {isLoading && (
               <span className="flex items-center gap-1">

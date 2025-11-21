@@ -1,9 +1,11 @@
 import { AlertCircle, Loader2, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { DualPanelLayout } from './DualPanelLayout';
+import { TransferPanel } from './TransferPanel';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useSftp } from '@/hooks/use-sftp';
+import { useTransferStore } from '@/stores/use-transfer-store';
 import type { SFTPConfig } from '@/types/connection';
 import { isSFTPConfig } from '@/types/connection';
 import { toBackendSftpConfig } from '@/types/sftp';
@@ -32,6 +34,9 @@ export function SftpBrowser({ id, connectionProfileId }: SftpBrowserProps) {
       console.error('[SftpBrowser] SFTP error:', error);
     },
   });
+
+  // Transfer store
+  const { addTransfer, updateTransfer } = useTransferStore();
 
   // Resolve credentials from keyring
   useEffect(() => {
@@ -228,6 +233,60 @@ export function SftpBrowser({ id, connectionProfileId }: SftpBrowserProps) {
     );
   }
 
+  // Upload handler (local → remote)
+  const handleUpload = async (localPath: string, remotePath: string) => {
+    const transferId = addTransfer({
+      type: 'upload',
+      localPath,
+      remotePath,
+      size: 0, // Size unknown for now (no fs.stat in frontend)
+      transferred: 0,
+      status: 'active',
+    });
+
+    try {
+      await sftp.uploadFile(localPath, remotePath);
+      updateTransfer(transferId, {
+        status: 'completed',
+        transferred: 0, // Size still unknown
+      });
+    } catch (err) {
+      updateTransfer(transferId, {
+        status: 'failed',
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
+
+  // Download handler (remote → local)
+  const handleDownload = async (remotePath: string, localPath: string) => {
+    // Find file size from fileList
+    const file = sftp.fileList.find((f) => f.path === remotePath);
+    const fileSize = file?.size || 0;
+
+    const transferId = addTransfer({
+      type: 'download',
+      localPath,
+      remotePath,
+      size: fileSize,
+      transferred: 0,
+      status: 'active',
+    });
+
+    try {
+      await sftp.downloadFile(remotePath, localPath);
+      updateTransfer(transferId, {
+        status: 'completed',
+        transferred: fileSize,
+      });
+    } catch (err) {
+      updateTransfer(transferId, {
+        status: 'failed',
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
+
   if (sftp.status === 'connected') {
     return (
       <div className="h-full flex flex-col">
@@ -242,15 +301,22 @@ export function SftpBrowser({ id, connectionProfileId }: SftpBrowserProps) {
         </div>
 
         {/* Dual panel layout (local + remote) */}
-        <DualPanelLayout
-          fileList={sftp.fileList}
-          currentPath={sftp.currentPath}
-          isLoading={sftp.isLoading}
-          onChangeDirectory={sftp.changeDirectory}
-          onCreateDirectory={sftp.createDirectory}
-          onDeleteFile={sftp.deleteFile}
-          onRenameFile={sftp.renameFile}
-        />
+        <div className="flex-1 overflow-hidden">
+          <DualPanelLayout
+            fileList={sftp.fileList}
+            currentPath={sftp.currentPath}
+            isLoading={sftp.isLoading}
+            onChangeDirectory={sftp.changeDirectory}
+            onCreateDirectory={sftp.createDirectory}
+            onDeleteFile={sftp.deleteFile}
+            onRenameFile={sftp.renameFile}
+            onUpload={handleUpload}
+            onDownload={handleDownload}
+          />
+        </div>
+
+        {/* Transfer panel */}
+        <TransferPanel />
       </div>
     );
   }

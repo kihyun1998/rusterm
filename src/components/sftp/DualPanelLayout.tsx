@@ -11,6 +11,10 @@ interface DualPanelLayoutProps {
   onCreateDirectory?: (path: string) => Promise<void>;
   onDeleteFile?: (path: string, isDir: boolean) => Promise<void>;
   onRenameFile?: (oldPath: string, newPath: string) => Promise<void>;
+
+  // File transfer callbacks
+  onUpload?: (localPath: string, remotePath: string) => Promise<void>;
+  onDownload?: (remotePath: string, localPath: string) => Promise<void>;
 }
 
 /**
@@ -25,12 +29,16 @@ export function DualPanelLayout({
   onCreateDirectory,
   onDeleteFile,
   onRenameFile,
+  onUpload,
+  onDownload,
 }: DualPanelLayoutProps) {
   return (
     <div className="flex h-full">
       {/* Left panel - Local files */}
       <div className="w-1/2 border-r">
-        <LocalFilePanel />
+        <LocalFilePanel
+          onDownload={onDownload}
+        />
       </div>
 
       {/* Right panel - Remote files */}
@@ -43,6 +51,7 @@ export function DualPanelLayout({
           onCreateDirectory={onCreateDirectory}
           onDeleteFile={onDeleteFile}
           onRenameFile={onRenameFile}
+          onUpload={onUpload}
         />
       </div>
     </div>
