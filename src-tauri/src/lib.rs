@@ -1,4 +1,5 @@
 mod commands;
+mod fs;
 mod pty;
 mod settings;
 mod ssh;
@@ -72,6 +73,14 @@ pub fn run() {
             commands::ssh_commands::write_to_ssh,
             commands::ssh_commands::resize_ssh_session,
             commands::ssh_commands::close_ssh_session,
+            // Local file system commands
+            commands::fs_commands::get_user_home_dir,
+            commands::fs_commands::list_local_directory,
+            commands::fs_commands::get_local_file_stats,
+            commands::fs_commands::create_local_directory,
+            commands::fs_commands::delete_local_file,
+            commands::fs_commands::delete_local_directory,
+            commands::fs_commands::rename_local_item,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
