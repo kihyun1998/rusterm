@@ -24,6 +24,14 @@
         "useKeyWithClickEvents": "off",
         "useSemanticElements": "warn"
       },
+      "correctness": {
+        "noUnusedVariables": {
+          "level": "error",
+          "options": {
+            "ignoreRestSiblings": true
+          }
+        }
+      },
       "suspicious": {
         "noArrayIndexKey": "warn"
       }

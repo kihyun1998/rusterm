@@ -10,6 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import ComponentDemo from '@/pages/ComponentDemo';
 import { useSettingsStore, useTabStore } from '@/stores';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
+import type { TabClosedPayload, TabCreatedPayload } from '@/types/ipc';
 
 function App() {
   const [showDemo, setShowDemo] = useState(false);
@@ -37,7 +38,7 @@ function App() {
   // IPC event listeners for tab management
   useEffect(() => {
     // Listen for tab-created events from IPC
-    const unlistenTabCreated = listen('tab-created', (event: any) => {
+    const unlistenTabCreated = listen<TabCreatedPayload>('tab-created', (event) => {
       const payload = event.payload;
       console.log('[IPC] tab-created event received:', payload);
 
@@ -53,7 +54,7 @@ function App() {
     });
 
     // Listen for tab-closed events from IPC
-    const unlistenTabClosed = listen('tab-closed', (event: any) => {
+    const unlistenTabClosed = listen<TabClosedPayload>('tab-closed', (event) => {
       const payload = event.payload;
       console.log('[IPC] tab-closed event received:', payload);
 
