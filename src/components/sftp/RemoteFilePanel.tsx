@@ -113,18 +113,18 @@ export function RemoteFilePanel({
 
   // Drag & Drop handlers
   const handleDragStart = (e: React.DragEvent, file: FileEntry) => {
+    console.log('[RemoteFilePanel] DragStart:', file.name, file.isDir ? '(folder)' : '(file)');
     setIsDragging(true);
     e.dataTransfer.effectAllowed = 'copy';
-    e.dataTransfer.setData(
-      'text/plain',
-      JSON.stringify({
-        type: 'remote',
-        path: file.path,
-        name: file.name,
-        size: file.size,
-        isDir: file.isDir,
-      })
-    );
+    const dragData = {
+      type: 'remote',
+      path: file.path,
+      name: file.name,
+      size: file.size,
+      isDir: file.isDir,
+    };
+    console.log('[RemoteFilePanel] DragData:', dragData);
+    e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 
     // Create custom drag image
     const dragImage = document.createElement('div');
@@ -138,6 +138,7 @@ export function RemoteFilePanel({
   };
 
   const handleDragEnd = () => {
+    console.log('[RemoteFilePanel] DragEnd');
     // Reset dragging state after a short delay to prevent click events
     setTimeout(() => setIsDragging(false), 50);
   };
@@ -149,28 +150,37 @@ export function RemoteFilePanel({
   };
 
   const handleDragLeave = () => {
+    console.log('[RemoteFilePanel] DragLeave');
     setIsDragOver(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    console.log('[RemoteFilePanel] Drop event triggered');
 
     if (!onUpload) {
-      console.warn('onUpload callback not provided');
+      console.warn('[RemoteFilePanel] onUpload callback not provided');
       return;
     }
 
     try {
-      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const rawData = e.dataTransfer.getData('text/plain');
+      console.log('[RemoteFilePanel] Raw drop data:', rawData);
+      const data = JSON.parse(rawData);
+      console.log('[RemoteFilePanel] Parsed drop data:', data);
 
       if (data.type === 'local') {
         // Local file dropped → Upload to remote
         const remotePath = `${safePath}/${data.name}`;
+        console.log('[RemoteFilePanel] Uploading:', data.path, '→', remotePath);
         await onUpload(data.path, remotePath);
+        console.log('[RemoteFilePanel] Upload complete');
+      } else {
+        console.log('[RemoteFilePanel] Not a local file, ignoring');
       }
     } catch (err) {
-      console.error('Drop failed:', err);
+      console.error('[RemoteFilePanel] Drop failed:', err);
     }
   };
 

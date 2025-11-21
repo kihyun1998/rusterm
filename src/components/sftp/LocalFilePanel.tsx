@@ -85,18 +85,18 @@ export function LocalFilePanel({
 
   // Drag & Drop handlers
   const handleDragStart = (e: React.DragEvent, file: FileEntry) => {
+    console.log('[LocalFilePanel] DragStart:', file.name, file.isDir ? '(folder)' : '(file)');
     setIsDragging(true);
     e.dataTransfer.effectAllowed = 'copy';
-    e.dataTransfer.setData(
-      'text/plain',
-      JSON.stringify({
-        type: 'local',
-        path: file.path,
-        name: file.name,
-        size: file.size,
-        isDir: file.isDir,
-      })
-    );
+    const dragData = {
+      type: 'local',
+      path: file.path,
+      name: file.name,
+      size: file.size,
+      isDir: file.isDir,
+    };
+    console.log('[LocalFilePanel] DragData:', dragData);
+    e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 
     // Create custom drag image
     const dragImage = document.createElement('div');
@@ -110,6 +110,7 @@ export function LocalFilePanel({
   };
 
   const handleDragEnd = () => {
+    console.log('[LocalFilePanel] DragEnd');
     // Reset dragging state after a short delay to prevent click events
     setTimeout(() => setIsDragging(false), 50);
   };
@@ -121,28 +122,37 @@ export function LocalFilePanel({
   };
 
   const handleDragLeave = () => {
+    console.log('[LocalFilePanel] DragLeave');
     setIsDragOver(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    console.log('[LocalFilePanel] Drop event triggered');
 
     if (!onDownload) {
-      console.warn('onDownload callback not provided');
+      console.warn('[LocalFilePanel] onDownload callback not provided');
       return;
     }
 
     try {
-      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const rawData = e.dataTransfer.getData('text/plain');
+      console.log('[LocalFilePanel] Raw drop data:', rawData);
+      const data = JSON.parse(rawData);
+      console.log('[LocalFilePanel] Parsed drop data:', data);
 
       if (data.type === 'remote') {
         // Remote file dropped → Download to local
         const localPath = `${currentPath}/${data.name}`;
+        console.log('[LocalFilePanel] Downloading:', data.path, '→', localPath);
         await onDownload(data.path, localPath);
+        console.log('[LocalFilePanel] Download complete');
+      } else {
+        console.log('[LocalFilePanel] Not a remote file, ignoring');
       }
     } catch (err) {
-      console.error('Drop failed:', err);
+      console.error('[LocalFilePanel] Drop failed:', err);
     }
   };
 
