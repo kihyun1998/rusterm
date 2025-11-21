@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
+import { useEffect, useState } from 'react';
 import { CommandPalette } from '@/components/command/CommandPalette';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';

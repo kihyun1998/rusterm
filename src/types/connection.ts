@@ -64,7 +64,7 @@ export type AuthMethod = 'password' | 'privateKey' | 'noAuth';
  */
 export function getAuthMethod(profile: {
   type: ConnectionType;
-  savedAuthType?: 'password' | 'privateKey' | 'passphrase' | 'interactive'
+  savedAuthType?: 'password' | 'privateKey' | 'passphrase' | 'interactive';
 }): AuthMethod {
   if (profile.type === 'ssh') {
     // Both passphrase and privateKey display as "Private Key" in UI

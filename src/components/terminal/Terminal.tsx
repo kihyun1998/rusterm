@@ -79,14 +79,19 @@ export function Terminal({
         setIsResolvingCredentials(true);
 
         try {
-          const { useConnectionProfileStore } = await import('@/stores/use-connection-profile-store');
+          const { useConnectionProfileStore } = await import(
+            '@/stores/use-connection-profile-store'
+          );
           const profile = useConnectionProfileStore.getState().getProfileById(connectionProfileId);
 
           if (!profile) {
             // No profile found - this might be an IPC-created SSH session
             // IPC sessions pass session_id as connectionProfileId
             if (isSshConnection) {
-              console.log('No profile found - treating as IPC-created SSH session:', connectionProfileId);
+              console.log(
+                'No profile found - treating as IPC-created SSH session:',
+                connectionProfileId
+              );
               setIsIpcCreatedSsh(true);
               ipcSshSessionIdRef.current = connectionProfileId;
             } else {
