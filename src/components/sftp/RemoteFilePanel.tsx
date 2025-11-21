@@ -1,5 +1,5 @@
 import { ArrowUp, File, Folder, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -84,6 +84,28 @@ export function RemoteFilePanel({
   const hasParent = safePath !== '/' && safePath !== '';
   const [isDragging, setIsDragging] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  // Debug: Log when component mounts and updates
+  useEffect(() => {
+    console.log('[RemoteFilePanel] Mounted/Updated:', {
+      currentPath: safePath,
+      fileCount: fileList.length,
+      isLoading,
+      hasUploadCallback: !!onUpload,
+    });
+
+    // Log drop zone dimensions
+    if (dropZoneRef.current) {
+      const rect = dropZoneRef.current.getBoundingClientRect();
+      console.log('[RemoteFilePanel] Drop zone size:', {
+        width: rect.width,
+        height: rect.height,
+        top: rect.top,
+        left: rect.left,
+      });
+    }
+  }, [safePath, fileList.length, isLoading, onUpload]);
 
   // Single-click: Select file or folder (toggle)
   const handleFileClick = (file: FileEntry) => {
@@ -236,6 +258,7 @@ export function RemoteFilePanel({
 
       {/* File list */}
       <div
+        ref={dropZoneRef}
         className={`flex-1 overflow-auto sftp-file-list transition-all ${isDragOver ? 'ring-2 ring-primary ring-inset' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
