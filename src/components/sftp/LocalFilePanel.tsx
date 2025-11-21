@@ -8,6 +8,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useLocalFs } from '@/hooks/use-local-fs';
 import type { FileEntry } from '@/types/sftp';
 
@@ -15,11 +21,12 @@ import type { FileEntry } from '@/types/sftp';
  * Format file size in human-readable format
  */
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return '0KB';
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+  if (bytes < k) return '0KB';
+  const sizes = ['KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k)) - 1;
+  return `${(bytes / Math.pow(k, i + 1)).toFixed(1)}${sizes[i]}`;
 }
 
 /**
@@ -79,71 +86,95 @@ export function LocalFilePanel() {
             <Skeleton className="h-10 w-full" />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40px]"></TableHead>
-                <TableHead>이름</TableHead>
-                <TableHead className="w-[140px]">수정일</TableHead>
-                <TableHead className="w-[100px]">크기</TableHead>
-                <TableHead className="w-[80px]">권한</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {/* Parent directory */}
-              {hasParent && (
-                <TableRow
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={navigateUp}
-                >
-                  <TableCell>
-                    <ArrowUp className="h-4 w-4 text-muted-foreground" />
-                  </TableCell>
-                  <TableCell className="font-medium">..</TableCell>
-                  <TableCell></TableCell>
-                  <TableCell></TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-              )}
-
-              {/* Files and directories */}
-              {files.length === 0 && !hasParent ? (
+          <TooltipProvider>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    디렉토리가 비어있습니다
-                  </TableCell>
+                  <TableHead className="w-[40px]"></TableHead>
+                  <TableHead>이름</TableHead>
+                  <TableHead className="w-[100px]">크기</TableHead>
+                  <TableHead className="w-[150px]">수정일</TableHead>
                 </TableRow>
-              ) : (
-                files.map((file) => (
+              </TableHeader>
+              <TableBody>
+                {/* Parent directory */}
+                {hasParent && (
                   <TableRow
-                    key={file.path}
-                    className={file.isDir ? 'cursor-pointer hover:bg-muted/50' : ''}
-                    onClick={() => handleFileClick(file)}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={navigateUp}
                   >
                     <TableCell>
-                      {file.isDir ? (
-                        <Folder className="h-4 w-4 text-blue-500" />
-                      ) : (
-                        <File className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <ArrowUp className="h-4 w-4 text-muted-foreground" />
                     </TableCell>
-                    <TableCell className={file.isDir ? 'font-medium' : ''}>
-                      {file.name}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDate(file.modified)}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {file.isDir ? '' : formatFileSize(file.size)}
-                    </TableCell>
-                    <TableCell className="text-xs font-mono text-muted-foreground">
-                      {file.permissions}
+                    <TableCell className="font-medium">..</TableCell>
+                    <TableCell></TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                )}
+
+                {/* Files and directories */}
+                {files.length === 0 && !hasParent ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      디렉토리가 비어있습니다
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  files.map((file) => (
+                    <TableRow
+                      key={file.path}
+                      className={file.isDir ? 'cursor-pointer hover:bg-muted/50' : ''}
+                      onClick={() => handleFileClick(file)}
+                    >
+                      <TableCell>
+                        {file.isDir ? (
+                          <Folder className="h-4 w-4 text-blue-500" />
+                        ) : (
+                          <File className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </TableCell>
+                      <TableCell className={file.isDir ? 'font-medium' : ''}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="truncate max-w-[300px]">
+                              {file.name}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{file.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="truncate">
+                              {file.isDir ? '' : formatFileSize(file.size)}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{file.isDir ? '' : formatFileSize(file.size)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="truncate">
+                              {formatDate(file.modified)}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{formatDate(file.modified)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TooltipProvider>
         )}
       </div>
 
