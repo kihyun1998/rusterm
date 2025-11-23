@@ -1,4 +1,4 @@
-import { Lock, Monitor, Plus } from 'lucide-react';
+import { FolderOpen, Lock, Monitor, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { ConnectionType } from '@/types/connection';
+import { SFTPSessionForm } from './SFTPSessionForm';
 import { SSHSessionForm } from './SSHSessionForm';
 
 interface NewSessionDialogProps {
@@ -17,6 +18,7 @@ interface NewSessionDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreateLocal?: () => void;
   onCreateSSH?: (profileId: string) => void;
+  onCreateSFTP?: (profileId: string) => void;
 }
 
 /**
@@ -28,6 +30,7 @@ export function NewSessionDialog({
   onOpenChange,
   onCreateLocal,
   onCreateSSH,
+  onCreateSFTP,
 }: NewSessionDialogProps) {
   const [selectedProtocol, setSelectedProtocol] = useState<ConnectionType>('local');
 
@@ -38,6 +41,11 @@ export function NewSessionDialog({
 
   const handleCreateSSH = (profileId: string) => {
     onCreateSSH?.(profileId);
+    onOpenChange(false);
+  };
+
+  const handleCreateSFTP = (profileId: string) => {
+    onCreateSFTP?.(profileId);
     onOpenChange(false);
   };
 
@@ -54,7 +62,7 @@ export function NewSessionDialog({
 
         <Tabs value={selectedProtocol} onValueChange={(v) => setSelectedProtocol(v as ConnectionType)}>
           {/* Protocol Selector (Chip-style) */}
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="local" className="flex items-center gap-2">
               <Monitor className="h-4 w-4" />
               Local Terminal
@@ -62,6 +70,10 @@ export function NewSessionDialog({
             <TabsTrigger value="ssh" className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
               SSH
+            </TabsTrigger>
+            <TabsTrigger value="sftp" className="flex items-center gap-2">
+              <FolderOpen className="h-4 w-4" />
+              SFTP
             </TabsTrigger>
           </TabsList>
 
@@ -85,6 +97,14 @@ export function NewSessionDialog({
           <TabsContent value="ssh" className="space-y-4">
             <SSHSessionForm
               onConnect={handleCreateSSH}
+              onCancel={() => onOpenChange(false)}
+            />
+          </TabsContent>
+
+          {/* SFTP Tab */}
+          <TabsContent value="sftp" className="space-y-4">
+            <SFTPSessionForm
+              onConnect={handleCreateSFTP}
               onCancel={() => onOpenChange(false)}
             />
           </TabsContent>
