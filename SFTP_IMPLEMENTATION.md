@@ -525,9 +525,9 @@ pnpm run build
 ### Phase 3: NewSessionDialog SFTP 탭 추가
 
 #### Task 3.1: NewSessionDialog 수정
-- [ ] `TabsList`를 `grid-cols-3`로 변경
-- [ ] SFTP 탭 추가 (아이콘: FolderOpen)
-- [ ] selectedProtocol 상태에 'sftp' 지원
+- [x] `TabsList`를 `grid-cols-3`로 변경
+- [x] SFTP 탭 추가 (아이콘: FolderOpen)
+- [x] selectedProtocol 상태에 'sftp' 지원
 
 **테스트 방법:**
 ```bash
@@ -537,10 +537,10 @@ pnpm tauri dev
 ```
 
 #### Task 3.2: SFTPSessionForm 생성
-- [ ] `src/components/connection/SFTPSessionForm.tsx` 생성
-- [ ] SSHSessionForm과 유사한 UI 구현
-- [ ] 연결 프로필 저장 기능 통합
-- [ ] 저장 후 SFTP 탭 열기
+- [x] `src/components/connection/SFTPSessionForm.tsx` 생성
+- [x] SSHSessionForm과 유사한 UI 구현
+- [x] 연결 프로필 저장 기능 통합
+- [x] 저장 후 SFTP 탭 열기
 
 **테스트 방법:**
 ```bash
@@ -551,8 +551,8 @@ pnpm tauri dev
 ```
 
 #### Task 3.3: 연결 프로필 스토어 통합
-- [ ] `use-connection-profile-store.ts`에서 SFTP 타입 지원
-- [ ] SFTP 프로필 저장/로드 테스트
+- [x] `use-connection-profile-store.ts`에서 SFTP 타입 지원
+- [x] SFTP 프로필 저장/로드 테스트
 
 **테스트 방법:**
 ```bash
