@@ -1,8 +1,10 @@
 import { useDroppable } from '@dnd-kit/core';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FolderOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { FileInfo, FileSystemType } from '@/types/sftp';
 import { FileList } from './FileList';
+import { NavigateDialog } from './NavigateDialog';
 import { PanelToolbar } from './PanelToolbar';
 import { PathDisplay } from './PathDisplay';
 
@@ -36,6 +38,12 @@ interface FilePanelProps {
 
   /** 상위 디렉토리로 이동 콜백 */
   onNavigateUp: () => void;
+
+  /** 홈 디렉토리로 이동 콜백 */
+  onNavigateHome: () => void;
+
+  /** 다이얼로그로 경로 이동 콜백 */
+  onNavigateWithDialog: () => void;
 
   /** 파일 선택 시 콜백 */
   onSelectFile: (file: FileInfo) => void;
@@ -87,6 +95,8 @@ export function FilePanel({
   loading,
   onNavigate,
   onNavigateUp,
+  onNavigateHome,
+  onNavigateWithDialog,
   onSelectFile,
   onOpenFile,
   onRefresh,
@@ -140,8 +150,21 @@ export function FilePanel({
       {title && <div className="px-2 py-1 font-medium text-sm border-b bg-muted/50">{title}</div>}
 
       {/* PathDisplay */}
-      <div className="px-2 py-2 border-b">
-        <PathDisplay path={currentPath} onHome={onNavigateUp} />
+      <div className="px-2 py-2 border-b flex items-center gap-2">
+        <PathDisplay path={currentPath} onHome={onNavigateHome} />
+        {type === 'local' ? (
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={onNavigateWithDialog}
+            title="폴더 선택"
+            aria-label="폴더 선택"
+          >
+            <FolderOpen />
+          </Button>
+        ) : (
+          <NavigateDialog currentPath={currentPath} onNavigate={onNavigate} />
+        )}
       </div>
 
       {/* PanelToolbar */}

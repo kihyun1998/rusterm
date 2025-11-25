@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-dialog';
 import { useCallback, useRef, useState } from 'react';
 import { useSftpStore } from '@/stores/use-sftp-store';
 import type { SFTPConfig } from '@/types/connection';
@@ -145,6 +146,7 @@ interface UseSftpFileListReturn {
   refresh: () => Promise<void>;
   navigateUp: () => Promise<void>;
   navigateToHome: () => Promise<void>;
+  navigateWithDialog: () => Promise<void>;
 }
 
 /**
@@ -227,8 +229,8 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
     // 마지막 구분자 위치 찾기
     const lastSeparatorIndex = path.lastIndexOf(separator);
 
-    if (lastSeparatorIndex <= 0) {
-      // 루트 디렉토리이거나 구분자가 없으면 그대로
+    if (lastSeparatorIndex < 0) {
+      // 구분자가 없으면 그대로
       return;
     }
 
@@ -263,6 +265,34 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
     }
   }, [panelType, sessionId, loadDirectory]);
 
+  /**
+   * 다이얼로그로 폴더 선택/경로 입력하여 이동
+   * - Local: 시스템 폴더 선택 다이얼로그
+   * - Remote: 경로 입력 다이얼로그 (TODO: 구현 예정)
+   */
+  const navigateWithDialog = useCallback(async () => {
+    try {
+      if (panelType === 'local') {
+        // Local: Tauri 폴더 선택 다이얼로그
+        const selectedPath = await open({
+          directory: true,
+          multiple: false,
+          title: '폴더 선택',
+        });
+
+        if (selectedPath && typeof selectedPath === 'string') {
+          await loadDirectory(selectedPath);
+        }
+      } else {
+        // Remote: 경로 입력 다이얼로그 (TODO: 구현 예정)
+        // 현재는 콘솔 로그만 출력
+        console.log('Remote: Navigate with dialog - TODO');
+      }
+    } catch (err) {
+      console.error('Failed to navigate with dialog:', err);
+    }
+  }, [panelType, loadDirectory]);
+
   return {
     currentPath: panel?.currentPath || '',
     files: panel?.files || [],
@@ -272,6 +302,7 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
     refresh,
     navigateUp,
     navigateToHome,
+    navigateWithDialog,
   };
 }
 

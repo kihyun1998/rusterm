@@ -334,6 +334,8 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
           loading={session.localPanel.loading}
           onNavigate={localFileList.loadDirectory}
           onNavigateUp={localFileList.navigateUp}
+          onNavigateHome={localFileList.navigateToHome}
+          onNavigateWithDialog={localFileList.navigateWithDialog}
           onSelectFile={handleLocalFileSelect}
           onOpenFile={handleLocalFileOpen}
           onRefresh={localFileList.refresh}
@@ -354,6 +356,8 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
           loading={session.remotePanel.loading}
           onNavigate={remoteFileList.loadDirectory}
           onNavigateUp={remoteFileList.navigateUp}
+          onNavigateHome={remoteFileList.navigateToHome}
+          onNavigateWithDialog={remoteFileList.navigateWithDialog}
           onSelectFile={handleRemoteFileSelect}
           onOpenFile={handleRemoteFileOpen}
           onRefresh={remoteFileList.refresh}
