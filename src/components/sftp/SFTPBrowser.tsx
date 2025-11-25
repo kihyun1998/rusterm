@@ -1,5 +1,6 @@
 import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import {
   useSftpConnection,
   useSftpFileList,
@@ -12,6 +13,9 @@ import type { FileInfo, FileSystemType } from '@/types/sftp';
 import { ErrorScreen } from './ErrorScreen';
 import { FilePanel } from './FilePanel';
 import { LoadingScreen } from './LoadingScreen';
+import { NewFolderDialog } from './NewFolderDialog';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
+import { RenameDialog } from './RenameDialog';
 
 /**
  * Props for SFTPBrowser component
@@ -145,6 +149,15 @@ interface ConnectedSFTPBrowserProps {
 }
 
 function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
+  // 다이얼로그 상태
+  const [localNewFolderDialogOpen, setLocalNewFolderDialogOpen] = useState(false);
+  const [remoteNewFolderDialogOpen, setRemoteNewFolderDialogOpen] = useState(false);
+  const [localDeleteDialogOpen, setLocalDeleteDialogOpen] = useState(false);
+  const [remoteDeleteDialogOpen, setRemoteDeleteDialogOpen] = useState(false);
+  const [localRenameDialogOpen, setLocalRenameDialogOpen] = useState(false);
+  const [remoteRenameDialogOpen, setRemoteRenameDialogOpen] = useState(false);
+  const [selectedFileForRename, setSelectedFileForRename] = useState<FileInfo | null>(null);
+
   // 스토어에서 세션 및 패널 상태 가져오기
   const session = useSftpStore((state) => state.getSession(tabId));
 
@@ -275,35 +288,289 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
     }
   };
 
-  // TODO: 파일 작업 핸들러 (새 폴더, 삭제, 이름 변경 등)
+  // 파일 작업 핸들러
+  /**
+   * 로컬 패널에서 새 폴더 생성
+   */
   const handleLocalNewFolder = () => {
-    // TODO: 다이얼로그로 폴더 이름 입력 받기
-    console.log('Local: New Folder');
+    setLocalNewFolderDialogOpen(true);
   };
 
+  /**
+   * 로컬 패널에서 새 폴더 생성 확인
+   */
+  const handleLocalNewFolderConfirm = async (folderName: string) => {
+    try {
+      const currentPath = session?.localPanel.currentPath || '';
+      await localOps.createDirectory(currentPath, folderName);
+      toast.success('폴더가 생성되었습니다', {
+        description: folderName,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error('폴더 생성 실패', {
+        description: errorMessage,
+      });
+      throw error;
+    }
+  };
+
+  /**
+   * 원격 패널에서 새 폴더 생성
+   */
   const handleRemoteNewFolder = () => {
-    // TODO: 다이얼로그로 폴더 이름 입력 받기
-    console.log('Remote: New Folder');
+    setRemoteNewFolderDialogOpen(true);
   };
 
+  /**
+   * 원격 패널에서 새 폴더 생성 확인
+   */
+  const handleRemoteNewFolderConfirm = async (folderName: string) => {
+    try {
+      const currentPath = session?.remotePanel.currentPath || '';
+      await remoteOps.createDirectory(currentPath, folderName);
+      toast.success('폴더가 생성되었습니다', {
+        description: folderName,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error('폴더 생성 실패', {
+        description: errorMessage,
+      });
+      throw error;
+    }
+  };
+
+  /**
+   * 선택된 파일 목록을 FileInfo 배열로 반환
+   */
+  const getSelectedFiles = (panelType: 'local' | 'remote'): FileInfo[] => {
+    const selectedPaths =
+      panelType === 'local'
+        ? useSftpStore.getState().getLocalSelectedFiles(tabId)
+        : useSftpStore.getState().getRemoteSelectedFiles(tabId);
+
+    const files =
+      panelType === 'local'
+        ? session?.localPanel.files || []
+        : session?.remotePanel.files || [];
+
+    return files.filter((file) => selectedPaths.includes(file.path));
+  };
+
+  /**
+   * 로컬 패널에서 파일/폴더 삭제
+   */
   const handleLocalDelete = () => {
-    // TODO: 선택된 파일 삭제
-    console.log('Local: Delete');
+    const selectedPaths = useSftpStore.getState().getLocalSelectedFiles(tabId);
+    if (selectedPaths.length === 0) return;
+
+    setLocalDeleteDialogOpen(true);
   };
 
+  /**
+   * 로컬 패널에서 삭제 확인
+   */
+  const handleLocalDeleteConfirm = async () => {
+    try {
+      const selectedFiles = getSelectedFiles('local');
+
+      let successCount = 0;
+      const failedItems: string[] = [];
+
+      // 각 파일/폴더 삭제
+      for (const file of selectedFiles) {
+        try {
+          if (file.isDirectory) {
+            await localOps.deleteDirectory(file.path);
+          } else {
+            await localOps.deleteFile(file.path);
+          }
+          successCount++;
+        } catch (error) {
+          failedItems.push(file.name);
+          console.error(`Failed to delete ${file.name}:`, error);
+        }
+      }
+
+      // 선택 해제
+      useSftpStore.getState().clearLocalSelection(tabId);
+      setLocalDeleteDialogOpen(false);
+
+      // 결과 Toast
+      if (successCount > 0) {
+        toast.success(`${successCount}개 항목이 삭제되었습니다`);
+      }
+
+      if (failedItems.length > 0) {
+        toast.error(`${failedItems.length}개 항목 삭제 실패`, {
+          description:
+            failedItems.slice(0, 3).join(', ') +
+            (failedItems.length > 3 ? ` 외 ${failedItems.length - 3}개` : ''),
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error('삭제 실패', {
+        description: errorMessage,
+      });
+      throw error;
+    }
+  };
+
+  /**
+   * 원격 패널에서 파일/폴더 삭제
+   */
   const handleRemoteDelete = () => {
-    // TODO: 선택된 파일 삭제
-    console.log('Remote: Delete');
+    const selectedPaths = useSftpStore.getState().getRemoteSelectedFiles(tabId);
+    if (selectedPaths.length === 0) return;
+
+    setRemoteDeleteDialogOpen(true);
   };
 
+  /**
+   * 원격 패널에서 삭제 확인
+   */
+  const handleRemoteDeleteConfirm = async () => {
+    try {
+      const selectedFiles = getSelectedFiles('remote');
+
+      let successCount = 0;
+      const failedItems: string[] = [];
+
+      for (const file of selectedFiles) {
+        try {
+          if (file.isDirectory) {
+            await remoteOps.deleteDirectory(file.path);
+          } else {
+            await remoteOps.deleteFile(file.path);
+          }
+          successCount++;
+        } catch (error) {
+          failedItems.push(file.name);
+          console.error(`Failed to delete ${file.name}:`, error);
+        }
+      }
+
+      useSftpStore.getState().clearRemoteSelection(tabId);
+      setRemoteDeleteDialogOpen(false);
+
+      if (successCount > 0) {
+        toast.success(`${successCount}개 항목이 삭제되었습니다`);
+      }
+
+      if (failedItems.length > 0) {
+        toast.error(`${failedItems.length}개 항목 삭제 실패`, {
+          description:
+            failedItems.slice(0, 3).join(', ') +
+            (failedItems.length > 3 ? ` 외 ${failedItems.length - 3}개` : ''),
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error('삭제 실패', {
+        description: errorMessage,
+      });
+      throw error;
+    }
+  };
+
+  /**
+   * 로컬 패널에서 파일/폴더 이름 변경
+   */
   const handleLocalRename = () => {
-    // TODO: 파일 이름 변경
-    console.log('Local: Rename');
+    const selectedPaths = useSftpStore.getState().getLocalSelectedFiles(tabId);
+
+    // 정확히 1개 선택되어 있어야 함 (PanelToolbar에서 이미 검증)
+    if (selectedPaths.length !== 1) return;
+
+    const selectedFiles = getSelectedFiles('local');
+    const fileToRename = selectedFiles[0];
+
+    setSelectedFileForRename(fileToRename);
+    setLocalRenameDialogOpen(true);
   };
 
+  /**
+   * 로컬 패널에서 이름 변경 확인
+   */
+  const handleLocalRenameConfirm = async (newName: string) => {
+    if (!selectedFileForRename || !session) return;
+
+    try {
+      const currentPath = session.localPanel.currentPath;
+      const separator = currentPath.includes('\\') ? '\\' : '/';
+
+      // 기존 경로
+      const oldPath = selectedFileForRename.path;
+
+      // 새 경로 계산 (같은 디렉토리 내에서 이름만 변경)
+      const parentPath = oldPath.substring(0, oldPath.lastIndexOf(separator));
+      const newPath = `${parentPath}${separator}${newName}`;
+
+      await localOps.renameItem(oldPath, newPath);
+
+      // 성공 Toast
+      toast.success('이름이 변경되었습니다', {
+        description: `${selectedFileForRename.name} → ${newName}`,
+      });
+
+      // 선택 해제 및 상태 초기화
+      useSftpStore.getState().clearLocalSelection(tabId);
+      setSelectedFileForRename(null);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error('이름 변경 실패', {
+        description: errorMessage,
+      });
+      throw error;
+    }
+  };
+
+  /**
+   * 원격 패널에서 파일/폴더 이름 변경
+   */
   const handleRemoteRename = () => {
-    // TODO: 파일 이름 변경
-    console.log('Remote: Rename');
+    const selectedPaths = useSftpStore.getState().getRemoteSelectedFiles(tabId);
+
+    if (selectedPaths.length !== 1) return;
+
+    const selectedFiles = getSelectedFiles('remote');
+    const fileToRename = selectedFiles[0];
+
+    setSelectedFileForRename(fileToRename);
+    setRemoteRenameDialogOpen(true);
+  };
+
+  /**
+   * 원격 패널에서 이름 변경 확인
+   */
+  const handleRemoteRenameConfirm = async (newName: string) => {
+    if (!selectedFileForRename || !session) return;
+
+    try {
+      const currentPath = session.remotePanel.currentPath;
+      const separator = '/'; // Remote는 항상 Unix 스타일
+
+      const oldPath = selectedFileForRename.path;
+      const parentPath = oldPath.substring(0, oldPath.lastIndexOf(separator));
+      const newPath = `${parentPath}${separator}${newName}`;
+
+      await remoteOps.renameItem(oldPath, newPath);
+
+      toast.success('이름이 변경되었습니다', {
+        description: `${selectedFileForRename.name} → ${newName}`,
+      });
+
+      useSftpStore.getState().clearRemoteSelection(tabId);
+      setSelectedFileForRename(null);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error('이름 변경 실패', {
+        description: errorMessage,
+      });
+      throw error;
+    }
   };
 
   const handleLocalTransfer = () => {
@@ -321,52 +588,105 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-2 grid-rows-[1fr] gap-2 h-full p-4 min-h-0">
-        {/* Local Panel */}
-        <FilePanel
-          sessionId={sessionId}
-          type="local"
-          title="Local"
-          currentPath={session.localPanel.currentPath}
-          files={session.localPanel.files}
-          selectedFiles={session.localPanel.selectedFiles}
-          loading={session.localPanel.loading}
-          onNavigate={localFileList.loadDirectory}
-          onNavigateUp={localFileList.navigateUp}
-          onNavigateHome={localFileList.navigateToHome}
-          onNavigateWithDialog={localFileList.navigateWithDialog}
-          onSelectFile={handleLocalFileSelect}
-          onOpenFile={handleLocalFileOpen}
-          onRefresh={localFileList.refresh}
-          onNewFolder={handleLocalNewFolder}
-          onDelete={handleLocalDelete}
-          onRename={handleLocalRename}
-          onTransfer={handleLocalTransfer}
-        />
+    <>
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-2 grid-rows-[1fr] gap-2 h-full p-4 min-h-0">
+          {/* Local Panel */}
+          <FilePanel
+            sessionId={sessionId}
+            type="local"
+            title="Local"
+            currentPath={session.localPanel.currentPath}
+            files={session.localPanel.files}
+            selectedFiles={session.localPanel.selectedFiles}
+            loading={session.localPanel.loading}
+            onNavigate={localFileList.loadDirectory}
+            onNavigateUp={localFileList.navigateUp}
+            onNavigateHome={localFileList.navigateToHome}
+            onNavigateWithDialog={localFileList.navigateWithDialog}
+            onSelectFile={handleLocalFileSelect}
+            onOpenFile={handleLocalFileOpen}
+            onRefresh={localFileList.refresh}
+            onNewFolder={handleLocalNewFolder}
+            onDelete={handleLocalDelete}
+            onRename={handleLocalRename}
+            onTransfer={handleLocalTransfer}
+          />
 
-        {/* Remote Panel */}
-        <FilePanel
-          sessionId={sessionId}
-          type="remote"
-          title="Remote"
-          currentPath={session.remotePanel.currentPath}
-          files={session.remotePanel.files}
-          selectedFiles={session.remotePanel.selectedFiles}
-          loading={session.remotePanel.loading}
-          onNavigate={remoteFileList.loadDirectory}
-          onNavigateUp={remoteFileList.navigateUp}
-          onNavigateHome={remoteFileList.navigateToHome}
-          onNavigateWithDialog={remoteFileList.navigateWithDialog}
-          onSelectFile={handleRemoteFileSelect}
-          onOpenFile={handleRemoteFileOpen}
-          onRefresh={remoteFileList.refresh}
-          onNewFolder={handleRemoteNewFolder}
-          onDelete={handleRemoteDelete}
-          onRename={handleRemoteRename}
-          onTransfer={handleRemoteTransfer}
-        />
-      </div>
-    </DndContext>
+          {/* Remote Panel */}
+          <FilePanel
+            sessionId={sessionId}
+            type="remote"
+            title="Remote"
+            currentPath={session.remotePanel.currentPath}
+            files={session.remotePanel.files}
+            selectedFiles={session.remotePanel.selectedFiles}
+            loading={session.remotePanel.loading}
+            onNavigate={remoteFileList.loadDirectory}
+            onNavigateUp={remoteFileList.navigateUp}
+            onNavigateHome={remoteFileList.navigateToHome}
+            onNavigateWithDialog={remoteFileList.navigateWithDialog}
+            onSelectFile={handleRemoteFileSelect}
+            onOpenFile={handleRemoteFileOpen}
+            onRefresh={remoteFileList.refresh}
+            onNewFolder={handleRemoteNewFolder}
+            onDelete={handleRemoteDelete}
+            onRename={handleRemoteRename}
+            onTransfer={handleRemoteTransfer}
+          />
+        </div>
+      </DndContext>
+
+      {/* New Folder Dialogs */}
+      <NewFolderDialog
+        open={localNewFolderDialogOpen}
+        onOpenChange={setLocalNewFolderDialogOpen}
+        onConfirm={handleLocalNewFolderConfirm}
+        panelType="local"
+      />
+
+      <NewFolderDialog
+        open={remoteNewFolderDialogOpen}
+        onOpenChange={setRemoteNewFolderDialogOpen}
+        onConfirm={handleRemoteNewFolderConfirm}
+        panelType="remote"
+      />
+
+      {/* Delete Confirm Dialogs */}
+      <DeleteConfirmDialog
+        open={localDeleteDialogOpen}
+        onOpenChange={setLocalDeleteDialogOpen}
+        onConfirm={handleLocalDeleteConfirm}
+        items={getSelectedFiles('local')}
+        panelType="local"
+      />
+
+      <DeleteConfirmDialog
+        open={remoteDeleteDialogOpen}
+        onOpenChange={setRemoteDeleteDialogOpen}
+        onConfirm={handleRemoteDeleteConfirm}
+        items={getSelectedFiles('remote')}
+        panelType="remote"
+      />
+
+      {/* Rename Dialogs */}
+      <RenameDialog
+        open={localRenameDialogOpen}
+        onOpenChange={setLocalRenameDialogOpen}
+        onConfirm={handleLocalRenameConfirm}
+        currentName={selectedFileForRename?.name || ''}
+        isDirectory={selectedFileForRename?.isDirectory || false}
+        panelType="local"
+      />
+
+      <RenameDialog
+        open={remoteRenameDialogOpen}
+        onOpenChange={setRemoteRenameDialogOpen}
+        onConfirm={handleRemoteRenameConfirm}
+        currentName={selectedFileForRename?.name || ''}
+        isDirectory={selectedFileForRename?.isDirectory || false}
+        panelType="remote"
+      />
+    </>
   );
 }
