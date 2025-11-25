@@ -48,6 +48,9 @@ interface FilePanelProps {
   /** 파일 선택 시 콜백 */
   onSelectFile: (file: FileInfo, multiSelect: boolean) => void;
 
+  /** 파일 범위 선택 시 콜백 (Shift+Click) */
+  onSelectFileRange: (fileIndex: number) => void;
+
   /** 파일/폴더 열기 시 콜백 */
   onOpenFile: (file: FileInfo) => void;
 
@@ -98,6 +101,7 @@ export function FilePanel({
   onNavigateHome,
   onNavigateWithDialog,
   onSelectFile,
+  onSelectFileRange,
   onOpenFile,
   onRefresh,
   onNewFolder,
@@ -185,6 +189,7 @@ export function FilePanel({
           selectedFiles={selectedFiles}
           fsType={type}
           onSelectFile={(file, multiSelect) => onSelectFile(file, multiSelect)}
+          onSelectFileRange={onSelectFileRange}
           onOpenFile={onOpenFile}
           onNavigateUp={onNavigateUp}
           onRename={onRename}

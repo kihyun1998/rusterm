@@ -21,6 +21,9 @@ interface FileListProps {
   /** 파일 선택 시 콜백 */
   onSelectFile: (file: FileInfo, multiSelect: boolean) => void;
 
+  /** 파일 범위 선택 시 콜백 (Shift+Click) */
+  onSelectFileRange: (fileIndex: number) => void;
+
   /** 파일/폴더 열기 시 콜백 */
   onOpenFile: (file: FileInfo) => void;
 
@@ -70,6 +73,7 @@ export function FileList({
   selectedFiles,
   fsType,
   onSelectFile,
+  onSelectFileRange,
   onOpenFile,
   onNavigateUp,
   onRename,
@@ -120,14 +124,16 @@ export function FileList({
           )}
 
           {/* File list */}
-          {files.map((file) => (
+          {files.map((file, index) => (
             <FileListItem
               key={file.path}
               file={file}
+              fileIndex={index}
               fsType={fsType}
               selected={selectedFiles.has(file.path)}
               selectedCount={selectedFiles.size}
               onSelect={(file, multiSelect) => onSelectFile(file, multiSelect)}
+              onSelectRange={(index) => onSelectFileRange(index)}
               onOpen={onOpenFile}
               onRename={onRename}
               onDelete={onDelete}

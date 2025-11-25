@@ -112,15 +112,27 @@ export function TransferItem({
     item.status === 'cancelled';
 
   return (
-    <div className="flex flex-col gap-2 p-3 border rounded-lg bg-card">
+    <div className="flex flex-col gap-1.5 p-2 border rounded bg-card">
       {/* Header Row: Icon + Filename + Buttons */}
       <div className="flex justify-between items-center">
-        {/* Left Section: Icon + Filename + Size */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <StatusIcon className={cn('h-4 w-4 flex-shrink-0', iconColorClass)} />
-          <span className="text-sm font-medium truncate">
+        {/* Left Section: Direction Badge + Icon + Filename + Size */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {/* Direction Badge */}
+          <div
+            className={cn(
+              'px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 leading-none',
+              item.direction === 'upload'
+                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                : 'bg-green-500/10 text-green-600 dark:text-green-400'
+            )}
+          >
+            {item.direction === 'upload' ? '↑' : '↓'}
+          </div>
+
+          <StatusIcon className={cn('h-3.5 w-3.5 flex-shrink-0', iconColorClass)} />
+          <span className="text-xs font-medium truncate">
             {item.fileName}
-            <span className="text-xs text-muted-foreground ml-1">
+            <span className="text-[10px] text-muted-foreground ml-1">
               ({formatFileSize(item.fileSize)})
             </span>
           </span>
@@ -128,7 +140,7 @@ export function TransferItem({
 
         {/* Right Section: Control Buttons */}
         {!isFinished && (
-          <div className="flex gap-1 flex-shrink-0">
+          <div className="flex gap-0.5 flex-shrink-0">
             {/* Pause Button (only when transferring) */}
             {isTransferring && onPause && (
               <Button
@@ -137,6 +149,7 @@ export function TransferItem({
                 onClick={() => onPause(item.id)}
                 disabled={isDisabled}
                 aria-label="Pause transfer"
+                className="h-6 w-6"
               >
                 <Pause className="h-3 w-3" />
               </Button>
@@ -149,6 +162,7 @@ export function TransferItem({
                 size="icon-sm"
                 onClick={() => onResume(item.id)}
                 aria-label="Resume transfer"
+                className="h-6 w-6"
               >
                 <Play className="h-3 w-3" />
               </Button>
@@ -162,6 +176,7 @@ export function TransferItem({
                 onClick={() => onCancel(item.id)}
                 disabled={isDisabled}
                 aria-label="Cancel transfer"
+                className="h-6 w-6"
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -171,25 +186,25 @@ export function TransferItem({
       </div>
 
       {/* Progress Row: Progress Bar + Percentage + Speed */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Progress Bar */}
         <div className="flex-1">
           <Progress
             value={item.progress.percentage}
-            className="h-2"
+            className="h-1.5"
             indicatorClassName={progressColorClass}
             aria-label={`Transfer progress: ${item.progress.percentage}%`}
           />
         </div>
 
         {/* Percentage */}
-        <div className="text-xs text-muted-foreground w-10 text-right">
+        <div className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">
           {item.progress.percentage}%
         </div>
 
         {/* Speed (only when transferring and speed is available) */}
         {item.status === 'transferring' && item.progress.speed !== undefined && (
-          <div className="text-xs text-muted-foreground w-20 text-right">
+          <div className="text-[10px] text-muted-foreground w-16 text-right tabular-nums">
             {formatTransferSpeed(item.progress.speed)}
           </div>
         )}
@@ -197,7 +212,7 @@ export function TransferItem({
 
       {/* Error Message (only when failed) */}
       {item.status === 'failed' && item.error && (
-        <div className="text-xs text-destructive flex items-center gap-1">
+        <div className="text-[10px] text-destructive flex items-center gap-1">
           <XCircle className="h-3 w-3 flex-shrink-0" />
           <span className="truncate">{item.error}</span>
         </div>
@@ -205,23 +220,23 @@ export function TransferItem({
 
       {/* Status Text (for completed, cancelled) */}
       {item.status === 'completed' && (
-        <div className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+        <div className="text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1">
           <CheckCircle className="h-3 w-3 flex-shrink-0" />
-          <span>Transfer completed</span>
+          <span>Completed</span>
         </div>
       )}
 
       {item.status === 'cancelled' && (
-        <div className="text-xs text-muted-foreground flex items-center gap-1">
+        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
           <XCircle className="h-3 w-3 flex-shrink-0" />
-          <span>Transfer cancelled</span>
+          <span>Cancelled</span>
         </div>
       )}
 
       {item.status === 'pending' && (
-        <div className="text-xs text-muted-foreground flex items-center gap-1">
+        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
           <Clock className="h-3 w-3 flex-shrink-0" />
-          <span>Waiting to start...</span>
+          <span>Waiting...</span>
         </div>
       )}
     </div>

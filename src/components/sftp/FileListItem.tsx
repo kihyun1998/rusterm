@@ -18,6 +18,9 @@ interface FileListItemProps {
   /** File information */
   file: FileInfo;
 
+  /** Index of the file in the file list (for range selection) */
+  fileIndex: number;
+
   /** File system type ('local' | 'remote') */
   fsType: FileSystemType;
 
@@ -29,6 +32,9 @@ interface FileListItemProps {
 
   /** Callback when file is clicked (single click) */
   onSelect: (file: FileInfo, multiSelect: boolean) => void;
+
+  /** Callback when file range is selected (Shift+Click) */
+  onSelectRange: (fileIndex: number) => void;
 
   /** Callback when file is double-clicked (open file/folder) */
   onOpen: (file: FileInfo) => void;
@@ -58,10 +64,12 @@ interface FileListItemProps {
  */
 export function FileListItem({
   file,
+  fileIndex,
   fsType,
   selected,
   selectedCount,
   onSelect,
+  onSelectRange,
   onOpen,
   onRename,
   onDelete,
@@ -80,8 +88,14 @@ export function FileListItem({
   /**
    * Handle click event - detect single vs double click
    * Supports Ctrl+Click (Windows/Linux) and Cmd+Click (Mac) for multi-select
+   * Supports Shift+Click for range selection
    */
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Prevent text selection when using Shift+Click for range selection
+    if (e.shiftKey) {
+      e.preventDefault();
+    }
+
     const now = Date.now();
     const isDoubleClick = now - lastClickTime < DOUBLE_CLICK_DELAY;
 
@@ -90,9 +104,14 @@ export function FileListItem({
       onOpen(file);
     } else {
       // Single click: select file
-      // Check for Ctrl (Windows/Linux) or Cmd (Mac) key for multi-select
-      const multiSelect = e.ctrlKey || e.metaKey;
-      onSelect(file, multiSelect);
+      if (e.shiftKey) {
+        // Shift+Click: range selection
+        onSelectRange(fileIndex);
+      } else {
+        // Check for Ctrl (Windows/Linux) or Cmd (Mac) key for multi-select
+        const multiSelect = e.ctrlKey || e.metaKey;
+        onSelect(file, multiSelect);
+      }
     }
 
     setLastClickTime(now);
@@ -117,7 +136,7 @@ export function FileListItem({
       ref={setNodeRef}
       onClick={handleClick}
       className={cn(
-        'grid grid-cols-[1fr_auto_150px] gap-4 p-2 rounded cursor-pointer',
+        'grid grid-cols-[1fr_auto_150px] gap-4 p-2 rounded cursor-pointer select-none',
         'hover:bg-accent transition-colors',
         selected && 'bg-accent',
         isDragging && 'opacity-50'

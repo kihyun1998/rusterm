@@ -8,6 +8,7 @@ interface PanelState {
   currentPath: string;
   files: FileInfo[];
   selectedFiles: Set<string>; // file paths
+  lastSelectedIndex: number | null; // Index of last selected file for range selection
   loading: boolean;
   error: string | null;
 }
@@ -46,6 +47,7 @@ interface SftpStore {
   setLocalLoading: (tabId: string, loading: boolean) => void;
   setLocalError: (tabId: string, error: string | null) => void;
   toggleLocalFileSelection: (tabId: string, filePath: string, multiSelect?: boolean) => void;
+  selectLocalFileRange: (tabId: string, startIndex: number, endIndex: number) => void;
   clearLocalSelection: (tabId: string) => void;
   getLocalSelectedFiles: (tabId: string) => string[];
 
@@ -55,6 +57,7 @@ interface SftpStore {
   setRemoteLoading: (tabId: string, loading: boolean) => void;
   setRemoteError: (tabId: string, error: string | null) => void;
   toggleRemoteFileSelection: (tabId: string, filePath: string, multiSelect?: boolean) => void;
+  selectRemoteFileRange: (tabId: string, startIndex: number, endIndex: number) => void;
   clearRemoteSelection: (tabId: string) => void;
   getRemoteSelectedFiles: (tabId: string) => string[];
 
@@ -86,6 +89,7 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
             currentPath: localHome,
             files: [],
             selectedFiles: new Set(),
+            lastSelectedIndex: null,
             loading: false,
             error: null,
           },
@@ -93,6 +97,7 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
             currentPath: remoteHome,
             files: [],
             selectedFiles: new Set(),
+            lastSelectedIndex: null,
             loading: false,
             error: null,
           },
@@ -187,6 +192,7 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
       if (!session) return state;
 
       const selectedFiles = new Set(session.localPanel.selectedFiles);
+      const fileIndex = session.localPanel.files.findIndex((f) => f.path === filePath);
 
       if (!multiSelect) {
         // 단일 선택 모드
@@ -213,6 +219,40 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
             localPanel: {
               ...session.localPanel,
               selectedFiles,
+              lastSelectedIndex: fileIndex >= 0 ? fileIndex : session.localPanel.lastSelectedIndex,
+            },
+          },
+        },
+      };
+    }),
+
+  selectLocalFileRange: (tabId, startIndex, endIndex) =>
+    set((state) => {
+      const session = state.sessions[tabId];
+      if (!session) return state;
+
+      const files = session.localPanel.files;
+      const selectedFiles = new Set(session.localPanel.selectedFiles);
+
+      // Select all files in range
+      const minIndex = Math.min(startIndex, endIndex);
+      const maxIndex = Math.max(startIndex, endIndex);
+
+      for (let i = minIndex; i <= maxIndex; i++) {
+        if (i >= 0 && i < files.length) {
+          selectedFiles.add(files[i].path);
+        }
+      }
+
+      return {
+        sessions: {
+          ...state.sessions,
+          [tabId]: {
+            ...session,
+            localPanel: {
+              ...session.localPanel,
+              selectedFiles,
+              lastSelectedIndex: endIndex,
             },
           },
         },
@@ -231,6 +271,7 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
             localPanel: {
               ...session.localPanel,
               selectedFiles: new Set(),
+              lastSelectedIndex: null,
             },
           },
         },
@@ -321,6 +362,7 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
       if (!session) return state;
 
       const selectedFiles = new Set(session.remotePanel.selectedFiles);
+      const fileIndex = session.remotePanel.files.findIndex((f) => f.path === filePath);
 
       if (!multiSelect) {
         if (selectedFiles.has(filePath)) {
@@ -345,6 +387,40 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
             remotePanel: {
               ...session.remotePanel,
               selectedFiles,
+              lastSelectedIndex: fileIndex >= 0 ? fileIndex : session.remotePanel.lastSelectedIndex,
+            },
+          },
+        },
+      };
+    }),
+
+  selectRemoteFileRange: (tabId, startIndex, endIndex) =>
+    set((state) => {
+      const session = state.sessions[tabId];
+      if (!session) return state;
+
+      const files = session.remotePanel.files;
+      const selectedFiles = new Set(session.remotePanel.selectedFiles);
+
+      // Select all files in range
+      const minIndex = Math.min(startIndex, endIndex);
+      const maxIndex = Math.max(startIndex, endIndex);
+
+      for (let i = minIndex; i <= maxIndex; i++) {
+        if (i >= 0 && i < files.length) {
+          selectedFiles.add(files[i].path);
+        }
+      }
+
+      return {
+        sessions: {
+          ...state.sessions,
+          [tabId]: {
+            ...session,
+            remotePanel: {
+              ...session.remotePanel,
+              selectedFiles,
+              lastSelectedIndex: endIndex,
             },
           },
         },
@@ -363,6 +439,7 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
             remotePanel: {
               ...session.remotePanel,
               selectedFiles: new Set(),
+              lastSelectedIndex: null,
             },
           },
         },

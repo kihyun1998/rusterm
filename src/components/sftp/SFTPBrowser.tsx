@@ -17,6 +17,7 @@ import { LoadingScreen } from './LoadingScreen';
 import { NewFolderDialog } from './NewFolderDialog';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { RenameDialog } from './RenameDialog';
+import { TransferPanel } from './TransferPanel';
 
 /**
  * Props for SFTPBrowser component
@@ -159,8 +160,8 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   const [remoteRenameDialogOpen, setRemoteRenameDialogOpen] = useState(false);
   const [selectedFileForRename, setSelectedFileForRename] = useState<FileInfo | null>(null);
 
-  // 드래그 중인 파일 상태
-  const [activeFile, setActiveFile] = useState<FileInfo | null>(null);
+  // 드래그 중인 파일 상태 (여러 파일 지원)
+  const [activeFiles, setActiveFiles] = useState<FileInfo[]>([]);
 
   // 스토어에서 세션 및 패널 상태 가져오기
   const session = useSftpStore((state) => state.getSession(tabId));
@@ -199,6 +200,14 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   // 파일 선택 관리
   const toggleLocalFileSelection = useSftpStore((state) => state.toggleLocalFileSelection);
   const toggleRemoteFileSelection = useSftpStore((state) => state.toggleRemoteFileSelection);
+  const selectLocalFileRange = useSftpStore((state) => state.selectLocalFileRange);
+  const selectRemoteFileRange = useSftpStore((state) => state.selectRemoteFileRange);
+
+  // 전송 큐 관리
+  const transferQueue = useSftpStore((state) => state.transferQueue);
+  const clearCompletedTransfers = useSftpStore((state) => state.clearCompletedTransfers);
+  const updateTransferStatus = useSftpStore((state) => state.updateTransferStatus);
+  const removeTransfer = useSftpStore((state) => state.removeTransfer);
 
   // 초기 디렉토리 로드
   useEffect(() => {
@@ -228,7 +237,28 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
       file: FileInfo;
       fsType: FileSystemType;
     };
-    setActiveFile(dragData.file);
+
+    // 드래그한 파일이 선택된 파일 목록에 포함되어 있는지 확인
+    const selectedPaths =
+      dragData.fsType === 'local'
+        ? useSftpStore.getState().getLocalSelectedFiles(tabId)
+        : useSftpStore.getState().getRemoteSelectedFiles(tabId);
+
+    const isDraggedFileSelected = selectedPaths.includes(dragData.file.path);
+
+    if (isDraggedFileSelected && selectedPaths.length > 1) {
+      // 선택된 여러 파일을 드래그
+      const files =
+        dragData.fsType === 'local'
+          ? session?.localPanel.files || []
+          : session?.remotePanel.files || [];
+
+      const selectedFiles = files.filter((file) => selectedPaths.includes(file.path));
+      setActiveFiles(selectedFiles);
+    } else {
+      // 단일 파일만 드래그
+      setActiveFiles([dragData.file]);
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -245,40 +275,34 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
 
     // 반대편 패널으로 드래그 시에만 전송
     if (dragData.fsType !== dropData.type) {
+      // 여러 파일 전송
+      for (const file of activeFiles) {
+        if (dragData.fsType === 'local') {
+          // 업로드: Local → Remote
+          const remotePath = session?.remotePanel.currentPath || '/';
+          const destinationPath = `${remotePath}${remotePath.endsWith('/') ? '' : '/'}${file.name}`;
+
+          await transfer.upload(file.path, destinationPath, file.name, file.size);
+        } else {
+          // 다운로드: Remote → Local
+          const localPath = session?.localPanel.currentPath || '/';
+          const localSeparator = localPath.includes('\\') ? '\\' : '/';
+          const destinationPath = `${localPath}${localPath.endsWith(localSeparator) ? '' : localSeparator}${file.name}`;
+
+          await transfer.download(file.path, destinationPath, file.name, file.size);
+        }
+      }
+
+      // 전송 완료 후 패널 새로고침
       if (dragData.fsType === 'local') {
-        // 업로드: Local → Remote
-        const remotePath = session?.remotePanel.currentPath || '/';
-        const destinationPath = `${remotePath}${remotePath.endsWith('/') ? '' : '/'}${dragData.file.name}`;
-
-        await transfer.upload(
-          dragData.file.path,
-          destinationPath,
-          dragData.file.name,
-          dragData.file.size
-        );
-
-        // 전송 완료 후 원격 패널 새로고침
         await remoteFileList.refresh();
       } else {
-        // 다운로드: Remote → Local
-        const localPath = session?.localPanel.currentPath || '/';
-        const localSeparator = localPath.includes('\\') ? '\\' : '/';
-        const destinationPath = `${localPath}${localPath.endsWith(localSeparator) ? '' : localSeparator}${dragData.file.name}`;
-
-        await transfer.download(
-          dragData.file.path,
-          destinationPath,
-          dragData.file.name,
-          dragData.file.size
-        );
-
-        // 전송 완료 후 로컬 패널 새로고침
         await localFileList.refresh();
       }
     }
 
-    // 드래그 종료 시 activeFile 초기화
-    setActiveFile(null);
+    // 드래그 종료 시 activeFiles 초기화
+    setActiveFiles([]);
   };
 
   // 파일 선택 핸들러
@@ -288,6 +312,33 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
 
   const handleRemoteFileSelect = (file: FileInfo, multiSelect: boolean) => {
     toggleRemoteFileSelection(tabId, file.path, multiSelect);
+  };
+
+  // 파일 범위 선택 핸들러 (Shift+Click)
+  const handleLocalFileRangeSelect = (fileIndex: number) => {
+    const lastIndex = session?.localPanel.lastSelectedIndex;
+    if (lastIndex !== null && lastIndex !== undefined) {
+      selectLocalFileRange(tabId, lastIndex, fileIndex);
+    } else {
+      // 마지막 선택이 없으면 단일 선택
+      const file = session?.localPanel.files[fileIndex];
+      if (file) {
+        handleLocalFileSelect(file, false);
+      }
+    }
+  };
+
+  const handleRemoteFileRangeSelect = (fileIndex: number) => {
+    const lastIndex = session?.remotePanel.lastSelectedIndex;
+    if (lastIndex !== null && lastIndex !== undefined) {
+      selectRemoteFileRange(tabId, lastIndex, fileIndex);
+    } else {
+      // 마지막 선택이 없으면 단일 선택
+      const file = session?.remotePanel.files[fileIndex];
+      if (file) {
+        handleRemoteFileSelect(file, false);
+      }
+    }
   };
 
   // 파일 열기 핸들러 (폴더 더블 클릭)
@@ -598,6 +649,84 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
     console.log('Remote: Transfer (Download)');
   };
 
+  /**
+   * 전송 패널 핸들러 함수들
+   */
+
+  /**
+   * 개별 전송 일시정지
+   */
+  const handleTransferPause = (transferId: string) => {
+    // TODO: 백엔드에 일시정지 요청 (Phase 7.5 이후 구현)
+    console.log('Pause transfer:', transferId);
+  };
+
+  /**
+   * 개별 전송 재개
+   */
+  const handleTransferResume = (transferId: string) => {
+    // TODO: 백엔드에 재개 요청 (Phase 7.5 이후 구현)
+    console.log('Resume transfer:', transferId);
+  };
+
+  /**
+   * 개별 전송 취소
+   */
+  const handleTransferCancel = (transferId: string) => {
+    updateTransferStatus(transferId, 'cancelled');
+    toast.info('전송이 취소되었습니다');
+  };
+
+  /**
+   * 완료된 항목 삭제
+   */
+  const handleClearCompleted = () => {
+    clearCompletedTransfers();
+    toast.success('완료된 항목이 삭제되었습니다');
+  };
+
+  /**
+   * 전체 일시정지
+   */
+  const handlePauseAll = () => {
+    transferQueue.forEach((item) => {
+      if (item.status === 'transferring') {
+        handleTransferPause(item.id);
+      }
+    });
+    toast.info('모든 전송이 일시정지되었습니다');
+  };
+
+  /**
+   * 전체 재개
+   */
+  const handleResumeAll = () => {
+    transferQueue.forEach((item) => {
+      if (item.status === 'pending') {
+        // TODO: 'paused' 상태 추가 필요
+        handleTransferResume(item.id);
+      }
+    });
+    toast.info('모든 전송이 재개되었습니다');
+  };
+
+  /**
+   * 전체 취소
+   */
+  const handleCancelAll = () => {
+    const activeTransfers = transferQueue.filter(
+      (item) => item.status === 'pending' || item.status === 'transferring'
+    );
+
+    activeTransfers.forEach((item) => {
+      handleTransferCancel(item.id);
+    });
+
+    if (activeTransfers.length > 0) {
+      toast.warning(`${activeTransfers.length}개 전송이 취소되었습니다`);
+    }
+  };
+
   if (!session) {
     return <LoadingScreen />;
   }
@@ -605,61 +734,90 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   return (
     <>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-2 grid-rows-[1fr] gap-2 h-full p-4 min-h-0">
-          {/* Local Panel */}
-          <FilePanel
-            sessionId={sessionId}
-            type="local"
-            title="Local"
-            currentPath={session.localPanel.currentPath}
-            files={session.localPanel.files}
-            selectedFiles={session.localPanel.selectedFiles}
-            loading={session.localPanel.loading}
-            onNavigate={localFileList.loadDirectory}
-            onNavigateUp={localFileList.navigateUp}
-            onNavigateHome={localFileList.navigateToHome}
-            onNavigateWithDialog={localFileList.navigateWithDialog}
-            onSelectFile={handleLocalFileSelect}
-            onOpenFile={handleLocalFileOpen}
-            onRefresh={localFileList.refresh}
-            onNewFolder={handleLocalNewFolder}
-            onDelete={handleLocalDelete}
-            onRename={handleLocalRename}
-            onTransfer={handleLocalTransfer}
-          />
+        <div className="flex flex-col h-full gap-2 p-4">
+          {/* Main Content: Dual Panels */}
+          <div className="grid grid-cols-2 gap-2 flex-1 min-h-0">
+            {/* Local Panel */}
+            <FilePanel
+              sessionId={sessionId}
+              type="local"
+              title="Local"
+              currentPath={session.localPanel.currentPath}
+              files={session.localPanel.files}
+              selectedFiles={session.localPanel.selectedFiles}
+              loading={session.localPanel.loading}
+              onNavigate={localFileList.loadDirectory}
+              onNavigateUp={localFileList.navigateUp}
+              onNavigateHome={localFileList.navigateToHome}
+              onNavigateWithDialog={localFileList.navigateWithDialog}
+              onSelectFile={handleLocalFileSelect}
+              onSelectFileRange={handleLocalFileRangeSelect}
+              onOpenFile={handleLocalFileOpen}
+              onRefresh={localFileList.refresh}
+              onNewFolder={handleLocalNewFolder}
+              onDelete={handleLocalDelete}
+              onRename={handleLocalRename}
+              onTransfer={handleLocalTransfer}
+            />
 
-          {/* Remote Panel */}
-          <FilePanel
-            sessionId={sessionId}
-            type="remote"
-            title="Remote"
-            currentPath={session.remotePanel.currentPath}
-            files={session.remotePanel.files}
-            selectedFiles={session.remotePanel.selectedFiles}
-            loading={session.remotePanel.loading}
-            onNavigate={remoteFileList.loadDirectory}
-            onNavigateUp={remoteFileList.navigateUp}
-            onNavigateHome={remoteFileList.navigateToHome}
-            onNavigateWithDialog={remoteFileList.navigateWithDialog}
-            onSelectFile={handleRemoteFileSelect}
-            onOpenFile={handleRemoteFileOpen}
-            onRefresh={remoteFileList.refresh}
-            onNewFolder={handleRemoteNewFolder}
-            onDelete={handleRemoteDelete}
-            onRename={handleRemoteRename}
-            onTransfer={handleRemoteTransfer}
+            {/* Remote Panel */}
+            <FilePanel
+              sessionId={sessionId}
+              type="remote"
+              title="Remote"
+              currentPath={session.remotePanel.currentPath}
+              files={session.remotePanel.files}
+              selectedFiles={session.remotePanel.selectedFiles}
+              loading={session.remotePanel.loading}
+              onNavigate={remoteFileList.loadDirectory}
+              onNavigateUp={remoteFileList.navigateUp}
+              onNavigateHome={remoteFileList.navigateToHome}
+              onNavigateWithDialog={remoteFileList.navigateWithDialog}
+              onSelectFile={handleRemoteFileSelect}
+              onSelectFileRange={handleRemoteFileRangeSelect}
+              onOpenFile={handleRemoteFileOpen}
+              onRefresh={remoteFileList.refresh}
+              onNewFolder={handleRemoteNewFolder}
+              onDelete={handleRemoteDelete}
+              onRename={handleRemoteRename}
+              onTransfer={handleRemoteTransfer}
+            />
+          </div>
+
+          {/* Transfer Panel: Fixed Bottom */}
+          <TransferPanel
+            transfers={transferQueue}
+            onPause={handleTransferPause}
+            onResume={handleTransferResume}
+            onCancel={handleTransferCancel}
+            onClearCompleted={handleClearCompleted}
+            onPauseAll={handlePauseAll}
+            onResumeAll={handleResumeAll}
+            onCancelAll={handleCancelAll}
           />
         </div>
 
         {/* Drag Overlay - 드래그 중인 파일 미리보기 */}
         <DragOverlay>
-          {activeFile ? (
+          {activeFiles.length > 0 ? (
             <div className="flex items-center gap-2 px-3 py-2 bg-accent rounded shadow-lg border">
-              {(() => {
-                const Icon = getFileIcon(activeFile);
-                return <Icon className="h-4 w-4 flex-shrink-0" />;
-              })()}
-              <span className="text-sm font-medium">{activeFile.name}</span>
+              {activeFiles.length === 1 ? (
+                <>
+                  {(() => {
+                    const Icon = getFileIcon(activeFiles[0]);
+                    return <Icon className="h-4 w-4 flex-shrink-0" />;
+                  })()}
+                  <span className="text-sm font-medium">{activeFiles[0].name}</span>
+                </>
+              ) : (
+                <>
+                  {(() => {
+                    const Icon = getFileIcon(activeFiles[0]);
+                    return <Icon className="h-4 w-4 flex-shrink-0" />;
+                  })()}
+                  <span className="text-sm font-medium">{activeFiles.length}개 파일</span>
+                </>
+              )}
             </div>
           ) : null}
         </DragOverlay>
