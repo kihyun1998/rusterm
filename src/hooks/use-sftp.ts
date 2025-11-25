@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useSftpStore } from '@/stores/use-sftp-store';
 import type { SFTPConfig } from '@/types/connection';
-import type { FileInfo, SftpConfig, TransferDirection, TransferStatus } from '@/types/sftp';
+import type { FileInfo, TransferDirection, TransferStatus } from '@/types/sftp';
 import { toBackendSftpConfig } from '@/types/sftp';
 
 /**
@@ -160,25 +160,21 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
   const session = useSftpStore((state) => state.getSession(tabId));
   const panel = panelType === 'local' ? session?.localPanel : session?.remotePanel;
 
-  const setPath =
-    panelType === 'local'
-      ? useSftpStore((state) => state.setLocalPath)
-      : useSftpStore((state) => state.setRemotePath);
+  const setLocalPath = useSftpStore((state) => state.setLocalPath);
+  const setRemotePath = useSftpStore((state) => state.setRemotePath);
+  const setPath = panelType === 'local' ? setLocalPath : setRemotePath;
 
-  const setFiles =
-    panelType === 'local'
-      ? useSftpStore((state) => state.setLocalFiles)
-      : useSftpStore((state) => state.setRemoteFiles);
+  const setLocalFiles = useSftpStore((state) => state.setLocalFiles);
+  const setRemoteFiles = useSftpStore((state) => state.setRemoteFiles);
+  const setFiles = panelType === 'local' ? setLocalFiles : setRemoteFiles;
 
-  const setLoading =
-    panelType === 'local'
-      ? useSftpStore((state) => state.setLocalLoading)
-      : useSftpStore((state) => state.setRemoteLoading);
+  const setLocalLoading = useSftpStore((state) => state.setLocalLoading);
+  const setRemoteLoading = useSftpStore((state) => state.setRemoteLoading);
+  const setLoading = panelType === 'local' ? setLocalLoading : setRemoteLoading;
 
-  const setError =
-    panelType === 'local'
-      ? useSftpStore((state) => state.setLocalError)
-      : useSftpStore((state) => state.setRemoteError);
+  const setLocalError = useSftpStore((state) => state.setLocalError);
+  const setRemoteError = useSftpStore((state) => state.setRemoteError);
+  const setError = panelType === 'local' ? setLocalError : setRemoteError;
 
   /**
    * 디렉토리 목록 로드
