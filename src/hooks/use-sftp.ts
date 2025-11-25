@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useCallback, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useSftpStore } from '@/stores/use-sftp-store';
 import type { SFTPConfig } from '@/types/connection';
 import type { FileInfo, SftpConfig, TransferDirection, TransferStatus } from '@/types/sftp';
@@ -199,6 +200,11 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
         const errorMessage = err instanceof Error ? err.message : String(err);
         setError(tabId, errorMessage);
         console.error(`Failed to load ${panelType} directory:`, err);
+
+        // Toast 알림 표시
+        toast.error('Failed to load directory', {
+          description: errorMessage,
+        });
       } finally {
         setLoading(tabId, false);
       }

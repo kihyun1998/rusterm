@@ -4,6 +4,7 @@ import { CommandPalette } from '@/components/command/CommandPalette';
 import { NewSessionDialog } from '@/components/connection/NewSessionDialog';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
+import { Toaster } from '@/components/ui/sonner';
 import { isDevelopment } from '@/config';
 import { useShortcuts } from '@/hooks/use-shortcuts';
 import { useTheme } from '@/hooks/use-theme';
@@ -149,6 +150,9 @@ function App() {
           onOpenNewSession={openNewSessionDialog}
         />
       </div>
+
+      {/* Toast Notifications */}
+      <Toaster />
 
       {/* Global Command Palette */}
       <CommandPalette
