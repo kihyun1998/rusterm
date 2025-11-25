@@ -55,3 +55,32 @@ export function formatDate(timestamp: number): string {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}년 ${month}월 ${day}일`;
 }
+
+/**
+ * Format transfer speed in bytes/sec to human-readable format
+ *
+ * - Shows appropriate unit (KB/s, MB/s, GB/s)
+ * - 1 decimal place for all units
+ *
+ * @param bytesPerSec - Transfer speed in bytes per second
+ * @returns Formatted speed string
+ *
+ * @example
+ * formatTransferSpeed(0)         // "0 KB/s"
+ * formatTransferSpeed(512)       // "0.5 KB/s"
+ * formatTransferSpeed(102400)    // "100.0 KB/s"
+ * formatTransferSpeed(1572864)   // "1.5 MB/s"
+ * formatTransferSpeed(1073741824) // "1.0 GB/s"
+ */
+export function formatTransferSpeed(bytesPerSec: number): string {
+  if (bytesPerSec === 0) return '0 KB/s';
+
+  const kb = bytesPerSec / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB/s`;
+
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} MB/s`;
+
+  const gb = mb / 1024;
+  return `${gb.toFixed(1)} GB/s`;
+}
