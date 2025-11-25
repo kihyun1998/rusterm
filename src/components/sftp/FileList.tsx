@@ -26,6 +26,18 @@ interface FileListProps {
 
   /** 상위 디렉토리로 이동 콜백 */
   onNavigateUp: () => void;
+
+  /** Callback when rename is requested from context menu */
+  onRename: () => void;
+
+  /** Callback when delete is requested from context menu */
+  onDelete: () => void;
+
+  /** Callback when transfer is requested from context menu */
+  onTransfer: () => void;
+
+  /** Callback when new folder is requested from context menu */
+  onNewFolder: () => void;
 }
 
 /**
@@ -60,6 +72,10 @@ export function FileList({
   onSelectFile,
   onOpenFile,
   onNavigateUp,
+  onRename,
+  onDelete,
+  onTransfer,
+  onNewFolder,
 }: FileListProps) {
   // Check if current path is root
   const isRoot = isRootPath(currentPath);
@@ -93,8 +109,13 @@ export function FileList({
               file={parentDirItem}
               fsType={fsType}
               selected={false}
+              selectedCount={selectedFiles.size}
               onSelect={() => {}} // Ignore selection for ".."
               onOpen={onNavigateUp} // Double-click to go up
+              onRename={onRename}
+              onDelete={onDelete}
+              onTransfer={onTransfer}
+              onNewFolder={onNewFolder}
             />
           )}
 
@@ -105,8 +126,13 @@ export function FileList({
               file={file}
               fsType={fsType}
               selected={selectedFiles.has(file.path)}
+              selectedCount={selectedFiles.size}
               onSelect={(file, multiSelect) => onSelectFile(file, multiSelect)}
               onOpen={onOpenFile}
+              onRename={onRename}
+              onDelete={onDelete}
+              onTransfer={onTransfer}
+              onNewFolder={onNewFolder}
             />
           ))}
 

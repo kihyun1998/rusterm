@@ -187,6 +187,10 @@ export function FilePanel({
           onSelectFile={(file, multiSelect) => onSelectFile(file, multiSelect)}
           onOpenFile={onOpenFile}
           onNavigateUp={onNavigateUp}
+          onRename={onRename}
+          onDelete={onDelete}
+          onTransfer={onTransfer}
+          onNewFolder={onNewFolder}
         />
       </div>
 

@@ -4,6 +4,7 @@ import { getFileIcon } from '@/constants/file-icons';
 import { formatDate, formatFileSize } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { FileInfo, FileSystemType } from '@/types/sftp';
+import { FileContextMenu } from './FileContextMenu';
 
 /**
  * Double-click detection delay in milliseconds
@@ -23,11 +24,26 @@ interface FileListItemProps {
   /** Whether the file is currently selected */
   selected: boolean;
 
+  /** Total number of selected files in the panel */
+  selectedCount: number;
+
   /** Callback when file is clicked (single click) */
   onSelect: (file: FileInfo, multiSelect: boolean) => void;
 
   /** Callback when file is double-clicked (open file/folder) */
   onOpen: (file: FileInfo) => void;
+
+  /** Callback when rename is requested from context menu */
+  onRename: () => void;
+
+  /** Callback when delete is requested from context menu */
+  onDelete: () => void;
+
+  /** Callback when transfer is requested from context menu */
+  onTransfer: () => void;
+
+  /** Callback when new folder is requested from context menu */
+  onNewFolder: () => void;
 }
 
 /**
@@ -44,8 +60,13 @@ export function FileListItem({
   file,
   fsType,
   selected,
+  selectedCount,
   onSelect,
   onOpen,
+  onRename,
+  onDelete,
+  onTransfer,
+  onNewFolder,
 }: FileListItemProps) {
   // Double-click detection state
   const [lastClickTime, setLastClickTime] = useState(0);
@@ -77,10 +98,21 @@ export function FileListItem({
     setLastClickTime(now);
   };
 
+  /**
+   * Handle file selection for context menu auto-select
+   */
+  const handleSelectFile = (fileToSelect: FileInfo) => {
+    onSelect(fileToSelect, false); // Single select (no multi-select)
+  };
+
   // Get appropriate icon for file/folder
   const Icon = getFileIcon(file);
 
-  return (
+  // Disable context menu for ".." parent directory item
+  const isParentDirItem = file.name === '..';
+
+  // File item content
+  const fileItemContent = (
     <div
       ref={setNodeRef}
       onClick={handleClick}
@@ -109,5 +141,27 @@ export function FileListItem({
         {formatDate(file.modified)}
       </div>
     </div>
+  );
+
+  // Wrap with context menu only for regular files/folders (not "..")
+  if (isParentDirItem) {
+    return fileItemContent;
+  }
+
+  return (
+    <FileContextMenu
+      file={file}
+      fsType={fsType}
+      isSelected={selected}
+      selectedCount={selectedCount}
+      onOpen={onOpen}
+      onRename={onRename}
+      onDelete={onDelete}
+      onTransfer={onTransfer}
+      onNewFolder={onNewFolder}
+      onSelectFile={handleSelectFile}
+    >
+      {fileItemContent}
+    </FileContextMenu>
   );
 }
