@@ -76,9 +76,9 @@ export function FileList({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-[450px]">
       {/* Header - fixed at top */}
-      <div className="grid grid-cols-[1fr_120px_150px] gap-4 px-2 py-2 border-b bg-muted/50 font-medium text-sm">
+      <div className="grid grid-cols-[1fr_auto_150px] gap-4 px-2 py-2 border-b bg-muted/50 font-medium text-sm">
         <div>Name</div>
         <div className="text-right">Size</div>
         <div className="text-right">Modified</div>

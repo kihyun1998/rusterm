@@ -81,7 +81,7 @@ export function FileListItem({
       ref={setNodeRef}
       onClick={handleClick}
       className={cn(
-        'grid grid-cols-[1fr_120px_150px] gap-4 p-2 rounded cursor-pointer',
+        'grid grid-cols-[1fr_auto_150px] gap-4 p-2 rounded cursor-pointer',
         'hover:bg-accent transition-colors',
         selected && 'bg-accent',
         isDragging && 'opacity-50'
