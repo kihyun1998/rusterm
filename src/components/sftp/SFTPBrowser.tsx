@@ -254,12 +254,12 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   };
 
   // 파일 선택 핸들러
-  const handleLocalFileSelect = (file: FileInfo) => {
-    toggleLocalFileSelection(tabId, file.path, false);
+  const handleLocalFileSelect = (file: FileInfo, multiSelect: boolean) => {
+    toggleLocalFileSelection(tabId, file.path, multiSelect);
   };
 
-  const handleRemoteFileSelect = (file: FileInfo) => {
-    toggleRemoteFileSelection(tabId, file.path, false);
+  const handleRemoteFileSelect = (file: FileInfo, multiSelect: boolean) => {
+    toggleRemoteFileSelection(tabId, file.path, multiSelect);
   };
 
   // 파일 열기 핸들러 (폴더 더블 클릭)

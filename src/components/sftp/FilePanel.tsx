@@ -46,7 +46,7 @@ interface FilePanelProps {
   onNavigateWithDialog: () => void;
 
   /** 파일 선택 시 콜백 */
-  onSelectFile: (file: FileInfo) => void;
+  onSelectFile: (file: FileInfo, multiSelect: boolean) => void;
 
   /** 파일/폴더 열기 시 콜백 */
   onOpenFile: (file: FileInfo) => void;
@@ -184,7 +184,7 @@ export function FilePanel({
           files={files}
           selectedFiles={selectedFiles}
           fsType={type}
-          onSelectFile={onSelectFile}
+          onSelectFile={(file, multiSelect) => onSelectFile(file, multiSelect)}
           onOpenFile={onOpenFile}
           onNavigateUp={onNavigateUp}
         />

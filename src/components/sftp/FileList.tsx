@@ -19,7 +19,7 @@ interface FileListProps {
   fsType: FileSystemType;
 
   /** 파일 선택 시 콜백 */
-  onSelectFile: (file: FileInfo) => void;
+  onSelectFile: (file: FileInfo, multiSelect: boolean) => void;
 
   /** 파일/폴더 열기 시 콜백 */
   onOpenFile: (file: FileInfo) => void;
@@ -105,7 +105,7 @@ export function FileList({
               file={file}
               fsType={fsType}
               selected={selectedFiles.has(file.path)}
-              onSelect={onSelectFile}
+              onSelect={(file, multiSelect) => onSelectFile(file, multiSelect)}
               onOpen={onOpenFile}
             />
           ))}

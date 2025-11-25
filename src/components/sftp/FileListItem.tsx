@@ -24,7 +24,7 @@ interface FileListItemProps {
   selected: boolean;
 
   /** Callback when file is clicked (single click) */
-  onSelect: (file: FileInfo) => void;
+  onSelect: (file: FileInfo, multiSelect: boolean) => void;
 
   /** Callback when file is double-clicked (open file/folder) */
   onOpen: (file: FileInfo) => void;
@@ -58,16 +58,20 @@ export function FileListItem({
 
   /**
    * Handle click event - detect single vs double click
+   * Supports Ctrl+Click (Windows/Linux) and Cmd+Click (Mac) for multi-select
    */
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const now = Date.now();
+    const isDoubleClick = now - lastClickTime < DOUBLE_CLICK_DELAY;
 
-    // Double-click: open file/folder
-    if (now - lastClickTime < DOUBLE_CLICK_DELAY) {
+    if (isDoubleClick) {
+      // Double-click: open file/folder
       onOpen(file);
     } else {
       // Single click: select file
-      onSelect(file);
+      // Check for Ctrl (Windows/Linux) or Cmd (Mac) key for multi-select
+      const multiSelect = e.ctrlKey || e.metaKey;
+      onSelect(file, multiSelect);
     }
 
     setLastClickTime(now);
