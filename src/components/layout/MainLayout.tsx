@@ -1,6 +1,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect } from 'react';
 import { Home } from '@/components/home/Home';
+import { SFTPBrowser } from '@/components/sftp/SFTPBrowser';
 import { Terminal } from '@/components/terminal/Terminal';
 import { getThemeById } from '@/constants/terminal-themes';
 import { useSettingsStore, useTabStore } from '@/stores';
@@ -94,6 +95,8 @@ export function MainLayout({
             >
               {tab.type === 'home' ? (
                 <Home onShowSettings={onShowSettings} onOpenNewSession={onOpenNewSession} />
+              ) : tab.type === 'sftp' ? (
+                <SFTPBrowser tabId={tab.id} connectionProfileId={tab.connectionProfileId!} />
               ) : (
                 <Terminal
                   id={tab.id}

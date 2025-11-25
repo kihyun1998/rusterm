@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { ConnectionType } from '@/types/connection';
+import type { ConnectionType, SFTPConfig } from '@/types/connection';
 
 export type TabType = 'home' | 'terminal' | 'sftp';
 
@@ -15,6 +15,7 @@ export interface Tab {
   // Connection-related fields
   connectionType?: ConnectionType; // Connection type (default: 'local' if not specified)
   connectionProfileId?: string; // Profile ID - credentials will be restored from keyring
+  sftpConfig?: SFTPConfig; // SFTP configuration (for sftp tabs)
 }
 
 interface TabState {

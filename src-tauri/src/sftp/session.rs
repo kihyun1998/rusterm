@@ -118,7 +118,8 @@ impl SftpSession {
                 .unwrap_or("")
                 .to_string();
 
-            let full_path = path.to_string_lossy().to_string();
+            // SFTP는 항상 Unix-style path 사용 (Windows 서버도 C:/Users/... 형식)
+            let full_path = path.to_string_lossy().replace('\\', "/");
             let is_directory = stat.is_dir();
             let size = stat.size.unwrap_or(0);
             let modified = stat.mtime.unwrap_or(0) as u64 * 1000; // sec to ms
@@ -273,7 +274,7 @@ impl SftpSession {
 
         Ok(FileInfo {
             name,
-            path: path.to_string(),
+            path: path.replace('\\', "/"), // SFTP는 항상 Unix-style path 사용
             is_directory,
             size,
             modified,

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useTabStore } from '@/stores';
 import { useConnectionProfileStore } from '@/stores/use-connection-profile-store';
 import type { StoredConnectionProfile } from '@/types/connection';
-import { isSSHConfig } from '@/types/connection';
+import { isSFTPConfig, isSSHConfig } from '@/types/connection';
 
 interface HomeProps {
   onShowSettings?: () => void;
@@ -75,14 +75,27 @@ export function Home({ onShowSettings, onOpenNewSession }: HomeProps) {
     console.log('Connecting to profile:', profileId, profile.name);
 
     const newTabId = crypto.randomUUID();
-    addTab({
-      id: newTabId,
-      title: profile.name,
-      type: 'terminal',
-      closable: true,
-      connectionType: profile.type,
-      connectionProfileId: profileId, // Terminal will restore credentials from keyring
-    });
+
+    // SFTP 프로필인 경우
+    if (profile.type === 'sftp' && isSFTPConfig(profile.config)) {
+      addTab({
+        id: newTabId,
+        title: profile.name,
+        type: 'sftp',
+        closable: true,
+        connectionProfileId: profileId, // SFTPBrowser will restore credentials from keyring
+      });
+    } else {
+      // 터미널 프로필 (local, ssh)
+      addTab({
+        id: newTabId,
+        title: profile.name,
+        type: 'terminal',
+        closable: true,
+        connectionType: profile.type,
+        connectionProfileId: profileId, // Terminal will restore credentials from keyring
+      });
+    }
 
     // Add to recent connections
     addToRecent(profileId);

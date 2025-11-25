@@ -1,8 +1,9 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useRef, useState } from 'react';
 import { useSftpStore } from '@/stores/use-sftp-store';
-import type { FileInfo, TransferDirection, TransferStatus } from '@/types/sftp';
 import type { SFTPConfig } from '@/types/connection';
+import type { FileInfo, SftpConfig, TransferDirection, TransferStatus } from '@/types/sftp';
+import { toBackendSftpConfig } from '@/types/sftp';
 
 /**
  * SFTP 연결 상태
@@ -10,7 +11,7 @@ import type { SFTPConfig } from '@/types/connection';
 export type SftpConnectionState = 'disconnected' | 'connecting' | 'connected' | 'failed' | 'error';
 
 /**
- * SFTP 연결 응답
+ * SFTP 연결 응답 (백엔드에서 camelCase로 변환됨)
  */
 interface CreateSftpResponse {
   sessionId: string;
@@ -36,9 +37,7 @@ interface UseSftpConnectionReturn {
 /**
  * SFTP 연결 관리 훅
  */
-export function useSftpConnection(
-  options: UseSftpConnectionOptions
-): UseSftpConnectionReturn {
+export function useSftpConnection(options: UseSftpConnectionOptions): UseSftpConnectionReturn {
   const { tabId, onStateChange } = options;
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [status, setStatus] = useState<SftpConnectionState>('disconnected');
@@ -63,9 +62,12 @@ export function useSftpConnection(
         setStatus('connecting');
         onStateChangeRef.current?.('connecting');
 
+        // UI config를 백엔드 config로 변환
+        const backendConfig = toBackendSftpConfig(config);
+
         // SFTP 세션 생성
         const response = await invoke<CreateSftpResponse>('create_sftp_session', {
-          config,
+          config: backendConfig,
         });
 
         setSessionId(response.sessionId);
@@ -184,10 +186,8 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
         setLoading(tabId, true);
         setError(tabId, null);
 
-        const command =
-          panelType === 'local' ? 'list_local_directory' : 'list_remote_directory';
-        const params =
-          panelType === 'local' ? { path } : { sessionId, path };
+        const command = panelType === 'local' ? 'list_local_directory' : 'list_remote_directory';
+        const params = panelType === 'local' ? { path } : { sessionId, path };
 
         const files = await invoke<FileInfo[]>(command, params);
 
@@ -219,12 +219,33 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
   const navigateUp = useCallback(async () => {
     if (!panel?.currentPath) return;
 
-    const pathParts = panel.currentPath.split('/').filter(Boolean);
-    if (pathParts.length === 0) return;
+    const path = panel.currentPath;
 
-    pathParts.pop();
-    const parentPath = '/' + pathParts.join('/');
-    await loadDirectory(parentPath || '/');
+    // 경로 구분자 감지 (Windows: \, Unix: /)
+    const separator = path.includes('\\') ? '\\' : '/';
+
+    // 마지막 구분자 위치 찾기
+    const lastSeparatorIndex = path.lastIndexOf(separator);
+
+    if (lastSeparatorIndex <= 0) {
+      // 루트 디렉토리이거나 구분자가 없으면 그대로
+      return;
+    }
+
+    // 상위 디렉토리 경로 추출
+    let parentPath = path.substring(0, lastSeparatorIndex);
+
+    // Windows 드라이브 루트 처리 (C: → C:\)
+    if (separator === '\\' && parentPath.match(/^[A-Z]:$/i)) {
+      parentPath += '\\';
+    }
+
+    // Unix 루트 처리 (빈 문자열 → /)
+    if (separator === '/' && !parentPath) {
+      parentPath = '/';
+    }
+
+    await loadDirectory(parentPath);
   }, [panel?.currentPath, loadDirectory]);
 
   /**
@@ -232,8 +253,7 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
    */
   const navigateToHome = useCallback(async () => {
     try {
-      const command =
-        panelType === 'local' ? 'get_user_home_dir' : 'get_remote_home_dir';
+      const command = panelType === 'local' ? 'get_user_home_dir' : 'get_remote_home_dir';
       const params = panelType === 'local' ? {} : { sessionId };
 
       const homePath = await invoke<string>(command, params);
@@ -282,7 +302,9 @@ export function useSftpFileOperations(
   const createDirectory = useCallback(
     async (path: string, name: string) => {
       try {
-        const fullPath = `${path}/${name}`;
+        // 로컬은 플랫폼별 구분자, 원격은 항상 /
+        const separator = panelType === 'local' ? (path.includes('\\') ? '\\' : '/') : '/';
+        const fullPath = `${path}${path.endsWith(separator) ? '' : separator}${name}`;
         const command =
           panelType === 'local' ? 'create_local_directory' : 'create_remote_directory';
         const params = panelType === 'local' ? { path: fullPath } : { sessionId, path: fullPath };
@@ -363,8 +385,18 @@ interface UseSftpTransferOptions {
 }
 
 interface UseSftpTransferReturn {
-  upload: (localPath: string, remotePath: string, fileName: string, fileSize: number) => Promise<void>;
-  download: (remotePath: string, localPath: string, fileName: string, fileSize: number) => Promise<void>;
+  upload: (
+    localPath: string,
+    remotePath: string,
+    fileName: string,
+    fileSize: number
+  ) => Promise<void>;
+  download: (
+    remotePath: string,
+    localPath: string,
+    fileName: string,
+    fileSize: number
+  ) => Promise<void>;
 }
 
 /**

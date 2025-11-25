@@ -129,8 +129,7 @@ function App() {
       title: profile.name,
       type: 'sftp',
       closable: true,
-      connectionType: 'sftp',
-      connectionProfileId: profileId, // SFTP browser will restore credentials from keyring
+      connectionProfileId: profileId, // SFTPBrowser will restore credentials from keyring
     });
   };
 
