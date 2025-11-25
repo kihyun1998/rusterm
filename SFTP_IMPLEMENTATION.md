@@ -89,9 +89,18 @@ export interface FileInfo {
   path: string;
   isDirectory: boolean;
   size: number; // bytes
-  modified: number; // timestamp
-  permissions?: string; // 표시만 (변경 불가)
+  modified: number; // timestamp (milliseconds)
 }
+
+/**
+ * 파일 크기 포맷팅 규칙:
+ * - KB가 최소 단위
+ * - 1KB 미만은 0KB로 표시
+ * - 예: formatFileSize(512) => "0 KB"
+ * - 예: formatFileSize(1024) => "1 KB"
+ * - 예: formatFileSize(1536) => "1.5 KB"
+ * - 예: formatFileSize(1048576) => "1 MB"
+ */
 
 export interface FileListResponse {
   path: string;
@@ -190,6 +199,17 @@ ssh2 = "0.9"  # 이미 있음
 
 ## ⚛️ Frontend 구현
 
+### 0. 의존성
+
+**추가 패키지**
+```bash
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+```
+
+- `@dnd-kit/core`: 드래그 앤 드롭 핵심 기능
+- `@dnd-kit/sortable`: 정렬 가능한 리스트 (선택 사항)
+- `@dnd-kit/utilities`: 유틸리티 함수
+
 ### 1. 상태 관리
 
 **`src/stores/use-tab-store.ts` 수정**
@@ -268,12 +288,12 @@ src/components/
 │   └── SFTPSessionForm.tsx           (신규)
 │
 └── sftp/
-    ├── SFTPBrowser.tsx               (메인 컨테이너)
-    ├── FilePanel.tsx                 (단일 패널)
-    ├── PathBreadcrumb.tsx            (경로 네비게이션)
+    ├── SFTPBrowser.tsx               (메인 컨테이너 - DndContext 래핑)
+    ├── FilePanel.tsx                 (단일 패널 - useDroppable)
+    ├── PathDisplay.tsx               (전체 경로 표시 + Home 버튼)
     ├── PanelToolbar.tsx              (패널 툴바)
-    ├── FileList.tsx                  (파일 리스트)
-    ├── FileListItem.tsx              (파일 아이템)
+    ├── FileList.tsx                  (파일 리스트 + 헤더 + ".." 항목)
+    ├── FileListItem.tsx              (파일 아이템 - useDraggable)
     ├── TransferPanel.tsx             (전송 패널)
     ├── TransferItem.tsx              (전송 아이템)
     └── FileContextMenu.tsx           (컨텍스트 메뉴)
@@ -281,59 +301,197 @@ src/components/
 
 ### 4. Drag & Drop + Click 이벤트 처리
 
-**핵심 전략: 이벤트 시퀀스 추적 + 임계값 기반 판별**
+**핵심 전략: @dnd-kit 라이브러리 사용 (Tauri 데스크톱 앱에 최적화)**
+
+**의존성**
+```bash
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+```
+
+**FileListItem 구현**
 
 ```typescript
 // FileListItem.tsx
-const DRAG_THRESHOLD = 5;        // px - 드래그 인식 최소 거리
+import { useDraggable } from '@dnd-kit/core';
+import { formatFileSize, formatDate } from '@/lib/format';
+
 const DOUBLE_CLICK_DELAY = 300;  // ms - 더블 클릭 인식 시간
-const CLICK_DELAY = 200;         // ms - 싱글 클릭 확정 대기
 
-handleMouseDown() {
-  // 드래그 시작 위치 기록
+function FileListItem({ file, fsType, selected, onSelect, onOpen }: Props) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: file.path,
+    data: { file, fsType },
+  });
+
+  const handleClick = () => {
+    const now = Date.now();
+    if (now - lastClickTime < DOUBLE_CLICK_DELAY) {
+      onOpen(file); // 폴더 진입
+    } else {
+      onSelect(file); // 싱글 클릭: 선택
+    }
+    setLastClickTime(now);
+  };
+
+  const Icon = getFileIcon(file);
+
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={handleClick}
+      className={`
+        grid grid-cols-[1fr_120px_150px] gap-4 p-2 hover:bg-accent rounded
+        ${selected ? 'bg-accent' : ''}
+        ${isDragging ? 'opacity-50' : ''}
+      `}
+      {...attributes}
+      {...listeners}
+    >
+      {/* Name - 동적 width, 긴 이름은 ... */}
+      <div className="flex items-center gap-2 min-w-0">
+        <Icon className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">{file.name}</span>
+      </div>
+
+      {/* Size - 고정 width 120px */}
+      <div className="text-sm text-muted-foreground text-right">
+        {file.isDirectory ? '-' : formatFileSize(file.size)}
+      </div>
+
+      {/* Modified - 고정 width 150px */}
+      <div className="text-sm text-muted-foreground text-right">
+        {formatDate(file.modified)}
+      </div>
+    </div>
+  );
 }
 
-handleMouseMove() {
-  // 임계값 초과 시 드래그 모드
-  if (distance > DRAG_THRESHOLD) {
-    startDrag();
-    cancelPendingClick();
-  }
+/**
+ * 파일 크기 포맷 함수
+ * @example formatFileSize(512) => "0 KB"
+ * @example formatFileSize(1024) => "1 KB"
+ * @example formatFileSize(1048576) => "1 MB"
+ */
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return '0 KB';
+
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} MB`;
+
+  const gb = mb / 1024;
+  return `${gb.toFixed(2)} GB`;
 }
 
-handleMouseUp() {
-  // 드래그 중이었으면 클릭 무시
-  if (wasDragging) return;
-
-  // 더블 클릭 체크
-  if (timeSinceLastClick < DOUBLE_CLICK_DELAY) {
-    onOpen(); // 폴더 진입 또는 전송
-  } else {
-    // 싱글 클릭 대기
-    setTimeout(() => onSelect(), CLICK_DELAY);
-  }
+/**
+ * 날짜 포맷 함수
+ * @example formatDate(timestamp) => "2025년 01월 15일"
+ */
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}년 ${month}월 ${day}일`;
 }
 ```
 
-**Drop Zone 처리**
+**FilePanel Drop Zone 구현**
 
 ```typescript
 // FilePanel.tsx
-handleDrop(e: React.DragEvent) {
-  // Case 1: 반대편 패널에서 드래그
-  const dragData = e.dataTransfer.getData('application/json');
-  if (dragData) {
-    const { file, fsType } = JSON.parse(dragData);
-    if (fsType !== type) {
-      transferFile(file);
-    }
-  }
+import { useDroppable } from '@dnd-kit/core';
 
-  // Case 2: OS 파일 탐색기에서 드래그 (Remote 패널만)
-  if (type === 'remote' && e.dataTransfer.files.length > 0) {
-    uploadFiles(e.dataTransfer.files);
-  }
+function FilePanel({ type, sessionId, onTransfer }: Props) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${type}-panel`,
+    data: { type },
+  });
+
+  // DndContext에서 onDragEnd 처리
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const dragData = active.data.current;
+    const dropData = over.data.current;
+
+    // Case 1: 반대편 패널에서 드래그
+    if (dragData?.fsType !== dropData?.type) {
+      onTransfer(dragData.file, dropData.type);
+    }
+  };
+
+  return (
+    <div ref={setNodeRef} className={isOver ? 'bg-accent' : ''}>
+      {/* 패널 UI */}
+    </div>
+  );
 }
+```
+
+**SFTPBrowser DndContext 설정**
+
+```typescript
+// SFTPBrowser.tsx
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+
+function SFTPBrowser() {
+  // 마우스 드래그만 지원 (키보드 드래그 제외)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px 이동 후 드래그 시작 (실수 방지)
+      },
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const dragData = active.data.current as { file: FileInfo; fsType: FileSystemType };
+    const dropData = over.data.current as { type: FileSystemType };
+
+    // 반대편 패널으로 드래그 시 전송
+    if (dragData.fsType !== dropData.type) {
+      transferFile(dragData.file, dropData.type);
+    }
+  };
+
+  return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <FilePanel type="local" />
+      <FilePanel type="remote" />
+    </DndContext>
+  );
+}
+```
+
+**OS 파일 탐색기 드래그 앤 드롭 처리**
+
+```typescript
+// FilePanel.tsx - OS 파일 드래그 앤 드롭은 네이티브 이벤트 사용
+const handleNativeDrop = (e: React.DragEvent) => {
+  e.preventDefault();
+
+  // OS 파일 탐색기에서 드래그 (Remote 패널만)
+  if (type === 'remote' && e.dataTransfer.files.length > 0) {
+    uploadFiles(Array.from(e.dataTransfer.files));
+  }
+};
+
+return (
+  <div
+    ref={setNodeRef}
+    onDrop={handleNativeDrop}
+    onDragOver={(e) => e.preventDefault()}
+  >
+    {/* ... */}
+  </div>
+);
 ```
 
 ### 5. 파일 아이콘
@@ -479,6 +637,20 @@ await invoke('close_sftp_session', { sessionId });
 
 ### Phase 2: Frontend 기본 구조
 
+#### Task 2.0: 의존성 설치
+- [ ] `@dnd-kit/core` 설치
+- [ ] `@dnd-kit/sortable` 설치 (선택 사항)
+- [ ] `@dnd-kit/utilities` 설치
+
+**테스트 방법:**
+```bash
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+
+# package.json 확인
+grep "@dnd-kit" package.json
+# 3개 패키지가 dependencies에 있으면 성공
+```
+
 #### Task 2.1: Tab Store 수정
 - [ ] `src/stores/use-tab-store.ts`에 `'sftp'` 타입 추가
 
@@ -585,68 +757,103 @@ testFiles.forEach(file => {
 });
 ```
 
-#### Task 4.2: PathBreadcrumb 컴포넌트
-- [ ] `src/components/sftp/PathBreadcrumb.tsx` 생성
-- [ ] 경로를 '/' 기준으로 분할하여 breadcrumb 표시
-- [ ] 각 세그먼트 클릭 시 해당 경로로 이동
+#### Task 4.2: PathDisplay 컴포넌트
+- [ ] `src/components/sftp/PathDisplay.tsx` 생성
+- [ ] 전체 경로를 Input 형태로 표시 (읽기 전용)
+- [ ] 경로 복사 버튼 추가 (선택 사항)
 - [ ] Home 버튼 추가
 
 **테스트 방법:**
-```bash
-# Storybook이나 별도 테스트 페이지에서
-<PathBreadcrumb
+```tsx
+<PathDisplay
   path="/home/user/documents/projects"
-  onNavigate={(path) => console.log('Navigate to:', path)}
   onHome={() => console.log('Go home')}
 />
-# 각 세그먼트 클릭 시 콘솔에 경로 출력되면 성공
+
+// 전체 경로가 표시되는지 확인
+// Home 버튼 클릭 시 콘솔 출력 확인
 ```
 
 #### Task 4.3: FileListItem 컴포넌트
 - [ ] `src/components/sftp/FileListItem.tsx` 생성
-- [ ] Drag & Drop + Click 이벤트 처리 구현
-- [ ] 체크박스, 아이콘, 이름, 크기, 수정일 표시
+- [ ] `@dnd-kit/core`의 `useDraggable` 훅 사용
+- [ ] 싱글/더블 클릭 처리 (드래그와 독립적)
+- [ ] Grid 레이아웃: `grid-cols-[1fr_120px_150px]`
+  - Name: 동적 width, `truncate`로 ... 표시
+  - Size: 120px 고정, 우측 정렬
+  - Modified: 150px 고정, 우측 정렬
+- [ ] 파일 크기 포맷: KB 최소 단위, 1KB 미만은 0KB
+- [ ] 날짜 포맷: "0000년 00월 00일"
 
 **테스트 방법:**
 ```tsx
-// 테스트 페이지
+import { DndContext } from '@dnd-kit/core';
+
 const [selected, setSelected] = useState(false);
 
-<FileListItem
-  file={{ name: 'test.txt', size: 1024, ... }}
-  selected={selected}
-  fsType="local"
-  onSelect={() => setSelected(!selected)}
-  onOpen={() => console.log('Open!')}
-  onDragStart={(file) => console.log('Drag:', file.name)}
-/>
+<DndContext onDragEnd={(e) => console.log('Drag end:', e.active.data.current)}>
+  <FileListItem
+    file={{
+      name: 'very_long_filename_test_example.txt',
+      size: 512,           // 0 KB
+      path: '/test.txt',
+      modified: Date.now(),
+      isDirectory: false
+    }}
+    selected={selected}
+    fsType="local"
+    onSelect={() => setSelected(!selected)}
+    onOpen={() => console.log('Open!')}
+  />
+  <FileListItem
+    file={{
+      name: 'document.pdf',
+      size: 1048576,       // 1 MB
+      path: '/document.pdf',
+      modified: Date.now(),
+      isDirectory: false
+    }}
+    selected={false}
+    fsType="local"
+    onSelect={() => {}}
+    onOpen={() => {}}
+  />
+</DndContext>
 
-// 싱글 클릭 → 선택 상태 토글
+// 싱글 클릭 → 선택 상태 토글 (배경색 변경)
 // 더블 클릭 → 콘솔에 "Open!" 출력
-// 드래그 → 콘솔에 "Drag: test.txt" 출력
+// 긴 파일명 → ... 표시 확인
+// 512 bytes → "0 KB" 표시 확인
+// 1048576 bytes → "1 MB" 표시 확인
+// 날짜 → "2025년 01월 15일" 형식 확인
 ```
 
 #### Task 4.4: FileList 컴포넌트
 - [ ] `src/components/sftp/FileList.tsx` 생성
-- [ ] 헤더 (Name, Size, Modified)
+- [ ] 헤더: Grid 레이아웃 `grid-cols-[1fr_120px_150px]` (Name, Size, Modified)
+- [ ] ".." 상위 디렉토리 항목을 맨 위에 추가 (현재 경로가 루트가 아닐 때)
 - [ ] FileListItem 리스트 렌더링
-- [ ] 전체 선택 체크박스
 
 **테스트 방법:**
 ```tsx
 const testFiles: FileInfo[] = [
-  { name: 'folder1', isDirectory: true, size: 0, modified: Date.now() },
-  { name: 'file1.txt', isDirectory: false, size: 2048, modified: Date.now() },
+  { name: 'folder1', path: '/home/user/folder1', isDirectory: true, size: 0, modified: Date.now() },
+  { name: 'file1.txt', path: '/home/user/file1.txt', isDirectory: false, size: 2048, modified: Date.now() },
 ];
 
 <FileList
+  currentPath="/home/user"
   files={testFiles}
   selectedFiles={new Set()}
-  onSelectFile={(path) => console.log('Select:', path)}
-  onOpenFile={(path) => console.log('Open:', path)}
-  onDragStart={(file) => console.log('Drag:', file.name)}
+  fsType="local"
+  onSelectFile={(file) => console.log('Select:', file.name)}
+  onOpenFile={(file) => console.log('Open:', file.name)}
+  onNavigateUp={() => console.log('Navigate to parent')}
 />
 
+// 헤더: "Name", "Size", "Modified" 표시 확인
+// ".." 항목이 맨 위에 표시되는지 확인
+// ".." 더블 클릭 시 onNavigateUp 호출 확인
 // 파일 목록이 표시되고 클릭/드래그 동작하면 성공
 ```
 
@@ -671,26 +878,33 @@ const testFiles: FileInfo[] = [
 
 #### Task 4.6: FilePanel 컴포넌트
 - [ ] `src/components/sftp/FilePanel.tsx` 생성
-- [ ] PathBreadcrumb + PanelToolbar + FileList 조합
-- [ ] Drop Zone 구현
+- [ ] PathDisplay + PanelToolbar + FileList 조합
+- [ ] `@dnd-kit/core`의 `useDroppable` 훅 사용
+- [ ] OS 파일 탐색기 드래그 앤 드롭 처리 (네이티브 이벤트)
 - [ ] 로딩 상태 표시
 
 **테스트 방법:**
 ```tsx
-<FilePanel
-  sessionId="test"
-  type="local"
-  title="Local"
-  currentPath="/home/user"
-  files={testFiles}
-  selectedFiles={new Set()}
-  loading={false}
-  onNavigate={(path) => console.log('Navigate:', path)}
-  onTransfer={(file) => console.log('Transfer:', file.name)}
-/>
+import { DndContext } from '@dnd-kit/core';
 
-// 패널이 표시되고 파일 목록, 툴바가 보이면 성공
-// 외부에서 파일 드래그 앤 드롭 시 콘솔 출력 확인
+<DndContext onDragEnd={(e) => console.log('Transfer:', e.active.data.current)}>
+  <FilePanel
+    sessionId="test"
+    type="local"
+    title="Local"
+    currentPath="/home/user/documents"
+    files={testFiles}
+    selectedFiles={new Set()}
+    loading={false}
+    onNavigate={(path) => console.log('Navigate:', path)}
+    onNavigateUp={() => console.log('Navigate up')}
+  />
+</DndContext>
+
+// 패널이 표시되고 전체 경로 "/home/user/documents" 보이는지 확인
+// ".." 항목이 파일 목록 맨 위에 있는지 확인
+// 다른 FilePanel에서 파일 드래그 시 배경색 변경 확인 (isOver)
+// OS 파일 탐색기에서 파일 드래그 앤 드롭 시 업로드 시작 확인
 ```
 
 ---
@@ -699,10 +913,13 @@ const testFiles: FileInfo[] = [
 
 #### Task 5.1: SFTPBrowser 메인 컴포넌트
 - [ ] `src/components/sftp/SFTPBrowser.tsx` 생성
+- [ ] `DndContext`로 전체 컴포넌트 래핑
+- [ ] `PointerSensor` 설정 (8px 임계값)
 - [ ] Dual Panel 레이아웃 구현 (grid-cols-2)
 - [ ] 좌측: Local Panel, 우측: Remote Panel
 - [ ] SFTP 연결 생성 및 초기화
 - [ ] 양쪽 홈 디렉토리 로드
+- [ ] `onDragEnd`에서 파일 전송 처리
 
 **테스트 방법:**
 ```bash
@@ -710,27 +927,33 @@ pnpm tauri dev
 # 저장된 SFTP 프로필 클릭하여 탭 열기
 # 좌우 패널이 표시되고 양쪽 모두 홈 디렉토리 파일 목록이 보이면 성공
 # 연결 실패 시 에러 메시지 표시 확인
+
+# Browser Console에서 드래그 이벤트 확인
+# 로컬 파일을 원격 패널로 드래그 → 8px 이상 이동 시 드래그 시작 확인
 ```
 
 #### Task 5.2: 디렉토리 탐색 기능
 - [ ] 로컬 패널에서 폴더 더블 클릭 시 진입
 - [ ] 원격 패널에서 폴더 더블 클릭 시 진입
-- [ ] Breadcrumb 클릭 시 해당 경로로 이동
+- [ ] ".." 항목 더블 클릭 시 상위 디렉토리로 이동
 - [ ] Home 버튼 클릭 시 홈으로 복귀
+- [ ] 전체 경로 표시 (PathDisplay)
 
 **테스트 방법:**
 ```bash
 # SFTP 탭에서
-# 1. 로컬 패널에서 폴더 더블 클릭 → 파일 목록 변경 확인
-# 2. 원격 패널에서 폴더 더블 클릭 → 파일 목록 변경 확인
-# 3. Breadcrumb 중간 경로 클릭 → 해당 경로로 이동 확인
-# 4. Home 버튼 클릭 → 홈 디렉토리로 복귀 확인
+# 1. 전체 경로가 표시되는지 확인 (예: "/home/user/documents")
+# 2. 로컬 패널에서 폴더 더블 클릭 → 경로 변경 및 파일 목록 변경 확인
+# 3. 원격 패널에서 폴더 더블 클릭 → 경로 변경 및 파일 목록 변경 확인
+# 4. ".." 더블 클릭 → 상위 디렉토리로 이동 확인 (경로가 "/home/user"로 변경)
+# 5. Home 버튼 클릭 → 홈 디렉토리로 복귀 확인
+# 6. 루트 디렉토리에서는 ".." 항목이 표시되지 않는지 확인
 ```
 
 #### Task 5.3: 파일 선택 기능
 - [ ] 싱글 클릭으로 파일 선택/해제
 - [ ] Ctrl+Click으로 다중 선택
-- [ ] 전체 선택 체크박스
+- [ ] Ctrl+A로 전체 선택
 - [ ] 선택 항목 수 표시
 
 **테스트 방법:**
@@ -738,8 +961,9 @@ pnpm tauri dev
 # SFTP 탭에서
 # 1. 파일 클릭 → 선택 상태 토글 (배경색 변경)
 # 2. Ctrl+Click으로 여러 파일 선택
-# 3. 전체 선택 체크박스 클릭 → 모든 파일 선택/해제
+# 3. Ctrl+A → 모든 파일 선택 확인
 # 4. 툴바에서 선택 항목 수 확인 (예: "3 items selected")
+# 5. 다른 패널 클릭 시 선택 해제 (선택 사항)
 ```
 
 #### Task 5.4: MainLayout 통합
@@ -897,19 +1121,23 @@ const result = await invoke('download_file', {
 ```
 
 #### Task 7.5: Drag & Drop 전송
+- [ ] `@dnd-kit/core`의 `DndContext.onDragEnd`에서 전송 처리
 - [ ] 로컬 → 원격: 파일 드래그하여 원격 패널에 드롭
 - [ ] 원격 → 로컬: 파일 드래그하여 로컬 패널에 드롭
-- [ ] 드래그 중 시각적 피드백
+- [ ] 드래그 중 시각적 피드백 (useDraggable의 isDragging, useDroppable의 isOver)
 - [ ] 드롭 시 전송 큐에 추가 및 전송 시작
 
 **테스트 방법:**
 ```bash
 # SFTP 탭에서
-# 1. 로컬 파일을 원격 패널로 드래그 앤 드롭
-# 2. 드래그 중 패널에 하이라이트 표시 확인
-# 3. 드롭 후 TransferPanel에 항목 추가 확인
-# 4. 전송 완료 후 원격 패널 새로고침 확인
-# 5. 반대 방향(원격 → 로컬)도 테스트
+# 1. 로컬 파일을 원격 패널로 드래그
+# 2. 8px 이상 이동 시 드래그 시작 확인 (PointerSensor 임계값)
+# 3. 드래그 중 파일 아이템 opacity 변경 확인 (isDragging)
+# 4. 원격 패널 위로 드래그 시 배경색 변경 확인 (isOver)
+# 5. 드롭 후 onDragEnd 호출, TransferPanel에 항목 추가 확인
+# 6. 전송 완료 후 원격 패널 새로고침 확인
+# 7. 반대 방향(원격 → 로컬)도 테스트
+# 8. 같은 패널 내 드래그 시 전송 안 되는 것 확인
 ```
 
 #### Task 7.6: 툴바 Transfer 버튼
@@ -971,7 +1199,6 @@ const result = await invoke('download_file', {
 - [ ] F2: 이름 변경
 - [ ] F5: 새로고침
 - [ ] Ctrl+A: 전체 선택
-- [ ] Ctrl+C, Ctrl+V: 복사/붙여넣기 (선택 사항)
 
 **테스트 방법:**
 ```bash
@@ -1080,6 +1307,32 @@ cargo clippy -- -D warnings
 ---
 
 ## 🔧 개발 팁
+
+### @dnd-kit 사용 장점
+
+**Tauri 데스크톱 앱에 최적화:**
+- HTML5 Drag and Drop API 대신 마우스/터치 이벤트 기반으로 동작
+- 네이티브 드래그 앤 드롭의 브라우저/OS별 차이를 추상화
+- PointerSensor로 정밀한 드래그 시작 제어 (8px 임계값으로 실수 방지)
+- 시각적 피드백 간편화 (isDragging, isOver)
+
+**주요 기능:**
+1. **useDraggable**: 파일 아이템을 드래그 가능하게 만듦
+   - `data` prop으로 파일 정보 전달 (file, fsType)
+   - `isDragging`으로 시각적 피드백 (opacity 조정)
+
+2. **useDroppable**: 패널을 드롭 존으로 만듦
+   - `isOver`로 드래그 중 하이라이트 (배경색 변경)
+   - `data` prop으로 패널 타입 전달 (local/remote)
+
+3. **DndContext**: 드래그 앤 드롭 이벤트 통합 관리
+   - `onDragEnd`에서 전송 로직 처리
+   - `sensors`로 입력 방식 커스터마이징 (PointerSensor)
+
+**주의사항:**
+- OS 파일 탐색기 → 앱 드래그는 네이티브 이벤트 사용 (`onDrop`, `onDragOver`)
+- `@dnd-kit`은 앱 내부 드래그만 처리 (외부 → 앱은 불가능)
+- 큰 파일 목록은 가상 스크롤과 함께 사용 권장
 
 ### 테스트용 공개 SFTP 서버
 
