@@ -760,7 +760,6 @@ testFiles.forEach(file => {
 #### Task 4.2: PathDisplay 컴포넌트
 - [ ] `src/components/sftp/PathDisplay.tsx` 생성
 - [ ] 전체 경로를 Input 형태로 표시 (읽기 전용)
-- [ ] 경로 복사 버튼 추가 (선택 사항)
 - [ ] Home 버튼 추가
 
 **테스트 방법:**
