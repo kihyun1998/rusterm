@@ -75,6 +75,10 @@ export interface TransferItem {
   status: TransferStatus;
   progress: TransferProgress;
   error?: string;
+  // Folder transfer fields
+  isDirectory?: boolean; // Whether this is a directory transfer
+  totalFiles?: number; // Total number of files in directory
+  completedFiles?: number; // Number of files completed
 }
 
 // ============================================================================

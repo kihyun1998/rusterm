@@ -437,6 +437,12 @@ interface UseSftpTransferReturn {
     fileName: string,
     fileSize: number
   ) => Promise<void>;
+  uploadDirectory: (localDirPath: string, remoteDirPath: string, dirName: string) => Promise<void>;
+  downloadDirectory: (
+    remoteDirPath: string,
+    localDirPath: string,
+    dirName: string
+  ) => Promise<void>;
 }
 
 /**
@@ -554,8 +560,192 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
     [sessionId, addTransfer, updateTransferStatus, updateTransferProgress]
   );
 
+  const uploadDirectory = useCallback(
+    async (localDirPath: string, remoteDirPath: string, dirName: string) => {
+      const transferId = crypto.randomUUID();
+
+      try {
+        // Import utilities
+        const { collectFilesFromDirectory, calculateTotalSize, createDirectoryRecursive } =
+          await import('@/lib/sftp-utils');
+
+        // Collect all files from directory recursively
+        const allFiles = await collectFilesFromDirectory(
+          sessionId,
+          localDirPath,
+          true,
+          localDirPath
+        );
+        const totalSize = calculateTotalSize(allFiles);
+
+        // Add directory transfer to queue
+        addTransfer({
+          id: transferId,
+          fileName: dirName,
+          fileSize: totalSize,
+          sourcePath: localDirPath,
+          destinationPath: remoteDirPath,
+          direction: 'upload' as TransferDirection,
+          status: 'pending' as TransferStatus,
+          progress: {
+            bytes: 0,
+            totalBytes: totalSize,
+            percentage: 0,
+          },
+          isDirectory: true,
+          totalFiles: allFiles.length,
+          completedFiles: 0,
+        });
+
+        updateTransferStatus(transferId, 'transferring');
+
+        const updateDirectoryProgress = useSftpStore.getState().updateDirectoryProgress;
+        let completedFiles = 0;
+        let totalBytes = 0;
+
+        // Create base directory on remote
+        const separator = remoteDirPath.endsWith('/') ? '' : '/';
+        const baseRemoteDir = `${remoteDirPath}${separator}${dirName}`;
+        await createDirectoryRecursive(sessionId, baseRemoteDir, false);
+
+        // Upload each file
+        for (const file of allFiles) {
+          try {
+            // Use pre-calculated relative path and create subdirectories
+            const remoteFilePath = `${baseRemoteDir}/${file.relativePath}`;
+
+            // Create parent directory if needed
+            const lastSlash = remoteFilePath.lastIndexOf('/');
+            if (lastSlash > 0) {
+              const parentDir = remoteFilePath.substring(0, lastSlash);
+              await createDirectoryRecursive(sessionId, parentDir, false);
+            }
+
+            // Upload file
+            await invoke('upload_file', {
+              sessionId,
+              localPath: file.path,
+              remotePath: remoteFilePath,
+              transferId: `${transferId}-${completedFiles}`,
+            });
+
+            completedFiles++;
+            totalBytes += file.size;
+
+            // Update progress
+            updateDirectoryProgress(transferId, completedFiles, allFiles.length);
+            updateTransferProgress(transferId, totalBytes, totalSize);
+          } catch (err) {
+            console.error(`Failed to upload file ${file.path}:`, err);
+            // Continue with next file
+          }
+        }
+
+        updateTransferStatus(transferId, 'completed');
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        updateTransferStatus(transferId, 'failed', errorMessage);
+        throw err;
+      }
+    },
+    [sessionId, addTransfer, updateTransferStatus, updateTransferProgress]
+  );
+
+  const downloadDirectory = useCallback(
+    async (remoteDirPath: string, localDirPath: string, dirName: string) => {
+      const transferId = crypto.randomUUID();
+
+      try {
+        // Import utilities
+        const { collectFilesFromDirectory, calculateTotalSize, createDirectoryRecursive } =
+          await import('@/lib/sftp-utils');
+
+        // Collect all files from directory recursively
+        const allFiles = await collectFilesFromDirectory(
+          sessionId,
+          remoteDirPath,
+          false,
+          remoteDirPath
+        );
+        const totalSize = calculateTotalSize(allFiles);
+
+        // Add directory transfer to queue
+        addTransfer({
+          id: transferId,
+          fileName: dirName,
+          fileSize: totalSize,
+          sourcePath: remoteDirPath,
+          destinationPath: localDirPath,
+          direction: 'download' as TransferDirection,
+          status: 'pending' as TransferStatus,
+          progress: {
+            bytes: 0,
+            totalBytes: totalSize,
+            percentage: 0,
+          },
+          isDirectory: true,
+          totalFiles: allFiles.length,
+          completedFiles: 0,
+        });
+
+        updateTransferStatus(transferId, 'transferring');
+
+        const updateDirectoryProgress = useSftpStore.getState().updateDirectoryProgress;
+        let completedFiles = 0;
+        let totalBytes = 0;
+
+        // Create base directory on local
+        const separator = localDirPath.includes('\\') ? '\\' : '/';
+        const baseLocalDir = `${localDirPath}${localDirPath.endsWith(separator) ? '' : separator}${dirName}`;
+        await createDirectoryRecursive(null, baseLocalDir, true);
+
+        // Download each file
+        for (const file of allFiles) {
+          try {
+            // Use pre-calculated relative path and create subdirectories
+            const localFilePath = `${baseLocalDir}${separator}${file.relativePath.replace(/\//g, separator)}`;
+
+            // Create parent directory if needed
+            const lastSeparator = localFilePath.lastIndexOf(separator);
+            if (lastSeparator > 0) {
+              const parentDir = localFilePath.substring(0, lastSeparator);
+              await createDirectoryRecursive(null, parentDir, true);
+            }
+
+            // Download file
+            await invoke('download_file', {
+              sessionId,
+              remotePath: file.path,
+              localPath: localFilePath,
+              transferId: `${transferId}-${completedFiles}`,
+            });
+
+            completedFiles++;
+            totalBytes += file.size;
+
+            // Update progress
+            updateDirectoryProgress(transferId, completedFiles, allFiles.length);
+            updateTransferProgress(transferId, totalBytes, totalSize);
+          } catch (err) {
+            console.error(`Failed to download file ${file.path}:`, err);
+            // Continue with next file
+          }
+        }
+
+        updateTransferStatus(transferId, 'completed');
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        updateTransferStatus(transferId, 'failed', errorMessage);
+        throw err;
+      }
+    },
+    [sessionId, addTransfer, updateTransferStatus, updateTransferProgress]
+  );
+
   return {
     upload,
     download,
+    uploadDirectory,
+    downloadDirectory,
   };
 }

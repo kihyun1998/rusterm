@@ -64,6 +64,7 @@ interface SftpStore {
     status: TransferItem['status'],
     error?: string
   ) => void;
+  updateDirectoryProgress: (transferId: string, completedFiles: number, totalFiles: number) => void;
   removeTransfer: (transferId: string) => void;
   clearCompletedTransfers: () => void;
 }
@@ -476,6 +477,23 @@ export const useSftpStore = create<SftpStore>((set, get) => ({
               ...item,
               status,
               error,
+            }
+          : item
+      ),
+    })),
+
+  updateDirectoryProgress: (transferId, completedFiles, totalFiles) =>
+    set((state) => ({
+      transferQueue: state.transferQueue.map((item) =>
+        item.id === transferId
+          ? {
+              ...item,
+              completedFiles,
+              totalFiles,
+              progress: {
+                ...item.progress,
+                percentage: Math.round((completedFiles / totalFiles) * 100),
+              },
             }
           : item
       ),

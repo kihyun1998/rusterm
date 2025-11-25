@@ -294,21 +294,35 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
 
     // 반대편 패널으로 드래그 시에만 전송
     if (dragData.fsType !== dropData.type) {
-      // 여러 파일 전송
+      // 여러 파일/폴더 전송
       for (const file of activeFiles) {
-        if (dragData.fsType === 'local') {
-          // 업로드: Local → Remote
-          const remotePath = session?.remotePanel.currentPath || '/';
-          const destinationPath = `${remotePath}${remotePath.endsWith('/') ? '' : '/'}${file.name}`;
-
-          await transfer.upload(file.path, destinationPath, file.name, file.size);
+        if (file.isDirectory) {
+          // 폴더 전송
+          if (dragData.fsType === 'local') {
+            // 업로드: Local → Remote
+            const remotePath = session?.remotePanel.currentPath || '/';
+            await transfer.uploadDirectory(file.path, remotePath, file.name);
+          } else {
+            // 다운로드: Remote → Local
+            const localPath = session?.localPanel.currentPath || '/';
+            await transfer.downloadDirectory(file.path, localPath, file.name);
+          }
         } else {
-          // 다운로드: Remote → Local
-          const localPath = session?.localPanel.currentPath || '/';
-          const localSeparator = localPath.includes('\\') ? '\\' : '/';
-          const destinationPath = `${localPath}${localPath.endsWith(localSeparator) ? '' : localSeparator}${file.name}`;
+          // 파일 전송
+          if (dragData.fsType === 'local') {
+            // 업로드: Local → Remote
+            const remotePath = session?.remotePanel.currentPath || '/';
+            const destinationPath = `${remotePath}${remotePath.endsWith('/') ? '' : '/'}${file.name}`;
 
-          await transfer.download(file.path, destinationPath, file.name, file.size);
+            await transfer.upload(file.path, destinationPath, file.name, file.size);
+          } else {
+            // 다운로드: Remote → Local
+            const localPath = session?.localPanel.currentPath || '/';
+            const localSeparator = localPath.includes('\\') ? '\\' : '/';
+            const destinationPath = `${localPath}${localPath.endsWith(localSeparator) ? '' : localSeparator}${file.name}`;
+
+            await transfer.download(file.path, destinationPath, file.name, file.size);
+          }
         }
       }
 

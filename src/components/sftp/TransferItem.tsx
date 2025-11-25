@@ -117,7 +117,15 @@ export function TransferItem({ item, onPause, onResume, onCancel }: TransferItem
           <span className="text-xs font-medium truncate">
             {item.fileName}
             <span className="text-[10px] text-muted-foreground ml-1">
-              ({formatFileSize(item.fileSize)})
+              {item.isDirectory ? (
+                // Folder: show file count
+                <>
+                  ({item.completedFiles || 0}/{item.totalFiles || 0} files)
+                </>
+              ) : (
+                // File: show size
+                <>({formatFileSize(item.fileSize)})</>
+              )}
             </span>
           </span>
         </div>

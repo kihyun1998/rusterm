@@ -149,11 +149,78 @@ impl SftpSession {
         Ok(files)
     }
 
-    /// 디렉토리 생성
+    /// 디렉토리 생성 (재귀적)
+    /// 부모 디렉토리가 없으면 자동으로 생성 (mkdir -p와 동일)
     pub fn create_directory(&self, path: &str) -> Result<(), SftpError> {
         let sftp = self.sftp.lock().unwrap();
-        sftp.mkdir(Path::new(path), 0o755)
-            .map_err(|e| SftpError::CreateDirFailed(format!("{}: {}", path, e)))
+
+        // 경로 정규화 (백슬래시를 슬래시로 변환)
+        let normalized_path = path.replace('\\', "/");
+
+        // 빈 경로는 무시
+        if normalized_path.is_empty() || normalized_path == "/" {
+            return Ok(());
+        }
+
+        // 경로를 '/'로 분할
+        let parts: Vec<&str> = normalized_path.split('/').collect();
+
+        // 누적 경로를 만들면서 각 레벨의 디렉토리 생성
+        let mut current_path = String::new();
+
+        for (i, part) in parts.iter().enumerate() {
+            // 빈 부분은 스킵 (절대 경로의 경우 첫 번째가 빈 문자열)
+            if part.is_empty() {
+                if i == 0 {
+                    // 절대 경로의 루트
+                    current_path.push('/');
+                }
+                continue;
+            }
+
+            // 현재 경로에 부분 추가
+            if current_path == "/" {
+                current_path.push_str(part);
+            } else if current_path.is_empty() {
+                current_path = part.to_string();
+            } else {
+                current_path.push('/');
+                current_path.push_str(part);
+            }
+
+            // 디렉토리 생성 시도
+            match sftp.mkdir(Path::new(&current_path), 0o755) {
+                Ok(_) => {
+                    // 성공
+                }
+                Err(e) => {
+                    // 이미 존재하는지 확인
+                    match sftp.stat(Path::new(&current_path)) {
+                        Ok(stat) => {
+                            // 경로가 존재함
+                            if !stat.is_dir() {
+                                // 파일이 존재하는 경우 에러
+                                return Err(SftpError::CreateDirFailed(format!(
+                                    "{}: Path exists but is not a directory",
+                                    current_path
+                                )));
+                            }
+                            // 디렉토리가 이미 존재하면 무시하고 계속
+                        }
+                        Err(_) => {
+                            // stat 실패 = 디렉토리가 존재하지 않음
+                            // mkdir도 실패했으므로 권한 문제 등의 에러
+                            return Err(SftpError::CreateDirFailed(format!(
+                                "{}: {}",
+                                current_path, e
+                            )));
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// 파일 삭제
