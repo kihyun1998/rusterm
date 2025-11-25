@@ -85,14 +85,25 @@ export function SFTPBrowser({ tabId, connectionProfileId }: SFTPBrowserProps) {
 
         try {
           if (profile.savedAuthType === 'password') {
-            password = await getCredential(connectionProfileId, 'sftp', 'password');
+            const passwordCredential = await getCredential(connectionProfileId, 'sftp', 'password');
+            password = passwordCredential ?? undefined;
           } else if (
             profile.savedAuthType === 'privateKey' ||
             profile.savedAuthType === 'passphrase'
           ) {
-            privateKey = await getCredential(connectionProfileId, 'sftp', 'privatekey');
+            const privateKeyCredential = await getCredential(
+              connectionProfileId,
+              'sftp',
+              'privatekey'
+            );
+            privateKey = privateKeyCredential ?? undefined;
             if (profile.savedAuthType === 'passphrase') {
-              passphrase = await getCredential(connectionProfileId, 'sftp', 'passphrase');
+              const passphraseCredential = await getCredential(
+                connectionProfileId,
+                'sftp',
+                'passphrase'
+              );
+              passphrase = passphraseCredential ?? undefined;
             }
           }
         } catch (error) {
