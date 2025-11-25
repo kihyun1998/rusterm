@@ -98,3 +98,23 @@ impl From<SftpError> for String {
         err.to_string()
     }
 }
+
+/// 업로드 진행률 페이로드 (Tauri Event로 전송)
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UploadProgressPayload {
+    pub transfer_id: String,
+    pub bytes: u64,
+    pub total_bytes: u64,
+    pub percentage: u8,
+}
+
+/// 다운로드 진행률 페이로드 (Tauri Event로 전송)
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DownloadProgressPayload {
+    pub transfer_id: String,
+    pub bytes: u64,
+    pub total_bytes: u64,
+    pub percentage: u8,
+}

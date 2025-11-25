@@ -111,3 +111,29 @@ export function toBackendSftpConfig(uiConfig: import('./connection').SFTPConfig)
     authMethod,
   };
 }
+
+// ============================================================================
+// Transfer Event Payloads (Backend → Frontend)
+// ============================================================================
+
+/**
+ * 업로드 진행률 이벤트 페이로드
+ * Matches: Rust UploadProgressPayload
+ */
+export interface UploadProgressPayload {
+  transferId: string;
+  bytes: number;
+  totalBytes: number;
+  percentage: number;
+}
+
+/**
+ * 다운로드 진행률 이벤트 페이로드
+ * Matches: Rust DownloadProgressPayload
+ */
+export interface DownloadProgressPayload {
+  transferId: string;
+  bytes: number;
+  totalBytes: number;
+  percentage: number;
+}

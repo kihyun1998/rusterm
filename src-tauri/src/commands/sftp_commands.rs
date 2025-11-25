@@ -121,12 +121,14 @@ pub async fn download_file(
 #[tauri::command]
 pub async fn upload_file(
     state: State<'_, SftpManager>,
+    app: tauri::AppHandle,
     session_id: String,
     local_path: String,
     remote_path: String,
+    transfer_id: String,
 ) -> Result<(), String> {
     state
-        .upload_file(&session_id, &local_path, &remote_path)
+        .upload_file(&session_id, &local_path, &remote_path, &transfer_id, app)
         .await
         .map_err(|e| e.to_string())
 }

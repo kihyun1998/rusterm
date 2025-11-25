@@ -1,10 +1,17 @@
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useSftpStore } from '@/stores/use-sftp-store';
 import type { SFTPConfig } from '@/types/connection';
-import type { FileInfo, TransferDirection, TransferStatus } from '@/types/sftp';
+import type {
+  FileInfo,
+  TransferDirection,
+  TransferStatus,
+  UploadProgressPayload,
+  DownloadProgressPayload,
+} from '@/types/sftp';
 import { toBackendSftpConfig } from '@/types/sftp';
 
 /**
@@ -439,6 +446,7 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
   const { sessionId } = options;
   const addTransfer = useSftpStore((state) => state.addTransfer);
   const updateTransferStatus = useSftpStore((state) => state.updateTransferStatus);
+  const updateTransferProgress = useSftpStore((state) => state.updateTransferProgress);
 
   const upload = useCallback(
     async (localPath: string, remotePath: string, fileName: string, fileSize: number) => {
@@ -460,6 +468,16 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
         },
       });
 
+      // 진행률 이벤트 리스너 등록
+      const unlisten = await listen<UploadProgressPayload>('upload-progress', (event) => {
+        const payload = event.payload;
+
+        // 현재 전송 ID와 일치하는 경우만 업데이트
+        if (payload.transferId === transferId) {
+          updateTransferProgress(transferId, payload.bytes, payload.totalBytes);
+        }
+      });
+
       try {
         updateTransferStatus(transferId, 'transferring');
 
@@ -467,6 +485,7 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
           sessionId,
           localPath,
           remotePath,
+          transferId,
         });
 
         updateTransferStatus(transferId, 'completed');
@@ -474,9 +493,12 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
         const errorMessage = err instanceof Error ? err.message : String(err);
         updateTransferStatus(transferId, 'failed', errorMessage);
         throw err;
+      } finally {
+        // 이벤트 리스너 제거
+        unlisten();
       }
     },
-    [sessionId, addTransfer, updateTransferStatus]
+    [sessionId, addTransfer, updateTransferStatus, updateTransferProgress]
   );
 
   const download = useCallback(

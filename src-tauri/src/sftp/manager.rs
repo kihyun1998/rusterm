@@ -144,13 +144,19 @@ impl SftpManager {
         session_id: &str,
         local_path: &str,
         remote_path: &str,
+        transfer_id: &str,
+        app_handle: tauri::AppHandle,
     ) -> Result<(), SftpError> {
         let session = self.get_session(session_id).await?;
         let local_path = local_path.to_string();
         let remote_path = remote_path.to_string();
-        tokio::task::spawn_blocking(move || session.upload_file(&local_path, &remote_path))
-            .await
-            .map_err(|e| SftpError::UploadFailed(format!("Task join error: {}", e)))?
+        let transfer_id = transfer_id.to_string();
+
+        tokio::task::spawn_blocking(move || {
+            session.upload_file(&local_path, &remote_path, &transfer_id, &app_handle)
+        })
+        .await
+        .map_err(|e| SftpError::UploadFailed(format!("Task join error: {}", e)))?
     }
 
     /// 파일 다운로드

@@ -1,8 +1,10 @@
-use super::types::{AuthMethod, FileInfo, SftpConfig, SftpError};
+use super::types::{AuthMethod, FileInfo, SftpConfig, SftpError, UploadProgressPayload};
 use ssh2::{Session, Sftp};
+use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use tauri::Emitter;
 
 /// SFTP 세션
 #[derive(Clone)]
@@ -200,13 +202,27 @@ impl SftpSession {
     }
 
     /// 파일 업로드 (로컬 → 원격)
-    pub fn upload_file(&self, local_path: &str, remote_path: &str) -> Result<(), SftpError> {
+    pub fn upload_file(
+        &self,
+        local_path: &str,
+        remote_path: &str,
+        transfer_id: &str,
+        app_handle: &tauri::AppHandle,
+    ) -> Result<(), SftpError> {
+        const CHUNK_SIZE: usize = 65536; // 64KB
+
         let sftp = self.sftp.lock().unwrap();
 
-        // 로컬 파일 읽기
+        // 로컬 파일 열기
         let mut local_file = std::fs::File::open(local_path).map_err(|e| {
             SftpError::UploadFailed(format!("Failed to open local file {}: {}", local_path, e))
         })?;
+
+        // 파일 크기 조회
+        let metadata = local_file.metadata().map_err(|e| {
+            SftpError::UploadFailed(format!("Failed to get file metadata: {}", e))
+        })?;
+        let total_bytes = metadata.len();
 
         // 원격 파일 생성
         let mut remote_file = sftp.create(Path::new(remote_path)).map_err(|e| {
@@ -216,10 +232,50 @@ impl SftpSession {
             ))
         })?;
 
-        // 복사
-        std::io::copy(&mut local_file, &mut remote_file).map_err(|e| {
-            SftpError::UploadFailed(format!("Failed to upload {}: {}", local_path, e))
-        })?;
+        // 청크 단위 전송
+        let mut buffer = vec![0u8; CHUNK_SIZE];
+        let mut bytes_transferred: u64 = 0;
+        let mut last_reported_percentage: u8 = 0;
+
+        loop {
+            let bytes_read = local_file.read(&mut buffer).map_err(|e| {
+                SftpError::UploadFailed(format!("Failed to read local file: {}", e))
+            })?;
+
+            if bytes_read == 0 {
+                break; // EOF
+            }
+
+            remote_file.write_all(&buffer[..bytes_read]).map_err(|e| {
+                SftpError::UploadFailed(format!("Failed to write to remote file: {}", e))
+            })?;
+
+            bytes_transferred += bytes_read as u64;
+
+            // 진행률 계산
+            let percentage = if total_bytes > 0 {
+                ((bytes_transferred as f64 / total_bytes as f64) * 100.0) as u8
+            } else {
+                100
+            };
+
+            // 진행률 이벤트 발생 (5% 단위로만 발생하거나 완료 시)
+            if bytes_transferred == total_bytes
+                || percentage >= last_reported_percentage + 5
+                || last_reported_percentage == 0
+            {
+                last_reported_percentage = percentage;
+
+                let payload = UploadProgressPayload {
+                    transfer_id: transfer_id.to_string(),
+                    bytes: bytes_transferred,
+                    total_bytes,
+                    percentage,
+                };
+
+                let _ = app_handle.emit("upload-progress", payload);
+            }
+        }
 
         Ok(())
     }
