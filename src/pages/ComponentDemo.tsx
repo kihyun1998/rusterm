@@ -1,7 +1,24 @@
 import { CodeIcon, Cross2Icon, GearIcon, PlusIcon } from '@radix-ui/react-icons';
-import { BadgeCheckIcon } from 'lucide-react';
+import { BadgeCheckIcon, GripVerticalIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Toaster, toast } from 'sonner';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -100,6 +117,13 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
   const [selectValue, setSelectValue] = useState('apple');
   const [switchChecked, setSwitchChecked] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [items, setItems] = useState([
+    { id: '1', text: 'Item 1 - Terminal Tab' },
+    { id: '2', text: 'Item 2 - Settings Panel' },
+    { id: '3', text: 'Item 3 - Profile Card' },
+    { id: '4', text: 'Item 4 - Connection List' },
+    { id: '5', text: 'Item 5 - Theme Preset' },
+  ]);
 
   // Ctrl+K to open command dialog demo
   useEffect(() => {
@@ -112,6 +136,34 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
   }, []);
+
+  // Drag and drop sensors - optimized for desktop apps
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required before drag starts
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setItems((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+      toast.success('Item reordered', {
+        description: `Moved to position ${items.findIndex((item) => item.id === over.id) + 1}`,
+      });
+    }
+  };
 
   return (
     <>
@@ -1189,6 +1241,101 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
                 </div>
               </div>
             </section>
+
+            {/* Drag and Drop Demo */}
+            <section>
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Drag and Drop (Sortable)</h2>
+                <p className="text-sm text-muted-foreground">
+                  드래그 앤 드롭으로 아이템 순서 변경. Tauri 데스크톱 앱에 최적화됨.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {/* Basic Sortable List */}
+                <div>
+                  <h3 className="text-lg font-medium mb-3">기본 정렬 가능한 리스트</h3>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext items={items} strategy={verticalListSortingStrategy}>
+                      <div className="max-w-md space-y-2">
+                        {items.map((item) => (
+                          <SortableItem key={item.id} id={item.id} text={item.text} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </div>
+
+                {/* Features */}
+                <div className="rounded-lg border border-border bg-muted/50 p-4">
+                  <h3 className="text-sm font-semibold mb-2">데스크톱 앱 최적화 기능</h3>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                    <li>
+                      <strong>PointerSensor</strong>: 8px 이동 후 드래그 시작 (실수 방지)
+                    </li>
+                    <li>
+                      <strong>KeyboardSensor</strong>: 키보드로 순서 변경 가능 (접근성)
+                    </li>
+                    <li>
+                      <strong>Visual Feedback</strong>: 드래그 중 시각적 피드백 제공
+                    </li>
+                    <li>
+                      <strong>Toast Notification</strong>: 순서 변경 시 알림 표시
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Usage Note */}
+                <div className="rounded-lg border border-border bg-muted/50 p-4">
+                  <h3 className="text-sm font-semibold mb-2">Rusterm에서 사용 예정</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    이 컴포넌트는 다음과 같은 곳에서 사용될 예정입니다:
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                    <li>탭 순서 재정렬 (TabBar)</li>
+                    <li>연결 프로필 순서 변경 (Home)</li>
+                    <li>테마 프리셋 우선순위 조정</li>
+                    <li>단축키 우선순위 설정</li>
+                    <li>커맨드 팔레트 항목 순서 커스터마이징</li>
+                  </ul>
+                </div>
+
+                {/* Keyboard Instructions */}
+                <div className="rounded-lg border border-blue-600/20 bg-blue-50/50 dark:bg-blue-950/20 p-4">
+                  <h3 className="text-sm font-semibold mb-2">키보드 조작법</h3>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>
+                      <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100 mr-1">
+                        Tab
+                      </kbd>
+                      - 다음 아이템으로 포커스 이동
+                    </p>
+                    <p>
+                      <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100 mr-1">
+                        Space
+                      </kbd>
+                      - 드래그 시작/종료
+                    </p>
+                    <p>
+                      <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100 mr-1">
+                        ↑ ↓
+                      </kbd>
+                      - 아이템 이동
+                    </p>
+                    <p>
+                      <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100 mr-1">
+                        Esc
+                      </kbd>
+                      - 드래그 취소
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -1196,5 +1343,41 @@ export default function ComponentDemo({ onBack }: ComponentDemoProps) {
       {/* Toast Notifications for Demo */}
       <Toaster position="bottom-right" closeButton richColors />
     </>
+  );
+}
+
+// Sortable Item Component
+interface SortableItemProps {
+  id: string;
+  text: string;
+}
+
+function SortableItem({ id, text }: SortableItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 rounded-lg border bg-card p-4 hover:bg-accent/50 transition-colors ${
+        isDragging ? 'shadow-lg z-50 cursor-grabbing' : 'cursor-grab'
+      }`}
+      {...attributes}
+      {...listeners}
+    >
+      <GripVerticalIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+      <span className="text-sm font-medium flex-1">{text}</span>
+      <Badge variant="secondary" className="text-xs">
+        Drag me
+      </Badge>
+    </div>
   );
 }
