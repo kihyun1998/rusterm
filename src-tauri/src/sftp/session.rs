@@ -281,8 +281,25 @@ impl SftpSession {
     }
 
     /// 파일 다운로드 (원격 → 로컬)
-    pub fn download_file(&self, remote_path: &str, local_path: &str) -> Result<(), SftpError> {
+    pub fn download_file(
+        &self,
+        remote_path: &str,
+        local_path: &str,
+        transfer_id: &str,
+        app_handle: &tauri::AppHandle,
+    ) -> Result<(), SftpError> {
+        const CHUNK_SIZE: usize = 65536; // 64KB
+
         let sftp = self.sftp.lock().unwrap();
+
+        // 원격 파일 정보 조회 (파일 크기)
+        let stat = sftp.stat(Path::new(remote_path)).map_err(|e| {
+            SftpError::DownloadFailed(format!(
+                "Failed to get remote file stats {}: {}",
+                remote_path, e
+            ))
+        })?;
+        let total_bytes = stat.size.unwrap_or(0);
 
         // 원격 파일 열기
         let mut remote_file = sftp.open(Path::new(remote_path)).map_err(|e| {
@@ -300,10 +317,50 @@ impl SftpSession {
             ))
         })?;
 
-        // 복사
-        std::io::copy(&mut remote_file, &mut local_file).map_err(|e| {
-            SftpError::DownloadFailed(format!("Failed to download {}: {}", remote_path, e))
-        })?;
+        // 청크 단위 전송
+        let mut buffer = vec![0u8; CHUNK_SIZE];
+        let mut bytes_transferred: u64 = 0;
+        let mut last_reported_percentage: u8 = 0;
+
+        loop {
+            let bytes_read = remote_file.read(&mut buffer).map_err(|e| {
+                SftpError::DownloadFailed(format!("Failed to read remote file: {}", e))
+            })?;
+
+            if bytes_read == 0 {
+                break; // EOF
+            }
+
+            local_file.write_all(&buffer[..bytes_read]).map_err(|e| {
+                SftpError::DownloadFailed(format!("Failed to write to local file: {}", e))
+            })?;
+
+            bytes_transferred += bytes_read as u64;
+
+            // 진행률 계산
+            let percentage = if total_bytes > 0 {
+                ((bytes_transferred as f64 / total_bytes as f64) * 100.0) as u8
+            } else {
+                100
+            };
+
+            // 진행률 이벤트 발생 (5% 단위로만 발생하거나 완료 시)
+            if bytes_transferred == total_bytes
+                || percentage >= last_reported_percentage + 5
+                || last_reported_percentage == 0
+            {
+                last_reported_percentage = percentage;
+
+                let payload = super::types::DownloadProgressPayload {
+                    transfer_id: transfer_id.to_string(),
+                    bytes: bytes_transferred,
+                    total_bytes,
+                    percentage,
+                };
+
+                let _ = app_handle.emit("download-progress", payload);
+            }
+        }
 
         Ok(())
     }

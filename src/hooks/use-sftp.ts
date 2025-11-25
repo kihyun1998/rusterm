@@ -505,6 +505,7 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
     async (remotePath: string, localPath: string, fileName: string, fileSize: number) => {
       const transferId = crypto.randomUUID();
 
+      // 전송 큐에 추가
       addTransfer({
         id: transferId,
         fileName,
@@ -520,6 +521,16 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
         },
       });
 
+      // 진행률 이벤트 리스너 등록
+      const unlisten = await listen<DownloadProgressPayload>('download-progress', (event) => {
+        const payload = event.payload;
+
+        // 현재 전송 ID와 일치하는 경우만 업데이트
+        if (payload.transferId === transferId) {
+          updateTransferProgress(transferId, payload.bytes, payload.totalBytes);
+        }
+      });
+
       try {
         updateTransferStatus(transferId, 'transferring');
 
@@ -527,6 +538,7 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
           sessionId,
           remotePath,
           localPath,
+          transferId,
         });
 
         updateTransferStatus(transferId, 'completed');
@@ -534,9 +546,12 @@ export function useSftpTransfer(options: UseSftpTransferOptions): UseSftpTransfe
         const errorMessage = err instanceof Error ? err.message : String(err);
         updateTransferStatus(transferId, 'failed', errorMessage);
         throw err;
+      } finally {
+        // 이벤트 리스너 제거
+        unlisten();
       }
     },
-    [sessionId, addTransfer, updateTransferStatus]
+    [sessionId, addTransfer, updateTransferStatus, updateTransferProgress]
   );
 
   return {

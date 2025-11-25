@@ -107,12 +107,14 @@ pub async fn rename_remote_item(
 #[tauri::command]
 pub async fn download_file(
     state: State<'_, SftpManager>,
+    app: tauri::AppHandle,
     session_id: String,
     remote_path: String,
     local_path: String,
+    transfer_id: String,
 ) -> Result<(), String> {
     state
-        .download_file(&session_id, &remote_path, &local_path)
+        .download_file(&session_id, &remote_path, &local_path, &transfer_id, app)
         .await
         .map_err(|e| e.to_string())
 }
