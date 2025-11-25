@@ -156,9 +156,7 @@ export function FileListItem({
       </div>
 
       {/* Column 3: Modified date (150px fixed) */}
-      <div className="text-sm text-muted-foreground text-right">
-        {formatDate(file.modified)}
-      </div>
+      <div className="text-sm text-muted-foreground text-right">{formatDate(file.modified)}</div>
     </div>
   );
 

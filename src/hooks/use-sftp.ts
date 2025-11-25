@@ -6,11 +6,11 @@ import { toast } from 'sonner';
 import { useSftpStore } from '@/stores/use-sftp-store';
 import type { SFTPConfig } from '@/types/connection';
 import type {
+  DownloadProgressPayload,
   FileInfo,
   TransferDirection,
   TransferStatus,
   UploadProgressPayload,
-  DownloadProgressPayload,
 } from '@/types/sftp';
 import { toBackendSftpConfig } from '@/types/sftp';
 

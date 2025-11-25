@@ -1,4 +1,4 @@
-import { type LucideIcon, FolderOpen, Monitor, Plus } from 'lucide-react';
+import { FolderOpen, type LucideIcon, Monitor, Plus } from 'lucide-react';
 import type { ConnectionType } from '@/types/connection';
 
 /**

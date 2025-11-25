@@ -2,11 +2,7 @@ import { ChevronDown } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -65,11 +61,7 @@ interface ValidationErrors {
  * SFTP Session Form Component
  * Form for creating SFTP connections
  */
-export function SFTPSessionForm({
-  onConnect,
-  onCancel,
-  initialConfig,
-}: SFTPSessionFormProps) {
+export function SFTPSessionForm({ onConnect, onCancel, initialConfig }: SFTPSessionFormProps) {
   // Form state
   const [formState, setFormState] = useState<FormState>({
     host: initialConfig?.host || '',

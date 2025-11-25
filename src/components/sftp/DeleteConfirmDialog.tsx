@@ -1,5 +1,5 @@
+import { AlertTriangle, File, Folder } from 'lucide-react';
 import { useState } from 'react';
-import { File, Folder, AlertTriangle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,17 +88,11 @@ export function DeleteConfirmDialog({
             {items.length}개 항목 삭제
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
-            <p>
-              {panelLabel} 파일 시스템에서 다음 항목을 삭제합니다.
-            </p>
+            <p>{panelLabel} 파일 시스템에서 다음 항목을 삭제합니다.</p>
             {hasDirectory && (
-              <p className="text-destructive font-medium">
-                폴더와 하위 항목이 모두 삭제됩니다.
-              </p>
+              <p className="text-destructive font-medium">폴더와 하위 항목이 모두 삭제됩니다.</p>
             )}
-            <p className="font-medium">
-              이 작업은 되돌릴 수 없습니다.
-            </p>
+            <p className="font-medium">이 작업은 되돌릴 수 없습니다.</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -115,15 +109,11 @@ export function DeleteConfirmDialog({
                 <span className="truncate" title={item.name}>
                   {item.name}
                 </span>
-                {item.isDirectory && (
-                  <span className="text-xs text-muted-foreground">(폴더)</span>
-                )}
+                {item.isDirectory && <span className="text-xs text-muted-foreground">(폴더)</span>}
               </li>
             ))}
             {items.length > 5 && (
-              <li className="text-sm text-muted-foreground">
-                외 {items.length - 5}개 항목
-              </li>
+              <li className="text-sm text-muted-foreground">외 {items.length - 5}개 항목</li>
             )}
           </ul>
         </div>
@@ -131,7 +121,9 @@ export function DeleteConfirmDialog({
         {/* 삭제 요약 */}
         <div className="text-sm text-muted-foreground">
           {fileCount > 0 && folderCount > 0 ? (
-            <span>파일 {fileCount}개, 폴더 {folderCount}개</span>
+            <span>
+              파일 {fileCount}개, 폴더 {folderCount}개
+            </span>
           ) : fileCount > 0 ? (
             <span>파일 {fileCount}개</span>
           ) : (

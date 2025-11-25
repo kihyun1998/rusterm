@@ -1,4 +1,12 @@
-import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getFileIcon } from '@/constants/file-icons';
@@ -11,11 +19,11 @@ import {
 import { useSftpStore } from '@/stores/use-sftp-store';
 import type { SFTPConfig } from '@/types/connection';
 import type { FileInfo, FileSystemType } from '@/types/sftp';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { ErrorScreen } from './ErrorScreen';
 import { FilePanel } from './FilePanel';
 import { LoadingScreen } from './LoadingScreen';
 import { NewFolderDialog } from './NewFolderDialog';
-import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { RenameDialog } from './RenameDialog';
 import { TransferPanel } from './TransferPanel';
 
@@ -121,7 +129,7 @@ export function SFTPBrowser({ tabId, connectionProfileId }: SFTPBrowserProps) {
         disconnect(); // 컴포넌트 언마운트 시 연결 종료
       };
     }
-  }, [isResolvingCredentials, resolvedConfig]);
+  }, [isResolvingCredentials, resolvedConfig, connect, disconnect]);
 
   // 4. 연결 상태에 따른 렌더링
   if (isResolvingCredentials || status === 'connecting') {
@@ -207,20 +215,20 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   const transferQueue = useSftpStore((state) => state.transferQueue);
   const clearCompletedTransfers = useSftpStore((state) => state.clearCompletedTransfers);
   const updateTransferStatus = useSftpStore((state) => state.updateTransferStatus);
-  const removeTransfer = useSftpStore((state) => state.removeTransfer);
+  const _removeTransfer = useSftpStore((state) => state.removeTransfer);
 
   // 초기 디렉토리 로드
   useEffect(() => {
     if (session?.localPanel.currentPath) {
       localFileList.loadDirectory(session.localPanel.currentPath);
     }
-  }, [session?.localPanel.currentPath]);
+  }, [session?.localPanel.currentPath, localFileList.loadDirectory]);
 
   useEffect(() => {
     if (session?.remotePanel.currentPath) {
       remoteFileList.loadDirectory(session.remotePanel.currentPath);
     }
-  }, [session?.remotePanel.currentPath]);
+  }, [session?.remotePanel.currentPath, remoteFileList.loadDirectory]);
 
   // 드래그 앤 드롭 설정
   const sensors = useSensors(
@@ -417,9 +425,7 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
         : useSftpStore.getState().getRemoteSelectedFiles(tabId);
 
     const files =
-      panelType === 'local'
-        ? session?.localPanel.files || []
-        : session?.remotePanel.files || [];
+      panelType === 'local' ? session?.localPanel.files || [] : session?.remotePanel.files || [];
 
     return files.filter((file) => selectedPaths.includes(file.path));
   };
@@ -615,7 +621,7 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
     if (!selectedFileForRename || !session) return;
 
     try {
-      const currentPath = session.remotePanel.currentPath;
+      const _currentPath = session.remotePanel.currentPath;
       const separator = '/'; // Remote는 항상 Unix 스타일
 
       const oldPath = selectedFileForRename.path;

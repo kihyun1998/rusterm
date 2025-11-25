@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-
 import { Plus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   CommandDialog,
   CommandEmpty,

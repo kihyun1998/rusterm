@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -82,7 +81,12 @@ function validateFolderName(name: string): string | null {
  * - No special characters: / \ : * ? " < > |
  * - Not "." or ".."
  */
-export function NewFolderDialog({ open, onOpenChange, onConfirm, panelType }: NewFolderDialogProps) {
+export function NewFolderDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  panelType,
+}: NewFolderDialogProps) {
   const [folderName, setFolderName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -154,9 +158,7 @@ export function NewFolderDialog({ open, onOpenChange, onConfirm, panelType }: Ne
       <DialogContent>
         <DialogHeader>
           <DialogTitle>새 폴더 만들기</DialogTitle>
-          <DialogDescription>
-            {panelLabel} 파일 시스템에 새 폴더를 만듭니다
-          </DialogDescription>
+          <DialogDescription>{panelLabel} 파일 시스템에 새 폴더를 만듭니다</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
@@ -179,17 +181,10 @@ export function NewFolderDialog({ open, onOpenChange, onConfirm, panelType }: Ne
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isCreating}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isCreating}>
             취소
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={!isValid || isCreating}
-          >
+          <Button onClick={handleConfirm} disabled={!isValid || isCreating}>
             {isCreating ? '생성 중...' : '생성'}
           </Button>
         </DialogFooter>

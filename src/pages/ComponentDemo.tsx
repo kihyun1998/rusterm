@@ -1,15 +1,11 @@
-import { CodeIcon, Cross2Icon, GearIcon, PlusIcon } from '@radix-ui/react-icons';
-import { BadgeCheckIcon, GripVerticalIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Toaster, toast } from 'sonner';
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -19,6 +15,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { CodeIcon, Cross2Icon, GearIcon, PlusIcon } from '@radix-ui/react-icons';
+import { BadgeCheckIcon, GripVerticalIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Toaster, toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,

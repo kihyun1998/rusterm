@@ -1,14 +1,10 @@
-import { useState, useEffect } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChevronDown, ChevronUp, Pause, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { ChevronUp, ChevronDown, X, Pause, Trash2 } from 'lucide-react';
-import { TransferItem as TransferItemComponent } from './TransferItem';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import type { TransferItem } from '@/types/sftp';
+import { TransferItem as TransferItemComponent } from './TransferItem';
 
 /**
  * Props for TransferPanel component
@@ -88,31 +84,19 @@ export function TransferPanel({
         }`}
       >
         <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 hover:bg-muted h-7"
-          >
-            {isOpen ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronUp className="h-4 w-4" />
-            )}
+          <Button variant="ghost" size="sm" className="gap-2 hover:bg-muted h-7">
+            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
             <span className="font-semibold">
               Transfers
               {stats.total === 0 ? (
-                <span className="text-muted-foreground ml-1 font-normal">
-                  (No transfers)
-                </span>
+                <span className="text-muted-foreground ml-1 font-normal">(No transfers)</span>
               ) : (
                 <>
                   {stats.active > 0 && (
                     <span className="text-blue-500 ml-1">({stats.active} active)</span>
                   )}
                   {stats.completed > 0 && (
-                    <span className="text-muted-foreground ml-1">
-                      {stats.completed} completed
-                    </span>
+                    <span className="text-muted-foreground ml-1">{stats.completed} completed</span>
                   )}
                   {stats.failed > 0 && (
                     <span className="text-destructive ml-1">{stats.failed} failed</span>
@@ -124,46 +108,38 @@ export function TransferPanel({
         </CollapsibleTrigger>
 
         {/* Action Buttons - 펼쳐져 있을 때만 표시 */}
-        {isOpen && <div className="flex gap-1">
-          {/* Clear Completed Button */}
-          {(stats.completed > 0 || stats.failed > 0) && onClearCompleted && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearCompleted}
-              className="gap-1 h-7 px-2"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline text-xs">Clear</span>
-            </Button>
-          )}
+        {isOpen && (
+          <div className="flex gap-1">
+            {/* Clear Completed Button */}
+            {(stats.completed > 0 || stats.failed > 0) && onClearCompleted && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearCompleted}
+                className="gap-1 h-7 px-2"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline text-xs">Clear</span>
+              </Button>
+            )}
 
-          {/* Pause All Button */}
-          {stats.active > 0 && onPauseAll && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onPauseAll}
-              className="gap-1 h-7 px-2"
-            >
-              <Pause className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline text-xs">Pause All</span>
-            </Button>
-          )}
+            {/* Pause All Button */}
+            {stats.active > 0 && onPauseAll && (
+              <Button variant="ghost" size="sm" onClick={onPauseAll} className="gap-1 h-7 px-2">
+                <Pause className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline text-xs">Pause All</span>
+              </Button>
+            )}
 
-          {/* Cancel All Button */}
-          {(stats.active > 0 || stats.pending > 0) && onCancelAll && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCancelAll}
-              className="gap-1 h-7 px-2"
-            >
-              <X className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline text-xs">Cancel All</span>
-            </Button>
-          )}
-        </div>}
+            {/* Cancel All Button */}
+            {(stats.active > 0 || stats.pending > 0) && onCancelAll && (
+              <Button variant="ghost" size="sm" onClick={onCancelAll} className="gap-1 h-7 px-2">
+                <X className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline text-xs">Cancel All</span>
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -174,9 +150,7 @@ export function TransferPanel({
             <div className="flex items-center justify-center h-[120px] text-muted-foreground">
               <div className="text-center">
                 <p className="text-sm">전송 항목이 없습니다</p>
-                <p className="text-xs mt-1">
-                  파일을 드래그 앤 드롭하여 전송을 시작하세요
-                </p>
+                <p className="text-xs mt-1">파일을 드래그 앤 드롭하여 전송을 시작하세요</p>
               </div>
             </div>
           ) : (

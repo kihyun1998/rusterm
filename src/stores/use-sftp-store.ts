@@ -32,12 +32,7 @@ interface SftpStore {
   transferQueue: TransferItem[];
 
   // 세션 관리
-  initSession: (
-    tabId: string,
-    sessionId: string,
-    localHome: string,
-    remoteHome: string
-  ) => void;
+  initSession: (tabId: string, sessionId: string, localHome: string, remoteHome: string) => void;
   removeSession: (tabId: string) => void;
   getSession: (tabId: string) => SessionState | undefined;
 

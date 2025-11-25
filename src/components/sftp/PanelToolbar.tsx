@@ -1,10 +1,4 @@
-import {
-  ArrowRightLeft,
-  Edit,
-  FolderPlus,
-  RefreshCw,
-  Trash2,
-} from 'lucide-react';
+import { ArrowRightLeft, Edit, FolderPlus, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /**

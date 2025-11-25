@@ -60,7 +60,10 @@ export function NewSessionDialog({
           <DialogDescription>Choose a protocol and configure your connection</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={selectedProtocol} onValueChange={(v) => setSelectedProtocol(v as ConnectionType)}>
+        <Tabs
+          value={selectedProtocol}
+          onValueChange={(v) => setSelectedProtocol(v as ConnectionType)}
+        >
           {/* Protocol Selector (Chip-style) */}
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="local" className="flex items-center gap-2">
@@ -95,18 +98,12 @@ export function NewSessionDialog({
 
           {/* SSH Tab */}
           <TabsContent value="ssh" className="space-y-4">
-            <SSHSessionForm
-              onConnect={handleCreateSSH}
-              onCancel={() => onOpenChange(false)}
-            />
+            <SSHSessionForm onConnect={handleCreateSSH} onCancel={() => onOpenChange(false)} />
           </TabsContent>
 
           {/* SFTP Tab */}
           <TabsContent value="sftp" className="space-y-4">
-            <SFTPSessionForm
-              onConnect={handleCreateSFTP}
-              onCancel={() => onOpenChange(false)}
-            />
+            <SFTPSessionForm onConnect={handleCreateSFTP} onCancel={() => onOpenChange(false)} />
           </TabsContent>
         </Tabs>
       </DialogContent>

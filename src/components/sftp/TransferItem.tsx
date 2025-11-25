@@ -1,15 +1,6 @@
-import { Progress } from '@/components/ui/progress';
+import { ArrowDown, ArrowUp, CheckCircle, Clock, Pause, Play, X, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  ArrowUp,
-  ArrowDown,
-  Pause,
-  Play,
-  X,
-  CheckCircle,
-  XCircle,
-  Clock,
-} from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { formatFileSize, formatTransferSpeed } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { TransferItem as TransferItemType } from '@/types/sftp';
@@ -42,12 +33,7 @@ interface TransferItemProps {
  * - Control buttons (pause/resume/cancel)
  * - Status-based visual feedback
  */
-export function TransferItem({
-  item,
-  onPause,
-  onResume,
-  onCancel,
-}: TransferItemProps) {
+export function TransferItem({ item, onPause, onResume, onCancel }: TransferItemProps) {
   /**
    * Get direction icon based on transfer direction
    */
@@ -107,9 +93,7 @@ export function TransferItem({
    * Check if transfer is finished (completed, failed, or cancelled)
    */
   const isFinished =
-    item.status === 'completed' ||
-    item.status === 'failed' ||
-    item.status === 'cancelled';
+    item.status === 'completed' || item.status === 'failed' || item.status === 'cancelled';
 
   return (
     <div className="flex flex-col gap-1.5 p-2 border rounded bg-card">

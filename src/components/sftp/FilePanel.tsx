@@ -1,5 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import { Loader2, FolderOpen } from 'lucide-react';
+import { FolderOpen, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { FileInfo, FileSystemType } from '@/types/sftp';

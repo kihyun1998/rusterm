@@ -1,3 +1,4 @@
+import { Download, Edit, FolderOpen, FolderPlus, Trash2, Upload } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
   ContextMenu,
@@ -7,7 +8,6 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Download, Edit, FolderOpen, FolderPlus, Trash2, Upload } from 'lucide-react';
 import type { FileInfo, FileSystemType } from '@/types/sftp';
 
 /**

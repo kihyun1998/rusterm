@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { FolderOpen } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -67,12 +67,7 @@ export function NavigateDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          variant={buttonVariant}
-          size={buttonSize}
-          title="경로 이동"
-          aria-label="경로 이동"
-        >
+        <Button variant={buttonVariant} size={buttonSize} title="경로 이동" aria-label="경로 이동">
           <FolderOpen />
         </Button>
       </DialogTrigger>
