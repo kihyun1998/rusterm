@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CONNECTION_ICONS } from '@/constants/connection-icons';
 import type { StoredConnectionProfile } from '@/types/connection';
-import { getAuthMethod, isSSHConfig } from '@/types/connection';
+import { getAuthMethod } from '@/types/connection';
 
 interface ConnectionCardProps {
   profile: StoredConnectionProfile;
@@ -25,16 +25,17 @@ export function ConnectionCard({ profile, onConnect, onEdit, onDelete }: Connect
 
   // Get connection details based on type
   const getConnectionDetails = () => {
-    if (profile.type === 'ssh' && isSSHConfig(profile.config)) {
-      return `${profile.config.username}@${profile.config.host}`;
+    if (profile.type === 'ssh' || profile.type === 'sftp') {
+      const config = profile.config as { username: string; host: string };
+      return `${config.username}@${config.host}`;
     }
     // Add other connection types here as needed
     return profile.name;
   };
 
-  // Get auth method info for SSH connections
+  // Get auth method info for SSH/SFTP connections
   const getAuthMethodInfo = () => {
-    if (profile.type === 'ssh') {
+    if (profile.type === 'ssh' || profile.type === 'sftp') {
       const authMethod = getAuthMethod(profile);
       switch (authMethod) {
         case 'password':

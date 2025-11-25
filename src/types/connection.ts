@@ -23,8 +23,6 @@ export interface SSHConfig {
   password?: string; // Password authentication (optional)
   privateKey?: string; // Private key path or content (optional)
   passphrase?: string; // Passphrase for private key (optional)
-  strictHostKeyChecking?: boolean; // Verify host key (default: true)
-  keepAlive?: boolean; // Keep connection alive (default: true)
 }
 
 // SFTP connection configuration
@@ -82,11 +80,11 @@ export function isLocalConfig(config: ConnectionConfig): config is LocalConfig {
 }
 
 export function isSSHConfig(config: ConnectionConfig): config is SSHConfig {
-  return 'host' in config && 'username' in config && 'strictHostKeyChecking' in config;
+  return 'host' in config && 'port' in config && 'username' in config;
 }
 
 export function isSFTPConfig(config: ConnectionConfig): config is SFTPConfig {
-  return 'host' in config && 'username' in config && !('strictHostKeyChecking' in config);
+  return 'host' in config && 'port' in config && 'username' in config;
 }
 
 // Stored connection config types (sensitive information excluded)
@@ -110,11 +108,11 @@ export function sanitizeProfile(profile: ConnectionProfile): StoredConnectionPro
 
   let sanitizedConfig: StoredConnectionConfig;
 
-  if (isSSHConfig(config)) {
-    const { password, privateKey, passphrase, ...sshRest } = config;
+  if (profile.type === 'ssh') {
+    const { password, privateKey, passphrase, ...sshRest } = config as SSHConfig;
     sanitizedConfig = sshRest as StoredSSHConfig;
-  } else if (isSFTPConfig(config)) {
-    const { password, privateKey, passphrase, ...sftpRest } = config;
+  } else if (profile.type === 'sftp') {
+    const { password, privateKey, passphrase, ...sftpRest } = config as SFTPConfig;
     sanitizedConfig = sftpRest as StoredSFTPConfig;
   } else {
     // LocalConfig - no sensitive information
