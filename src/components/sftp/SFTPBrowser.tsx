@@ -1,6 +1,7 @@
-import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { getFileIcon } from '@/constants/file-icons';
 import {
   useSftpConnection,
   useSftpFileList,
@@ -158,6 +159,9 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   const [remoteRenameDialogOpen, setRemoteRenameDialogOpen] = useState(false);
   const [selectedFileForRename, setSelectedFileForRename] = useState<FileInfo | null>(null);
 
+  // 드래그 중인 파일 상태
+  const [activeFile, setActiveFile] = useState<FileInfo | null>(null);
+
   // 스토어에서 세션 및 패널 상태 가져오기
   const session = useSftpStore((state) => state.getSession(tabId));
 
@@ -219,6 +223,14 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
   );
 
   // 드래그 앤 드롭 핸들러
+  const handleDragStart = (event: DragStartEvent) => {
+    const dragData = event.active.data.current as {
+      file: FileInfo;
+      fsType: FileSystemType;
+    };
+    setActiveFile(dragData.file);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -264,6 +276,9 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
         await localFileList.refresh();
       }
     }
+
+    // 드래그 종료 시 activeFile 초기화
+    setActiveFile(null);
   };
 
   // 파일 선택 핸들러
@@ -589,7 +604,7 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
 
   return (
     <>
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-2 grid-rows-[1fr] gap-2 h-full p-4 min-h-0">
           {/* Local Panel */}
           <FilePanel
@@ -635,6 +650,19 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
             onTransfer={handleRemoteTransfer}
           />
         </div>
+
+        {/* Drag Overlay - 드래그 중인 파일 미리보기 */}
+        <DragOverlay>
+          {activeFile ? (
+            <div className="flex items-center gap-2 px-3 py-2 bg-accent rounded shadow-lg border">
+              {(() => {
+                const Icon = getFileIcon(activeFile);
+                return <Icon className="h-4 w-4 flex-shrink-0" />;
+              })()}
+              <span className="text-sm font-medium">{activeFile.name}</span>
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       {/* New Folder Dialogs */}
