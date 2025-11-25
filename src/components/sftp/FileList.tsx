@@ -1,6 +1,6 @@
-import { FileListItem } from './FileListItem';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { FileInfo, FileSystemType } from '@/types/sftp';
+import { FileListItem } from './FileListItem';
 
 /**
  * Props for FileList component
@@ -65,6 +65,8 @@ export function FileList({
   const isRoot = isRootPath(currentPath);
 
   // Special ".." parent directory item
+
+  // Special ".." parent directory item
   const parentDirItem: FileInfo = {
     name: '..',
     path: '..',
@@ -83,7 +85,7 @@ export function FileList({
       </div>
 
       {/* Scrollable file list */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-1">
           {/* ".." parent directory item (if not at root) */}
           {!isRoot && (

@@ -1,6 +1,11 @@
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useEffect, useState } from 'react';
-import { useSftpConnection, useSftpFileList, useSftpFileOperations, useSftpTransfer } from '@/hooks/use-sftp';
+import {
+  useSftpConnection,
+  useSftpFileList,
+  useSftpFileOperations,
+  useSftpTransfer,
+} from '@/hooks/use-sftp';
 import { useSftpStore } from '@/stores/use-sftp-store';
 import type { SFTPConfig } from '@/types/connection';
 import type { FileInfo, FileSystemType } from '@/types/sftp';
@@ -317,7 +322,7 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-2 gap-2 h-full p-4">
+      <div className="grid grid-cols-2 grid-rows-[1fr] gap-2 h-full p-4 min-h-0">
         {/* Local Panel */}
         <FilePanel
           sessionId={sessionId}

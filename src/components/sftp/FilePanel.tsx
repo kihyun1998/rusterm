@@ -1,10 +1,10 @@
 import { useDroppable } from '@dnd-kit/core';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { FileInfo, FileSystemType } from '@/types/sftp';
 import { FileList } from './FileList';
 import { PanelToolbar } from './PanelToolbar';
 import { PathDisplay } from './PathDisplay';
-import { cn } from '@/lib/utils';
-import type { FileInfo, FileSystemType } from '@/types/sftp';
 
 /**
  * Props for FilePanel component
@@ -132,16 +132,12 @@ export function FilePanel({
       onDrop={handleNativeDrop}
       onDragOver={handleDragOver}
       className={cn(
-        'flex flex-col h-full relative border rounded transition-colors',
+        'flex flex-col h-full relative border rounded transition-colors min-h-0',
         isOver && 'border-2 border-primary bg-accent/50'
       )}
     >
       {/* 제목 (선택 사항) */}
-      {title && (
-        <div className="px-2 py-1 font-medium text-sm border-b bg-muted/50">
-          {title}
-        </div>
-      )}
+      {title && <div className="px-2 py-1 font-medium text-sm border-b bg-muted/50">{title}</div>}
 
       {/* PathDisplay */}
       <div className="px-2 py-2 border-b">
