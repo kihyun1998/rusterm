@@ -1,4 +1,4 @@
-import { useDraggable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useState } from 'react';
 import { getFileIcon } from '@/constants/file-icons';
 import { formatDate, formatFileSize } from '@/lib/format';
@@ -79,11 +79,31 @@ export function FileListItem({
   // Double-click detection state
   const [lastClickTime, setLastClickTime] = useState(0);
 
-  // Drag and drop setup
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  // Drag setup
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: file.path,
     data: { file, fsType },
   });
+
+  // Drop setup (only for folders)
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `folder-${fsType}-${file.path}`,
+    data: {
+      file,
+      fsType,
+      isFolder: true,
+      targetPath: file.path,
+    },
+    disabled: !file.isDirectory, // Only folders can be drop targets
+  });
+
+  // Combine drag and drop refs
+  const setRefs = (element: HTMLDivElement | null) => {
+    setDragRef(element);
+    if (file.isDirectory) {
+      setDropRef(element);
+    }
+  };
 
   /**
    * Handle click event - detect single vs double click
@@ -133,13 +153,14 @@ export function FileListItem({
   // File item content
   const fileItemContent = (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       onClick={handleClick}
       className={cn(
         'grid grid-cols-[1fr_auto_150px] gap-4 p-2 rounded cursor-pointer select-none',
         'hover:bg-accent transition-colors',
         selected && 'bg-accent',
-        isDragging && 'opacity-50'
+        isDragging && 'opacity-50',
+        isOver && file.isDirectory && 'ring-2 ring-primary bg-accent/80'
       )}
       {...attributes}
       {...listeners}

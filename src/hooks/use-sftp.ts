@@ -199,6 +199,13 @@ export function useSftpFileList(options: UseSftpFileListOptions): UseSftpFileLis
 
         setPath(tabId, path);
         setFiles(tabId, files);
+
+        // 경로 이동 시 선택 초기화
+        if (panelType === 'local') {
+          useSftpStore.getState().clearLocalSelection(tabId);
+        } else {
+          useSftpStore.getState().clearRemoteSelection(tabId);
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         setError(tabId, errorMessage);

@@ -4,6 +4,7 @@ import {
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -282,55 +283,195 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      setActiveFiles([]);
+      return;
+    }
 
     const dragData = active.data.current as {
       file: FileInfo;
       fsType: FileSystemType;
     };
-    const dropData = over.data.current as {
-      type: FileSystemType;
-    };
 
-    // 반대편 패널으로 드래그 시에만 전송
-    if (dragData.fsType !== dropData.type) {
-      // 여러 파일/폴더 전송
+    // === Case 1: 폴더 타일로 드롭 ===
+    if (
+      over.id.toString().startsWith('folder-local-') ||
+      over.id.toString().startsWith('folder-remote-')
+    ) {
+      const dropData = over.data.current as {
+        file: FileInfo;
+        fsType: FileSystemType;
+        isFolder: boolean;
+        targetPath: string;
+      };
+
+      // 자기 자신에게 드롭하면 무시
+      if (dragData.file.path === dropData.targetPath) {
+        setActiveFiles([]);
+        return;
+      }
+
+      // 대상 폴더 경로 계산
+      let targetFolderPath = dropData.targetPath;
+
+      // ".." (상위 디렉토리)에 드롭한 경우 실제 상위 경로로 변환
+      if (targetFolderPath === '..') {
+        const currentPath =
+          dropData.fsType === 'local'
+            ? session?.localPanel.currentPath
+            : session?.remotePanel.currentPath;
+
+        if (!currentPath) {
+          setActiveFiles([]);
+          return;
+        }
+
+        // 경로 구분자 감지
+        const separator = currentPath.includes('\\') ? '\\' : '/';
+        const lastSeparatorIndex = currentPath.lastIndexOf(separator);
+
+        if (lastSeparatorIndex < 0) {
+          setActiveFiles([]);
+          return;
+        }
+
+        // 상위 디렉토리 경로 추출
+        targetFolderPath = currentPath.substring(0, lastSeparatorIndex);
+
+        // Windows 드라이브 루트 처리 (C: → C:\)
+        if (separator === '\\' && targetFolderPath.match(/^[A-Z]:$/i)) {
+          targetFolderPath += '\\';
+        }
+
+        // Unix 루트 처리 (빈 문자열 → /)
+        if (separator === '/' && !targetFolderPath) {
+          targetFolderPath = '/';
+        }
+      }
+
+      // 같은 패널에서 폴더로 드롭 (이동)
+      if (dragData.fsType === dropData.fsType) {
+        const separator = dragData.fsType === 'remote' ? '/' : targetFolderPath.includes('\\') ? '\\' : '/';
+        const ops = dragData.fsType === 'local' ? localOps : remoteOps;
+
+        let successCount = 0;
+        const failedItems: string[] = [];
+
+        for (const file of activeFiles) {
+          try {
+            const newPath = `${targetFolderPath}${targetFolderPath.endsWith(separator) ? '' : separator}${file.name}`;
+            await ops.renameItem(file.path, newPath);
+            successCount++;
+          } catch (error) {
+            failedItems.push(file.name);
+            console.error(`Failed to move ${file.name}:`, error);
+          }
+        }
+
+        // 결과 Toast
+        if (successCount > 0) {
+          toast.success(`${successCount}개 항목이 이동되었습니다`);
+        }
+
+        if (failedItems.length > 0) {
+          toast.error(`${failedItems.length}개 항목 이동 실패`, {
+            description:
+              failedItems.slice(0, 3).join(', ') +
+              (failedItems.length > 3 ? ` 외 ${failedItems.length - 3}개` : ''),
+          });
+        }
+
+        // 현재 패널 새로고침
+        if (dragData.fsType === 'local') {
+          await localFileList.refresh();
+        } else {
+          await remoteFileList.refresh();
+        }
+
+        setActiveFiles([]);
+        return;
+      }
+
+      // 다른 패널의 폴더로 드롭 (업로드/다운로드)
       for (const file of activeFiles) {
         if (file.isDirectory) {
           // 폴더 전송
           if (dragData.fsType === 'local') {
-            // 업로드: Local → Remote
-            const remotePath = session?.remotePanel.currentPath || '/';
-            await transfer.uploadDirectory(file.path, remotePath, file.name);
+            // Local → Remote 폴더로 업로드
+            await transfer.uploadDirectory(file.path, targetFolderPath, file.name);
           } else {
-            // 다운로드: Remote → Local
-            const localPath = session?.localPanel.currentPath || '/';
-            await transfer.downloadDirectory(file.path, localPath, file.name);
+            // Remote → Local 폴더로 다운로드
+            await transfer.downloadDirectory(file.path, targetFolderPath, file.name);
           }
         } else {
           // 파일 전송
-          if (dragData.fsType === 'local') {
-            // 업로드: Local → Remote
-            const remotePath = session?.remotePanel.currentPath || '/';
-            const destinationPath = `${remotePath}${remotePath.endsWith('/') ? '' : '/'}${file.name}`;
+          const separator =
+            dragData.fsType === 'remote' ? '/' : targetFolderPath.includes('\\') ? '\\' : '/';
+          const destinationPath = `${targetFolderPath}${targetFolderPath.endsWith(separator) ? '' : separator}${file.name}`;
 
+          if (dragData.fsType === 'local') {
+            // Local → Remote 폴더로 업로드
             await transfer.upload(file.path, destinationPath, file.name, file.size);
           } else {
-            // 다운로드: Remote → Local
-            const localPath = session?.localPanel.currentPath || '/';
-            const localSeparator = localPath.includes('\\') ? '\\' : '/';
-            const destinationPath = `${localPath}${localPath.endsWith(localSeparator) ? '' : localSeparator}${file.name}`;
-
+            // Remote → Local 폴더로 다운로드
             await transfer.download(file.path, destinationPath, file.name, file.size);
           }
         }
       }
 
-      // 전송 완료 후 패널 새로고침
+      // 대상 패널 새로고침
       if (dragData.fsType === 'local') {
         await remoteFileList.refresh();
       } else {
         await localFileList.refresh();
+      }
+    }
+    // === Case 2: 패널 전체로 드롭 (기존 로직) ===
+    else if (over.id === 'local-panel' || over.id === 'remote-panel') {
+      const dropData = over.data.current as {
+        type: FileSystemType;
+      };
+
+      // 반대편 패널으로 드래그 시에만 전송
+      if (dragData.fsType !== dropData.type) {
+        // 여러 파일/폴더 전송
+        for (const file of activeFiles) {
+          if (file.isDirectory) {
+            // 폴더 전송
+            if (dragData.fsType === 'local') {
+              // 업로드: Local → Remote
+              const remotePath = session?.remotePanel.currentPath || '/';
+              await transfer.uploadDirectory(file.path, remotePath, file.name);
+            } else {
+              // 다운로드: Remote → Local
+              const localPath = session?.localPanel.currentPath || '/';
+              await transfer.downloadDirectory(file.path, localPath, file.name);
+            }
+          } else {
+            // 파일 전송
+            if (dragData.fsType === 'local') {
+              // 업로드: Local → Remote
+              const remotePath = session?.remotePanel.currentPath || '/';
+              const destinationPath = `${remotePath}${remotePath.endsWith('/') ? '' : '/'}${file.name}`;
+
+              await transfer.upload(file.path, destinationPath, file.name, file.size);
+            } else {
+              // 다운로드: Remote → Local
+              const localPath = session?.localPanel.currentPath || '/';
+              const localSeparator = localPath.includes('\\') ? '\\' : '/';
+              const destinationPath = `${localPath}${localPath.endsWith(localSeparator) ? '' : localSeparator}${file.name}`;
+
+              await transfer.download(file.path, destinationPath, file.name, file.size);
+            }
+          }
+        }
+
+        // 전송 완료 후 패널 새로고침
+        if (dragData.fsType === 'local') {
+          await remoteFileList.refresh();
+        } else {
+          await localFileList.refresh();
+        }
       }
     }
 
@@ -764,7 +905,12 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
 
   return (
     <>
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={pointerWithin}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <div className="flex flex-col h-full gap-2 p-4">
           {/* Main Content: Dual Panels */}
           <div className="grid grid-cols-2 gap-2 flex-1 min-h-0">
@@ -831,14 +977,14 @@ function ConnectedSFTPBrowser({ tabId, sessionId }: ConnectedSFTPBrowserProps) {
         {/* Drag Overlay - 드래그 중인 파일 미리보기 */}
         <DragOverlay>
           {activeFiles.length > 0 ? (
-            <div className="flex items-center gap-2 px-3 py-2 bg-accent rounded shadow-lg border">
+            <div className="flex items-center gap-2 px-3 py-2 bg-accent rounded shadow-lg border max-w-xs min-w-0">
               {activeFiles.length === 1 ? (
                 <>
                   {(() => {
                     const Icon = getFileIcon(activeFiles[0]);
                     return <Icon className="h-4 w-4 flex-shrink-0" />;
                   })()}
-                  <span className="text-sm font-medium">{activeFiles[0].name}</span>
+                  <span className="text-sm font-medium truncate">{activeFiles[0].name}</span>
                 </>
               ) : (
                 <>
